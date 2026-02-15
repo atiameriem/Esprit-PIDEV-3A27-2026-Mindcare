@@ -34,6 +34,7 @@ public class ServiceRendezVousTest {
     @Test
     @Order(1)
     public void testAddRendezVous() throws SQLException {
+
         int idPatient = 1;
         int idPsychologist = 2;
 
@@ -43,22 +44,26 @@ public class ServiceRendezVousTest {
         RendezVous rv = new RendezVous();
         rv.setIdPatient(idPatient);
         rv.setIdPsychologist(idPsychologist);
-        rv.setStatutRv(RendezVous.StatutRV.prevu); // -> "prevu" en DB
+        rv.setStatutRv(RendezVous.StatutRV.prevu);
         rv.setAppointmentDate(date);
-        rv.setTypeRendezVous(RendezVous.TypeRV.premiere_consultation); // -> "premiere_consultation"
+        rv.setTypeRendezVous(RendezVous.TypeRV.premiere_consultation);
         rv.setAppointmentTimeRv(time);
 
         srv.add(rv);
 
         List<RendezVous> list = srv.getAll();
+
         RendezVous found = list.stream()
-                .filter(x -> x.getIdPatient() == idPatient
-                        && x.getIdPsychologist() == idPsychologist
-                        && x.getAppointmentDate().equals(date)
-                        && x.getAppointmentTimeRv().equals(time)
-                        && x.getStatutRv() == RendezVous.StatutRV.prevu
-                        && x.getTypeRendezVous() == RendezVous.TypeRV.premiere_consultation)
-                .findFirst().orElse(null);
+                .filter(x ->
+                        x.getIdPatient() == idPatient &&
+                                x.getIdPsychologist() == idPsychologist &&
+                                x.getAppointmentDate().equals(date) &&
+                                x.getAppointmentTimeRv().equals(time) &&
+                                x.getStatutRv() == RendezVous.StatutRV.prevu &&
+                                x.getTypeRendezVous() == RendezVous.TypeRV.premiere_consultation
+                )
+                .findFirst()
+                .orElse(null);
 
         assertNotNull(found);
         idRv = found.getIdRv();
@@ -68,6 +73,7 @@ public class ServiceRendezVousTest {
     @Test
     @Order(2)
     public void testUpdateRendezVous() throws SQLException {
+
         int idPatient = 1;
         int idPsychologist = 2;
 
@@ -85,24 +91,27 @@ public class ServiceRendezVousTest {
         srv.add(rv);
 
         RendezVous created = srv.getAll().stream()
-                .filter(x -> x.getIdPatient() == idPatient
-                        && x.getIdPsychologist() == idPsychologist
-                        && x.getAppointmentDate().equals(date)
-                        && x.getAppointmentTimeRv().equals(time)
-                        && x.getTypeRendezVous() == RendezVous.TypeRV.suivi)
+                .filter(x ->
+                        x.getIdPatient() == idPatient &&
+                                x.getIdPsychologist() == idPsychologist &&
+                                x.getAppointmentDate().equals(date) &&
+                                x.getAppointmentTimeRv().equals(time) &&
+                                x.getTypeRendezVous() == RendezVous.TypeRV.suivi
+                )
                 .findFirst()
                 .orElseThrow();
 
         idRv = created.getIdRv();
 
-        created.setStatutRv(RendezVous.StatutRV.termine); // -> "termine"
-        created.setTypeRendezVous(RendezVous.TypeRV.urgence); // -> "urgence"
+        created.setStatutRv(RendezVous.StatutRV.termine);
+        created.setTypeRendezVous(RendezVous.TypeRV.urgence);
+
         srv.update(created);
 
         boolean ok = srv.getAll().stream().anyMatch(x ->
-                x.getIdRv() == idRv
-                        && x.getStatutRv() == RendezVous.StatutRV.termine
-                        && x.getTypeRendezVous() == RendezVous.TypeRV.urgence
+                x.getIdRv() == idRv &&
+                        x.getStatutRv() == RendezVous.StatutRV.termine &&
+                        x.getTypeRendezVous() == RendezVous.TypeRV.urgence
         );
 
         assertTrue(ok);
