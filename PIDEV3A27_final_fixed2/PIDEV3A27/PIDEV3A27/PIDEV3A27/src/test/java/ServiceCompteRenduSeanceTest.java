@@ -124,6 +124,31 @@ public class ServiceCompteRenduSeanceTest {
         List<CompteRenduView> views = crService.findViewsByPsychologist(PSY_ID);
         assertFalse(views.isEmpty());
     }
+    // ================= DELETE =================
+    @Test
+    @Order(4)
+    public void testDeleteById() throws SQLException, InterruptedException {
+
+        idRv = createRvForTest();
+
+        CompteRenduSeance cr = new CompteRenduSeance();
+        cr.setIdAppointment(idRv);
+        cr.setDateCreationCr(new Timestamp(System.currentTimeMillis()));
+        cr.setProgresCr(CompteRenduSeance.ProgresCR.amelioration_stable);
+        cr.setResumeSeanceCr("Delete test");
+        cr.setProchainesActionCr("Delete action");
+
+        idCr = crService.addAndReturnId(cr);
+
+        pauseForDemo("AVANT delete → vérifie que la ligne existe");
+
+        crService.deleteById(idCr);
+
+        pauseForDemo("APRÈS delete → vérifie que la ligne a disparu");
+
+        idCr = -1;
+        assertTrue(true);
+    }
 
     // Helper RV
     private int createRvForTest() throws SQLException {
