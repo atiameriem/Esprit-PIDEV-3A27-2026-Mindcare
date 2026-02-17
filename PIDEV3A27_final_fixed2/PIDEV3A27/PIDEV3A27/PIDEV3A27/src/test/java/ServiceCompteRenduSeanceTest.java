@@ -74,6 +74,36 @@ public class ServiceCompteRenduSeanceTest {
         assertTrue(idCr > 0);
     }
 
+    // ================= UPDATE =================
+    @Test
+    @Order(2)
+    public void testUpdate() throws SQLException, InterruptedException {
+
+        idRv = createRvForTest();
+
+        CompteRenduSeance cr = new CompteRenduSeance();
+        cr.setIdAppointment(idRv);
+        cr.setDateCreationCr(new Timestamp(System.currentTimeMillis()));
+        cr.setProgresCr(CompteRenduSeance.ProgresCR.stagnation);
+        cr.setResumeSeanceCr("Avant update");
+        cr.setProchainesActionCr("Action avant");
+
+        idCr = crService.addAndReturnId(cr);
+
+        CompteRenduSeance upd = new CompteRenduSeance();
+        upd.setIdCompteRendu(idCr);
+        upd.setIdAppointment(idRv);
+        upd.setDateCreationCr(new Timestamp(System.currentTimeMillis()));
+        upd.setProgresCr(CompteRenduSeance.ProgresCR.amelioration_significative);
+        upd.setResumeSeanceCr("Après update");
+        upd.setProchainesActionCr("Action après");
+
+        crService.update(upd);
+
+        pauseForDemo("Va dans phpMyAdmin → vérifie que résumé et progrès ont changé");
+
+        assertTrue(true);
+    }
 
 
     // Helper RV
