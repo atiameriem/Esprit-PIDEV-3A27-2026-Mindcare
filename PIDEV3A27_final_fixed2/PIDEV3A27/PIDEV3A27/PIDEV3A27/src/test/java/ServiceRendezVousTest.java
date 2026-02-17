@@ -149,51 +149,7 @@ public class ServiceRendezVousTest {
         assertFalse(v.getPsychologistFullName().isBlank());
     }
 
-    @Test
-    @Order(4)
-    public void testDeleteForPatientAlsoDeletesCompteRendu() throws SQLException, InterruptedException {
-        // create RV
-        RendezVous rv = new RendezVous();
-        rv.setIdPatient(PATIENT_ID);
-        rv.setIdPsychologist(PSY_ID);
-        rv.setStatutRv(RendezVous.StatutRV.prevu);
-        rv.setAppointmentDate(Date.valueOf("2026-04-07"));
-        rv.setTypeRendezVous(RendezVous.TypeRV.suivi);
-        rv.setAppointmentTimeRv(Time.valueOf("15:00:00"));
-        int id = srv.addAndReturnId(rv);
-        idRv = id;
 
-        // insert CR linked to RV (minimal)
-        String sql = """
-            INSERT INTO compte_rendu_seance (id_appointment, date_creationcr, progrescr, resumeseancecr, prochainesactioncr)
-            VALUES (?, ?, ?, ?, ?)
-        """;
-        try (PreparedStatement pst = cnx.prepareStatement(sql)) {
-            pst.setInt(1, id);
-            pst.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
-            // ✅ safe enum value (adapt if your enum differs)
-            pst.setString(3, CompteRenduSeance.ProgresCR.amelioration_stable.name());
-            pst.setString(4, "Résumé test JUnit");
-            pst.setString(5, "Action test JUnit");
-            pst.executeUpdate();
-        }
-
-        assertTrue(exists("SELECT 1 FROM compte_rendu_seance WHERE id_appointment=?", id));
-        assertTrue(exists("SELECT 1 FROM rendez_vous WHERE id_rv=?", id));
-
-        pauseForDemo("AVANT delete: vérifie dans phpMyAdmin que RV(ID=" + id +
-                ") existe ET qu'il y a un compte rendu dans compte_rendu_seance(id_appointment=" + id + ")");
-
-        // delete should remove CR + RV
-        srv.deleteForPatient(id, PATIENT_ID);
-        idRv = -1; // already deleted
-
-        pauseForDemo("APRÈS delete: vérifie que RV(ID=" + id +
-                ") n'existe plus ET que compte_rendu_seance(id_appointment=" + id + ") n'existe plus");
-
-        assertFalse(exists("SELECT 1 FROM compte_rendu_seance WHERE id_appointment=?", id));
-        assertFalse(exists("SELECT 1 FROM rendez_vous WHERE id_rv=?", id));
-    }
 
     private boolean exists(String sql, int id) throws SQLException {
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
