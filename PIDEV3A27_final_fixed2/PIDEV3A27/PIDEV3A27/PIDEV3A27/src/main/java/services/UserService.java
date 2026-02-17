@@ -22,13 +22,13 @@ public class UserService implements IService<User> {
             statement.setInt(1, user.getAge());
             statement.setString(2, user.getFirstName());
             statement.setString(3, user.getLastName());
-            
+
             int affectedRows = statement.executeUpdate();
-            
+
             if (affectedRows == 0) {
                 throw new SQLException("Creating user failed, no rows affected.");
             }
-            
+
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     int generatedId = generatedKeys.getInt(1);
@@ -66,10 +66,10 @@ public class UserService implements IService<User> {
     public List<User> read() throws SQLException {
         List<User> users = new ArrayList<>();
         String query = "SELECT * FROM users";
-        
+
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(query)) {
-            
+
             while (resultSet.next()) {
                 User user = new User();
                 user.setId(resultSet.getInt("id"));
@@ -79,7 +79,7 @@ public class UserService implements IService<User> {
                 users.add(user);
             }
         }
-        
+
         return users;
     }
 }

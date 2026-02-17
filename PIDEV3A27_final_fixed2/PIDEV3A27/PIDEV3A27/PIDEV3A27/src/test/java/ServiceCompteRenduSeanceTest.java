@@ -105,6 +105,25 @@ public class ServiceCompteRenduSeanceTest {
         assertTrue(true);
     }
 
+    // ================= VIEW =================
+    @Test
+    @Order(3)
+    public void testFindViewsByPsychologist() throws SQLException {
+
+        idRv = createRvForTest();
+
+        CompteRenduSeance cr = new CompteRenduSeance();
+        cr.setIdAppointment(idRv);
+        cr.setDateCreationCr(new Timestamp(System.currentTimeMillis()));
+        cr.setProgresCr(CompteRenduSeance.ProgresCR.amelioration_legere);
+        cr.setResumeSeanceCr("View test");
+        cr.setProchainesActionCr("View action");
+
+        idCr = crService.addAndReturnId(cr);
+
+        List<CompteRenduView> views = crService.findViewsByPsychologist(PSY_ID);
+        assertFalse(views.isEmpty());
+    }
 
     // Helper RV
     private int createRvForTest() throws SQLException {
