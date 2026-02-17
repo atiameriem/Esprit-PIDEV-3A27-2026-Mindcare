@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.RendezVousCrudController"
+      spacing="20"
+      style="-fx-background-color: white;">
+
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+    <!-- HEADER -->
+    <HBox alignment="CENTER_LEFT" spacing="15">
+        <VBox spacing="5">
+            <Label text="Rendez-vous" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+            <Label text="Gérez vos rendez-vous (patient)" style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
+        </VBox>
+        <Pane HBox.hgrow="ALWAYS"/>
+        <Button text="+ Nouveau Rendez-vous" onAction="#handleNewRendezVous"
+                style="-fx-background-color: #1a6b7c; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 8;"/>
+    </HBox>
+
+    <Separator/>
+
+    <!-- Search -->
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Rechercher (date, statut, type, id...)" prefWidth="520"
+                   style="-fx-padding: 10 10 10 10;"/>
+    </HBox>
+
+    <!-- List -->
+    <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true" style="-fx-background-color: white; -fx-background: white;">
+        <VBox fx:id="rendezVousContainer" spacing="15" style="-fx-background-color: white; -fx-padding: 5 0 5 0;"/>
+    </ScrollPane>
+
+</VBox>
