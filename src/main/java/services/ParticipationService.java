@@ -30,7 +30,7 @@ public class ParticipationService {
 
     public List<Participation> findByUserId(int userId) throws SQLException {
         List<Participation> list = new ArrayList<>();
-        String query = "SELECT p.*, f.titre as titre_formation FROM participation p " +
+        String query = "SELECT p.*, f.titre as titre_formation, f.imagePath FROM participation p " +
                 "JOIN formation f ON p.id_formation = f.id_formation " +
                 "WHERE p.id_users = ?";
         try (PreparedStatement pst = connection.prepareStatement(query)) {
@@ -44,6 +44,7 @@ public class ParticipationService {
                     p.setDateInscription(rs.getTimestamp("date_inscription"));
                     p.setStatut(rs.getString("statut"));
                     p.setTitreFormation(rs.getString("titre_formation"));
+                    p.setImagePath(rs.getString("imagePath"));
                     list.add(p);
                 }
             }

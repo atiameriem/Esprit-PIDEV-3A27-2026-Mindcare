@@ -9,8 +9,16 @@ public class Participation {
     private Date dateInscription;
     private String statut; // "en attente", "accepté"
 
-    // Attribut pour l'affichage
     private String titreFormation;
+    private String imagePath;
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String path) {
+        this.imagePath = path;
+    }
 
     public Participation() {
     }

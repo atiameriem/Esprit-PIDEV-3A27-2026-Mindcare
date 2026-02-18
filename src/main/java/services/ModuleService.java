@@ -65,7 +65,7 @@ public class ModuleService implements IService<Module> {
         List<Module> modules = new ArrayList<>();
         String query = "SELECT * FROM module";
         try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(query)) {
+                ResultSet resultSet = statement.executeQuery(query)) {
             while (resultSet.next()) {
                 Module m = mapResultSetToModule(resultSet);
                 modules.add(m);
@@ -86,19 +86,6 @@ public class ModuleService implements IService<Module> {
             }
         }
         return modules;
-    }
-
-    public Module findById(int id) throws SQLException {
-        String query = "SELECT * FROM module WHERE id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, id);
-            try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToModule(rs);
-                }
-            }
-        }
-        return null;
     }
 
     private Module mapResultSetToModule(ResultSet rs) throws SQLException {

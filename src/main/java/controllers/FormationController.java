@@ -8,8 +8,11 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -31,11 +34,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class FormationController {
 
-    // === ÉLÉMENTS DE LA VUE PRINCIPALE (Formation.fxml) ===
+    // === ÉLÉMENTS DE LA VUE PRINCIPALE ===
     @FXML
     private FlowPane formationsFlowPane;
     @FXML
@@ -45,23 +48,29 @@ public class FormationController {
     @FXML
     private VBox myFormationsView;
     @FXML
-    private VBox formationDetailsView;
-    @FXML
     private VBox noParticipationsBox;
     @FXML
     private Button allFormationsBtn;
     @FXML
     private Button myFormationsBtn;
+
+    // === FILTRES & RECHERCHE ===
     @FXML
     private HBox filterBar;
     @FXML
+    private Pane myFilterBar;
+    @FXML
     private TextField searchField;
     @FXML
-    private ComboBox<String> sortCombo;
+    private TextField myParticipationsSearchField;
     @FXML
     private ComboBox<String> categoryCombo;
 
-    // === DÉTAILS APPRENTISSAGE ===
+    // === ÉLÉMENTS D'APPRENTISSAGE ===
+    @FXML
+    private VBox formationDetailsView;
+    @FXML
+    private VBox moduleDetailsView;
     @FXML
     private Label detailFormationTitle;
     @FXML
@@ -109,7 +118,7 @@ public class FormationController {
     private boolean isEditMode = false;
     private Module moduleEnCours;
     private List<Module> modulesToAdd = new ArrayList<>();
-    private List<Participation> myParticipations = new ArrayList<>();
+    private List<Participation> userParticipations = new ArrayList<>();
 
     @FXML
     public void initialize() {
@@ -118,108 +127,167 @@ public class FormationController {
         }
 
         if (formationsFlowPane != null) {
-            refreshMyParticipations();
             loadAllFormations();
         }
 
-        if (sortCombo != null) {
-            sortCombo.getItems().setAll("Plus récents", "Titre A-Z");
-            sortCombo.getSelectionModel().selectFirst();
+        if (categoryCombo != null) {
+            categoryCombo.getItems().setAll("Toutes", "Développement", "Bien-être", "Santé");
+            categoryCombo.getSelectionModel().selectFirst();
         }
 
-        // Configuration de la liste des modules pour l'édition
+        if (myParticipationsSearchField != null) {
+            myParticipationsSearchField.textProperty().addListener((obs, oldV, newV) -> filterMyParticipations(newV));
+        }
+
         if (modulesListView != null) {
             modulesListView.setCellFactory(lv -> new ListCell<Module>() {
                 @Override
                 protected void updateItem(Module item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (empty || item == null) {
+                    if (empty || item == null)
                         setText(null);
-                    } else {
-                        setText(item.getTitre());
-                    }
+                    else
+                        setText(item.getTitre() + (item.getId() > 0 ? " (Existant)" : " (Nouveau)"));
                 }
             });
-
             modulesListView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal != null) {
-                    loadModuleToEditInForm(newVal);
-                }
+                if (newVal != null)
+                    loadModuleToEdit(newVal);
             });
         }
     }
 
-    private void loadModuleToEditInForm(Module m) {
-        this.moduleEnCours = m;
-        moduleTitreField.setText(m.getTitre());
-        moduleDescriptionArea.setText(m.getDescription());
-        contenusListView.getItems().clear();
-
-        // Si le module vient de la base et n'a pas encore ses contenus chargés
-        if (m.getId() > 0 && (m.getContenus() == null || m.getContenus().isEmpty())) {
-            try {
-                m.setContenus(new ArrayList<>(contenuService.findByModuleId(m.getId())));
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (m.getContenus() != null) {
-            for (Contenu c : m.getContenus()) {
-                File f = new File(c.getChemin());
-                contenusListView.getItems().add(c.getType() + " - " + f.getName());
-            }
+    private void filterMyParticipations(String query) {
+        if (participationsFlowPane == null)
+            return;
+        participationsFlowPane.getChildren().clear();
+        String low = query.toLowerCase().trim();
+        List<Participation> filtered = userParticipations.stream()
+                .filter(p -> p.getTitreFormation().toLowerCase().contains(low))
+                .collect(Collectors.toList());
+        if (filtered.isEmpty())
+            noParticipationsBox.setVisible(true);
+        else {
+            noParticipationsBox.setVisible(false);
+            for (Participation p : filtered)
+                participationsFlowPane.getChildren().add(createParticipationCard(p));
         }
     }
 
-    private void refreshMyParticipations() {
+    // === NAVIGATION ===
+
+    private void switchView(Pane target) {
+        if (allFormationsView != null)
+            allFormationsView.setVisible(target == allFormationsView);
+        if (myFormationsView != null)
+            myFormationsView.setVisible(target == myFilterBar || target == myFormationsView);
+        if (formationDetailsView != null)
+            formationDetailsView.setVisible(target == formationDetailsView);
+        if (moduleDetailsView != null)
+            moduleDetailsView.setVisible(target == moduleDetailsView);
+
+        if (filterBar != null) {
+            filterBar.setVisible(target == allFormationsView);
+            filterBar.setManaged(target == allFormationsView);
+        }
+        if (myFilterBar != null) {
+            myFilterBar.setVisible(target == myFormationsView);
+            myFilterBar.setManaged(target == myFormationsView);
+        }
+    }
+
+    @FXML
+    private void showAllFormations() {
+        switchView(allFormationsView);
+        if (allFormationsBtn != null) {
+            allFormationsBtn.setStyle(
+                    "-fx-background-color: #5C98A8; -fx-text-fill: white; -fx-background-radius: 20; -fx-padding: 8 20; -fx-font-weight: bold;");
+            myFormationsBtn.setStyle(
+                    "-fx-background-color: white; -fx-text-fill: #1F2A33; -fx-background-radius: 20; -fx-padding: 8 20; -fx-font-weight: bold; -fx-border-color: #DDD; -fx-border-radius: 20;");
+        }
+        loadAllFormations();
+    }
+
+    @FXML
+    private void showMyFormations() {
+        switchView(myFormationsView);
+        if (myFormationsBtn != null) {
+            myFormationsBtn.setStyle(
+                    "-fx-background-color: #5C98A8; -fx-text-fill: white; -fx-background-radius: 20; -fx-padding: 8 20; -fx-font-weight: bold;");
+            allFormationsBtn.setStyle(
+                    "-fx-background-color: white; -fx-text-fill: #1F2A33; -fx-background-radius: 20; -fx-padding: 8 20; -fx-font-weight: bold; -fx-border-color: #DDD; -fx-border-radius: 20;");
+        }
+        loadMyParticipations();
+    }
+
+    private void openModulesView(Participation p) {
+        switchView(formationDetailsView);
+        detailFormationTitle.setText(p.getTitreFormation());
+        modulesLearningList.getChildren().clear();
         try {
-            myParticipations = participationService.findByUserId(currentUserId);
+            List<Module> modules = moduleService.findByFormationId(p.getIdFormation());
+            for (Module m : modules) {
+                HBox item = new HBox(15);
+                item.setAlignment(Pos.CENTER_LEFT);
+                item.setStyle(
+                        "-fx-background-color: #F8FBFC; -fx-padding: 15; -fx-background-radius: 12; -fx-border-color: #DDECEF; -fx-border-radius: 12; -fx-cursor: hand;");
+                item.setOnMouseClicked(e -> openModuleContent(m));
+                VBox text = new VBox(5);
+                Label t = new Label(m.getTitre());
+                t.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #1F2A33;");
+                String desc = m.getDescription();
+                if (desc != null && desc.length() > 85)
+                    desc = desc.substring(0, 82) + "...";
+                Label d = new Label(desc);
+                d.setStyle("-fx-text-fill: #5F7F8B; -fx-font-size: 13px;");
+                text.getChildren().addAll(t, d);
+                Pane spacer = new Pane();
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+                Label arrow = new Label("➜");
+                arrow.setStyle("-fx-text-fill: #5C98A8; -fx-font-size: 18px; -fx-font-weight: bold;");
+                item.getChildren().addAll(text, spacer, arrow);
+                modulesLearningList.getChildren().add(item);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    private boolean isRegistered(int formationId) {
-        return myParticipations.stream().anyMatch(p -> p.getIdFormation() == formationId);
-    }
-
-    // === NAVIGATION ===
-
-    @FXML
-    private void showAllFormations() {
-        if (allFormationsView != null) {
-            allFormationsView.setVisible(true);
-            myFormationsView.setVisible(false);
-            formationDetailsView.setVisible(false);
-            filterBar.setVisible(true);
-            updateNavStyles(allFormationsBtn, myFormationsBtn);
-            loadAllFormations();
+    private void openModuleContent(Module m) {
+        switchView(moduleDetailsView);
+        selectedModuleTitle.setText(m.getTitre());
+        selectedModuleDesc.setText(m.getDescription());
+        contentsLearningContainer.getChildren().clear();
+        Label dTop = new Label(m.getDescription());
+        dTop.setStyle("-fx-text-fill: #5F7F8B; -fx-font-size: 15px; -fx-wrap-text: true; -fx-padding: 0 0 10 0;");
+        dTop.setMaxWidth(850);
+        contentsLearningContainer.getChildren().add(dTop);
+        try {
+            List<Contenu> contenus = contenuService.findByModuleId(m.getId());
+            for (Contenu c : contenus) {
+                VBox card = new VBox(15);
+                card.setStyle(
+                        "-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 2); -fx-border-color: #EEE; -fx-border-radius: 12;");
+                Label n = new Label(new File(c.getChemin()).getName());
+                Button b = new Button("Consulter");
+                b.setOnAction(e -> {
+                    try {
+                        java.awt.Desktop.getDesktop().open(new File(c.getChemin()));
+                    } catch (Exception ex) {
+                        showAlert("Erreur", "Impossible d'ouvrir le fichier.");
+                    }
+                });
+                card.getChildren().addAll(n, b);
+                contentsLearningContainer.getChildren().add(card);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     @FXML
-    private void showMyFormations() {
-        if (myFormationsView != null) {
-            allFormationsView.setVisible(false);
-            myFormationsView.setVisible(true);
-            formationDetailsView.setVisible(false);
-            filterBar.setVisible(false);
-            updateNavStyles(myFormationsBtn, allFormationsBtn);
-            loadMyParticipations();
-        }
-    }
-
-    private void updateNavStyles(Button active, Button inactive) {
-        active.setStyle(
-                "-fx-background-color: #5C98A8; -fx-text-fill: white; -fx-background-radius: 20; -fx-padding: 8 20; -fx-font-weight: bold;");
-        inactive.setStyle(
-                "-fx-background-color: white; -fx-text-fill: #1F2A33; -fx-background-radius: 20; -fx-padding: 8 20; -fx-font-weight: bold; -fx-border-color: #DDD; -fx-border-radius: 20;");
-    }
-
-    @FXML
-    private void backToList() {
-        showMyFormations();
+    private void backToModules() {
+        switchView(formationDetailsView);
     }
 
     // === CHARGEMENT ===
@@ -228,12 +296,11 @@ public class FormationController {
         if (formationsFlowPane == null)
             return;
         formationsFlowPane.getChildren().clear();
-        refreshMyParticipations();
         try {
-            List<Formation> formations = formationService.read();
-            for (Formation f : formations) {
+            userParticipations = participationService.findByUserId(currentUserId);
+            List<Formation> list = formationService.read();
+            for (Formation f : list)
                 formationsFlowPane.getChildren().add(createFormationCard(f));
-            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -243,15 +310,22 @@ public class FormationController {
         if (participationsFlowPane == null)
             return;
         participationsFlowPane.getChildren().clear();
-        refreshMyParticipations();
-        if (myParticipations.isEmpty()) {
-            noParticipationsBox.setVisible(true);
-        } else {
-            noParticipationsBox.setVisible(false);
-            for (Participation p : myParticipations) {
-                participationsFlowPane.getChildren().add(createParticipationCard(p));
+        try {
+            userParticipations = participationService.findByUserId(currentUserId);
+            if (userParticipations.isEmpty())
+                noParticipationsBox.setVisible(true);
+            else {
+                noParticipationsBox.setVisible(false);
+                for (Participation p : userParticipations)
+                    participationsFlowPane.getChildren().add(createParticipationCard(p));
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+    }
+
+    private boolean hasJoined(int fId) {
+        return userParticipations.stream().anyMatch(p -> p.getIdFormation() == fId);
     }
 
     // === CARTES ===
@@ -259,173 +333,92 @@ public class FormationController {
     private VBox createFormationCard(Formation f) {
         VBox card = new VBox(12);
         card.setStyle(
-                "-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 12, 0, 0, 4);");
-        card.setPrefWidth(260);
+                "-fx-background-color: white; -fx-padding: 12; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 5);");
+        card.setPrefWidth(240);
 
         StackPane imgCont = new StackPane();
         ImageView iv = new ImageView();
-        iv.setFitHeight(150);
-        iv.setFitWidth(230);
+        iv.setFitHeight(130);
+        iv.setFitWidth(215);
         iv.setPreserveRatio(true);
         setImageSafe(iv, f.getImagePath());
 
-        // Boutons admin
-        HBox topActions = new HBox(8);
-        topActions.setAlignment(Pos.TOP_RIGHT);
-        topActions.setPadding(new Insets(5));
-        topActions.setPickOnBounds(false);
+        // Boutons d'administration en haut à droite
+        HBox adminBtns = new HBox(5);
+        adminBtns.setAlignment(Pos.TOP_RIGHT);
+        adminBtns.setPadding(new Insets(8));
+
         Button editBtn = new Button("✎");
         editBtn.setStyle(
-                "-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 15; -fx-cursor: hand; -fx-text-fill: #5C98A8;");
-        editBtn.setOnAction(e -> openEditPopup(f));
-        Button delBtn = new Button("🗑");
-        delBtn.setStyle(
-                "-fx-background-color: rgba(255,235,238,0.9); -fx-text-fill: #D32F2F; -fx-background-radius: 15; -fx-cursor: hand;");
-        delBtn.setOnAction(e -> confirmDelete(f));
-        topActions.getChildren().addAll(editBtn, delBtn);
-        imgCont.getChildren().addAll(iv, topActions);
+                "-fx-background-color: rgba(249, 250, 251, 0.9); -fx-text-fill: #4B5563; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-weight: bold; -fx-padding: 5 8; -fx-border-color: #E5E7EB; -fx-border-radius: 8;");
+        editBtn.setOnAction(e -> openEditFormation(f));
 
-        Label titre = new Label(f.getTitre());
-        titre.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #1F2A33;");
-        titre.setWrapText(true);
+        Button deleteBtn = new Button("🗑");
+        deleteBtn.setStyle(
+                "-fx-background-color: rgba(254, 242, 242, 0.9); -fx-text-fill: #EF4444; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-weight: bold; -fx-padding: 5 8; -fx-border-color: #FECACA; -fx-border-radius: 8;");
+        deleteBtn.setOnAction(e -> handleDeleteFormation(f));
+
+        adminBtns.getChildren().addAll(editBtn, deleteBtn);
+        imgCont.getChildren().addAll(iv, adminBtns);
+
+        Label t = new Label(f.getTitre());
+        t.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #1F2A33;");
+        t.setWrapText(true);
+
+        HBox info = new HBox(10);
+        info.setAlignment(Pos.CENTER_LEFT);
+        Label exp = new Label("👤 Expert");
+        exp.setStyle("-fx-text-fill: #6E8E9A; -fx-font-size: 12px;");
+        Label dur = new Label("⏱ " + f.getDuree());
+        dur.setStyle("-fx-text-fill: #6E8E9A; -fx-font-size: 12px;");
+        info.getChildren().addAll(exp, dur);
 
         HBox bottom = new HBox(10);
         bottom.setAlignment(Pos.CENTER_LEFT);
 
-        boolean registered = isRegistered(f.getId());
-        Button actionBtn = new Button(registered ? "Annuler" : "Rejoindre");
-        if (registered) {
-            actionBtn.setStyle(
-                    "-fx-background-color: #FEF2F2; -fx-text-fill: #EF4444; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;");
-            actionBtn.setOnAction(e -> handleUnregistration(f.getId()));
+        if (hasJoined(f.getId())) {
+            Label jl = new Label("Déjà rejoint ✅");
+            jl.setStyle(
+                    "-fx-text-fill: #10B981; -fx-font-weight: bold; -fx-padding: 8 15; -fx-background-color: #ECFDF5; -fx-background-radius: 10; -fx-cursor: hand;");
+            jl.setOnMouseClicked(e -> {
+                if (e.getClickCount() == 2) {
+                    Participation p = userParticipations.stream().filter(pr -> pr.getIdFormation() == f.getId())
+                            .findFirst().orElse(null);
+                    if (p != null) {
+                        try {
+                            participationService.delete(p.getIdParticipation());
+                            loadAllFormations();
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+            });
+            bottom.getChildren().add(jl);
         } else {
-            actionBtn.setStyle(
-                    "-fx-background-color: linear-gradient(to right, #5C98A8, #7FB9C7); -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;");
-            actionBtn.setOnAction(e -> handleRegistration(f));
+            Button join = new Button("Rejoindre");
+            join.setStyle(
+                    "-fx-background-color: linear-gradient(to right, #5C98A8, #7FB9C7); -fx-text-fill: white; -fx-background-radius: 10; -fx-cursor: hand; -fx-font-weight: bold; -fx-padding: 8 20;");
+            join.setOnAction(e -> handleRegistration(f));
+            bottom.getChildren().add(join);
         }
 
-        Label duree = new Label("⏱ " + f.getDuree());
-        duree.setStyle("-fx-text-fill: #6E8E9A; -fx-font-size: 12px;");
+        Button det = new Button("Détails");
+        det.setStyle(
+                "-fx-background-color: #F0F9FF; -fx-text-fill: #0284C7; -fx-background-radius: 10; -fx-cursor: hand; -fx-font-weight: bold; -fx-padding: 8 15; -fx-border-color: #BAE6FD; -fx-border-radius: 10;");
+        det.setOnAction(e -> showFormationDetailsDialog(f));
 
-        bottom.getChildren().addAll(actionBtn, duree);
-        card.getChildren().addAll(imgCont, titre, bottom);
+        bottom.getChildren().add(det);
+        card.getChildren().addAll(imgCont, t, info, bottom);
         return card;
     }
 
-    private VBox createParticipationCard(Participation p) {
-        VBox card = new VBox(15);
-        card.setStyle(
-                "-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 4);");
-        card.setPrefWidth(280);
-
-        Label titre = new Label(p.getTitreFormation());
-        titre.setStyle("-fx-font-weight: bold; -fx-font-size: 17px; -fx-text-fill: #1F2A33;");
-        titre.setWrapText(true);
-
-        Button startBtn = new Button("Commencer");
-        startBtn.setMaxWidth(Double.MAX_VALUE);
-        startBtn.setStyle(
-                "-fx-background-color: linear-gradient(to right, #5C98A8, #7FB9C7); -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-weight: bold; -fx-padding: 10;");
-        startBtn.setOnAction(e -> openLearningView(p));
-
-        card.getChildren().addAll(titre, startBtn);
-        return card;
-    }
-
-    // === APPRENTISSAGE ===
-
-    private void openLearningView(Participation p) {
-        allFormationsView.setVisible(false);
-        myFormationsView.setVisible(false);
-        formationDetailsView.setVisible(true);
-        detailFormationTitle.setText(p.getTitreFormation());
-        modulesLearningList.getChildren().clear();
-        contentsLearningContainer.getChildren().clear();
-        selectedModuleTitle.setText("Sélectionnez un module pour commencer");
-        selectedModuleDesc.setText("");
-
-        try {
-            List<Module> modules = moduleService.findByFormationId(p.getIdFormation());
-            for (Module m : modules) {
-                Button mBtn = new Button(m.getTitre());
-                mBtn.setMaxWidth(Double.MAX_VALUE);
-                mBtn.setAlignment(Pos.CENTER_LEFT);
-                mBtn.setStyle(
-                        "-fx-background-color: white; -fx-background-radius: 8; -fx-padding: 10; -fx-cursor: hand; -fx-text-fill: #1F2A33;");
-                mBtn.setOnAction(e -> loadModuleContentInLearning(m));
-                modulesLearningList.getChildren().add(mBtn);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void loadModuleContentInLearning(Module m) {
-        selectedModuleTitle.setText(m.getTitre());
-        selectedModuleDesc.setText(m.getDescription());
-        contentsLearningContainer.getChildren().clear();
-
-        try {
-            List<Contenu> contenus = contenuService.findByModuleId(m.getId());
-            for (Contenu c : contenus) {
-                VBox post = new VBox(10);
-                post.setStyle(
-                        "-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2); -fx-border-color: #EEE; -fx-border-radius: 12;");
-
-                String icon = c.getType().equals("VIDEO") ? "🎥" : (c.getType().equals("PDF") ? "📄" : "🎧");
-                Label typeIcon = new Label(icon + " Support " + c.getType());
-                typeIcon.setStyle("-fx-font-weight: bold; -fx-text-fill: #5C98A8; -fx-font-size: 13px;");
-
-                File f = new File(c.getChemin());
-                Label fileName = new Label(f.getName());
-                fileName.setStyle("-fx-font-size: 15px; -fx-text-fill: #1F2A33;");
-
-                Button openBtn = new Button("Ouvrir le support");
-                openBtn.setStyle(
-                        "-fx-background-color: #F0F9FA; -fx-text-fill: #5C98A8; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;");
-
-                post.getChildren().addAll(typeIcon, fileName, openBtn);
-                contentsLearningContainer.getChildren().add(post);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // === ACTIONS REGISTRATION ===
-
-    private void handleRegistration(Formation f) {
-        try {
-            Participation p = new Participation(currentUserId, f.getId(), new Date(), "accepté");
-            participationService.create(p);
-            loadAllFormations();
-            showAlert("Succès", "Formation rejointe !");
-        } catch (SQLException e) {
-            showAlert("Erreur", e.getMessage());
-        }
-    }
-
-    private void handleUnregistration(int formationId) {
-        Optional<Participation> p = myParticipations.stream().filter(part -> part.getIdFormation() == formationId)
-                .findFirst();
-        if (p.isPresent()) {
-            try {
-                participationService.delete(p.get().getIdParticipation());
-                loadAllFormations();
-                showAlert("Succès", "Inscription annulée.");
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    // === RESTE DU CONTROLLER === (Popups, Saving, etc. - Inchangé mais
-    // synchronisé)
-
-    private void confirmDelete(Formation f) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Supprimer la formation ?", ButtonType.YES,
-                ButtonType.NO);
-        if (alert.showAndWait().get() == ButtonType.YES) {
+    private void handleDeleteFormation(Formation f) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Suppression");
+        alert.setHeaderText("Supprimer la formation ?");
+        alert.setContentText("Cette action est irréversible.");
+        if (alert.showAndWait().get() == ButtonType.OK) {
             try {
                 formationService.delete(f.getId());
                 loadAllFormations();
@@ -435,166 +428,164 @@ public class FormationController {
         }
     }
 
-    @FXML
-    private void openAjouterFormation() {
-        showFormationPopup(null);
-    }
+    private void showFormationDetailsDialog(Formation f) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Détails de la Formation");
+        VBox content = new VBox(15);
+        content.setPrefWidth(500);
+        content.setStyle("-fx-padding: 25; -fx-background-color: white; -fx-background-radius: 20;");
 
-    private void openEditPopup(Formation f) {
-        showFormationPopup(f);
-    }
+        Label title = new Label(f.getTitre());
+        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;");
 
-    private void showFormationPopup(Formation f) {
+        Label sub = new Label(f.getNiveau() + " • " + f.getDuree());
+        sub.setStyle("-fx-text-fill: #0284C7; -fx-font-weight: bold; -fx-font-size: 14px;");
+
+        Label dTitle = new Label("À propos");
+        dTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;");
+        Label desc = new Label(f.getDescription());
+        desc.setWrapText(true);
+        desc.setStyle("-fx-text-fill: #4B5563; -fx-line-spacing: 3;");
+
+        VBox mBox = new VBox(10);
+        Label mTitle = new Label("Programme");
+        mTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;");
+        mBox.getChildren().add(mTitle);
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/AjouterFormation.fxml"));
-            Parent root = loader.load();
-            FormationController controller = loader.getController();
-            if (f != null)
-                controller.setFormation(f);
-            Dialog<Void> dialog = new Dialog<>();
-            dialog.getDialogPane().setContent(root);
-            dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-            dialog.showAndWait();
+            List<Module> mods = moduleService.findByFormationId(f.getId());
+            if (mods.isEmpty())
+                mBox.getChildren().add(new Label("Aucun module répertorié."));
+            else {
+                for (Module m : mods) {
+                    Label ml = new Label("• " + m.getTitre());
+                    ml.setStyle("-fx-text-fill: #1F2A33; -fx-font-weight: 500;");
+                    mBox.getChildren().add(ml);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        content.getChildren().addAll(title, sub, new Separator(), dTitle, desc, mBox);
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.showAndWait();
+    }
+
+    private VBox createParticipationCard(Participation p) {
+        VBox card = new VBox(15);
+        card.setStyle(
+                "-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 8, 0, 0, 4); -fx-cursor: hand;");
+        card.setPrefWidth(240);
+        card.setOnMouseClicked(e -> openModulesView(p));
+        ImageView iv = new ImageView();
+        iv.setFitHeight(130);
+        iv.setFitWidth(210);
+        iv.setPreserveRatio(true);
+        setImageSafe(iv, p.getImagePath());
+        Label t = new Label(p.getTitreFormation());
+        t.setStyle("-fx-font-weight: bold; -fx-font-size: 17px; -fx-text-fill: #1F2A33;");
+        HBox status = new HBox(8);
+        status.setAlignment(Pos.CENTER_LEFT);
+        Circle dot = new Circle(4,
+                p.getStatut().equals("accepté") ? Color.valueOf("#10B981") : Color.valueOf("#10B981"));
+        String displayStatut = p.getStatut().equalsIgnoreCase("en attente") ? "ACTIF" : p.getStatut().toUpperCase();
+        Label sTxt = new Label(displayStatut);
+        sTxt.setStyle("-fx-text-fill: #5C98A8; -fx-font-size: 11px; -fx-font-weight: bold;");
+        status.getChildren().addAll(dot, sTxt);
+        Button start = new Button("Commencer");
+        start.setMaxWidth(Double.MAX_VALUE);
+        start.setStyle(
+                "-fx-background-color: linear-gradient(to right, #5C98A8, #7FB9C7); -fx-text-fill: white; -fx-background-radius: 8; -fx-font-weight: bold; -fx-padding: 8;");
+        start.setOnAction(e -> openModulesView(p));
+        Button cancel = new Button("Annuler l'inscription");
+        cancel.setMaxWidth(Double.MAX_VALUE);
+        cancel.setStyle(
+                "-fx-background-color: #FEF2F2; -fx-text-fill: #EF4444; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold; -fx-padding: 8;");
+        cancel.setOnAction(e -> {
+            try {
+                participationService.delete(p.getIdParticipation());
+                loadMyParticipations();
+                loadAllFormations();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+        card.getChildren().addAll(iv, t, status, start, cancel);
+        return card;
+    }
+
+    private void handleRegistration(Formation f) {
+        Participation p = new Participation();
+        p.setIdUser(currentUserId);
+        p.setIdFormation(f.getId());
+        p.setDateInscription(new Date());
+        p.setStatut("accepté");
+        try {
+            participationService.create(p);
             loadAllFormations();
-        } catch (IOException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public void setFormation(Formation f) {
-        this.existingFormation = f;
-        this.isEditMode = true;
-        if (titreField != null) {
-            titreField.setText(f.getTitre());
-            if (descriptionArea != null)
-                descriptionArea.setText(f.getDescription());
-            dureeField.setText(f.getDuree());
-            niveauCombo.setValue(f.getNiveau());
-            if (mainButton != null)
-                mainButton.setText("Enregistrer");
-            this.selectedImagePath = f.getImagePath();
-            setImageSafe(imagePreview, selectedImagePath);
-            try {
-                modulesListView.getItems().setAll(moduleService.findByFormationId(f.getId()));
-            } catch (SQLException e) {
-            }
-        }
-    }
-
-    @FXML
-    private void handleSaveAction(ActionEvent event) {
-        try {
-            if (isEditMode) {
-                existingFormation.setTitre(titreField.getText());
-                existingFormation.setDescription(descriptionArea.getText());
-                existingFormation.setDuree(dureeField.getText());
-                existingFormation.setNiveau(niveauCombo.getValue());
-                existingFormation.setImagePath(selectedImagePath);
-                formationService.update(existingFormation);
-                saveModules(existingFormation.getId());
-            } else {
-                Formation f = new Formation(titreField.getText(), descriptionArea.getText(), dureeField.getText(),
-                        niveauCombo.getValue(), selectedImagePath);
-                int id = formationService.create(f);
-                saveModules(id);
-            }
-            closeWindow();
-        } catch (SQLException e) {
-            showAlert("Erreur", e.getMessage());
-        }
-    }
-
-    private void saveModules(int formationId) throws SQLException {
-        for (Module m : modulesToAdd) {
-            m.setFormationId(formationId);
-            moduleService.create(m);
-            for (Contenu c : m.getContenus()) {
-                if (c.getId() == 0) {
-                    c.setModuleId(m.getId());
-                    contenuService.create(c);
-                }
-            }
-        }
-        modulesToAdd.clear();
-    }
-
-    @FXML
-    private void ajouterModule() {
-        if (moduleTitreField.getText().isEmpty())
-            return;
-
-        if (moduleEnCours != null && modulesListView.getItems().contains(moduleEnCours)) {
-            // Mode modification : on met à jour le module existant dans la liste
-            moduleEnCours.setTitre(moduleTitreField.getText());
-            moduleEnCours.setDescription(moduleDescriptionArea.getText());
-            modulesListView.refresh();
-        } else {
-            // Mode ajout : on crée un nouveau module
-            Module m = new Module(moduleTitreField.getText(), moduleDescriptionArea.getText());
-            if (moduleEnCours != null) {
-                m.setContenus(new ArrayList<>(moduleEnCours.getContenus()));
-            }
-            modulesListView.getItems().add(m);
-            modulesToAdd.add(m);
-        }
-
-        // Reset du formulaire module
-        moduleEnCours = null;
-        moduleTitreField.clear();
-        moduleDescriptionArea.clear();
+    private void loadModuleToEdit(Module m) {
+        this.moduleEnCours = m;
+        moduleTitreField.setText(m.getTitre());
+        moduleDescriptionArea.setText(m.getDescription());
         contenusListView.getItems().clear();
-        modulesListView.getSelectionModel().clearSelection();
+        if (m.getId() > 0 && m.getContenus().isEmpty()) {
+            try {
+                m.setContenus(contenuService.findByModuleId(m.getId()));
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        for (Contenu c : m.getContenus()) {
+            File f = new File(c.getChemin());
+            contenusListView.getItems().add(c.getType() + " - " + f.getName());
+        }
     }
 
     @FXML
     private void selectImage() {
         FileChooser fc = new FileChooser();
-        File f = fc.showOpenDialog(imagePreview.getScene().getWindow());
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg"));
+        File f = fc.showOpenDialog(null);
         if (f != null) {
             selectedImagePath = f.getAbsolutePath();
-            imagePreview.setImage(new Image(f.toURI().toString()));
+            imagePathLabel.setText(f.getName());
+            setImageSafe(imagePreview, selectedImagePath);
         }
     }
 
     @FXML
     private void ajouterPDF() {
-        ajouterFichier("PDF", "*.pdf");
+        choisirFichier("PDF", "*.pdf");
     }
 
     @FXML
     private void ajouterVideo() {
-        ajouterFichier("VIDEO", "*.mp4");
+        choisirFichier("VIDEO", "*.mp4", "*.mkv", "*.avi");
     }
 
     @FXML
     private void ajouterPodcast() {
-        ajouterFichier("PODCAST", "*.mp3");
+        choisirFichier("PODCAST", "*.mp3", "*.wav");
     }
 
-    private void ajouterFichier(String type, String ext) {
+    private void choisirFichier(String type, String... exts) {
+        if (moduleEnCours == null)
+            moduleEnCours = new Module();
         FileChooser fc = new FileChooser();
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(type, ext));
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(type, exts));
         File f = fc.showOpenDialog(null);
         if (f != null) {
-            if (moduleEnCours == null)
-                moduleEnCours = new Module("Draft", "");
-            moduleEnCours.ajouterContenu(new Contenu(type, f.getAbsolutePath()));
+            Contenu c = new Contenu();
+            c.setType(type);
+            c.setChemin(f.getAbsolutePath());
+            moduleEnCours.ajouterContenu(c);
             contenusListView.getItems().add(type + " - " + f.getName());
-        }
-    }
-
-    @FXML
-    private void supprimerModule() {
-        Module m = modulesListView.getSelectionModel().getSelectedItem();
-        if (m != null) {
-            if (m.getId() > 0) {
-                try {
-                    moduleService.delete(m.getId());
-                } catch (SQLException e) {
-                }
-            }
-            modulesListView.getItems().remove(m);
-            modulesToAdd.remove(m);
         }
     }
 
@@ -607,6 +598,7 @@ public class FormationController {
                 try {
                     contenuService.delete(c.getId());
                 } catch (SQLException e) {
+                    e.printStackTrace();
                 }
             }
             moduleEnCours.getContenus().remove(idx);
@@ -614,9 +606,134 @@ public class FormationController {
         }
     }
 
-    private void closeWindow() {
-        if (titreField != null)
+    @FXML
+    private void ajouterModule() {
+        if (moduleTitreField.getText().isEmpty()) {
+            showAlert("Erreur", "Titre du module requis.");
+            return;
+        }
+        if (moduleEnCours == null)
+            moduleEnCours = new Module();
+        moduleEnCours.setTitre(moduleTitreField.getText());
+        moduleEnCours.setDescription(moduleDescriptionArea.getText());
+
+        if (!modulesToAdd.contains(moduleEnCours)) {
+            modulesToAdd.add(moduleEnCours);
+        }
+        modulesListView.getItems().setAll(modulesToAdd);
+
+        // Reset
+        moduleEnCours = new Module();
+        moduleTitreField.clear();
+        moduleDescriptionArea.clear();
+        contenusListView.getItems().clear();
+    }
+
+    @FXML
+    private void closePopup() {
+        if (titreField != null && titreField.getScene() != null) {
             ((Stage) titreField.getScene().getWindow()).close();
+        }
+    }
+
+    @FXML
+    private void supprimerModule() {
+        Module selected = modulesListView.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            if (selected.getId() > 0) {
+                try {
+                    moduleService.delete(selected.getId());
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            modulesToAdd.remove(selected);
+            modulesListView.getItems().setAll(modulesToAdd);
+        }
+    }
+
+    @FXML
+    private void openAjouterFormation() {
+        this.isEditMode = false;
+        this.existingFormation = null;
+        this.modulesToAdd.clear();
+        showFormationPopup();
+    }
+
+    private void openEditFormation(Formation f) {
+        this.isEditMode = true;
+        this.existingFormation = f;
+        showFormationPopup();
+    }
+
+    private void showFormationPopup() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/AjouterFormation.fxml"));
+            Parent root = loader.load();
+            FormationController ctrl = loader.getController();
+
+            if (isEditMode && existingFormation != null) {
+                ctrl.titreField.setText(existingFormation.getTitre());
+                ctrl.descriptionArea.setText(existingFormation.getDescription());
+                ctrl.dureeField.setText(existingFormation.getDuree());
+                ctrl.niveauCombo.setValue(existingFormation.getNiveau());
+                ctrl.selectedImagePath = existingFormation.getImagePath();
+                ctrl.setImageSafe(ctrl.imagePreview, ctrl.selectedImagePath);
+                ctrl.mainButton.setText("Mettre à jour la Formation");
+                ctrl.isEditMode = true;
+                ctrl.existingFormation = existingFormation;
+                // Charger les modules
+                ctrl.modulesToAdd = moduleService.findByFormationId(existingFormation.getId());
+                ctrl.modulesListView.getItems().setAll(ctrl.modulesToAdd);
+            }
+
+            Stage stage = new Stage();
+            stage.setTitle(isEditMode ? "Modifier Formation" : "Ajouter une Formation");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.showAndWait();
+            loadAllFormations();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void handleSaveAction() {
+        if (titreField.getText().isEmpty()) {
+            showAlert("Erreur", "Le titre est obligatoire.");
+            return;
+        }
+
+        try {
+            Formation f = isEditMode ? existingFormation : new Formation();
+            f.setTitre(titreField.getText());
+            f.setDescription(descriptionArea.getText());
+            f.setDuree(dureeField.getText());
+            f.setNiveau(niveauCombo.getValue());
+            f.setImagePath(selectedImagePath);
+
+            if (isEditMode) {
+                formationService.update(f);
+                // On met à jour les modules (logique simplifiée)
+                for (Module m : modulesToAdd) {
+                    if (m.getId() == 0) {
+                        m.setFormationId(f.getId());
+                        moduleService.create(m);
+                    } else {
+                        moduleService.update(m);
+                    }
+                }
+            } else {
+                int id = formationService.create(f);
+                for (Module m : modulesToAdd) {
+                    m.setFormationId(id);
+                    moduleService.create(m);
+                }
+            }
+            ((Stage) titreField.getScene().getWindow()).close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private void setImageSafe(ImageView iv, String path) {
@@ -630,7 +747,10 @@ public class FormationController {
             }
             iv.setImage(new Image(getClass().getResource("/images/psychologie.jpg").toExternalForm()));
         } catch (Exception e) {
-            iv.setImage(new Image(getClass().getResource("/images/psychologie.jpg").toExternalForm()));
+            try {
+                iv.setImage(new Image(getClass().getResource("/images/psychologie.jpg").toExternalForm()));
+            } catch (Exception ex) {
+                /* Image Missing */ }
         }
     }
 

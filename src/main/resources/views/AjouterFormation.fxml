@@ -8,9 +8,9 @@
 <ScrollPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.FormationController"
             fitToWidth="true"
-            prefHeight="700"
-            prefWidth="850"
-            style="-fx-background-color: #EAF3F5; -fx-background: #EAF3F5;">
+            prefHeight="600"
+            prefWidth="750"
+            style="-fx-background-color: white; -fx-background: white;">
 
     <VBox spacing="25" style="-fx-background-color: transparent;">
         <padding>
@@ -140,17 +140,34 @@
             </HBox>
         </VBox>
 
-        <!-- ===== BOUTON FINAL ===== -->
-        <Button fx:id="mainButton"
-                text="Enregistrer la Formation"
-                onAction="#handleSaveAction"
-                maxWidth="Infinity"
-                style="-fx-background-color: linear-gradient(to right, #5C98A8, #7FB9C7);
-                       -fx-text-fill: white;
-                       -fx-padding: 18;
-                       -fx-font-size: 18px;
-                       -fx-font-weight: bold;
-                       -fx-background-radius: 14;
-                       -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.3), 10, 0, 0, 5);"/>
+        <!-- ===== BOUTONS FINAUX ===== -->
+        <HBox spacing="15">
+            <Button text="Annuler"
+                    onAction="#closePopup"
+                    maxWidth="Infinity"
+                    HBox.hgrow="ALWAYS"
+                    style="-fx-background-color: white;
+                           -fx-text-fill: #4B5563;
+                           -fx-padding: 15;
+                           -fx-font-size: 16px;
+                           -fx-font-weight: bold;
+                           -fx-background-radius: 14;
+                           -fx-border-color: #DDECEF;
+                           -fx-border-radius: 14;
+                           -fx-cursor: hand;"/>
+
+            <Button fx:id="mainButton"
+                    text="Enregistrer la Formation"
+                    onAction="#handleSaveAction"
+                    maxWidth="Infinity"
+                    HBox.hgrow="ALWAYS"
+                    style="-fx-background-color: linear-gradient(to right, #5C98A8, #7FB9C7);
+                           -fx-text-fill: white;
+                           -fx-padding: 15;
+                           -fx-font-size: 16px;
+                           -fx-font-weight: bold;
+                           -fx-background-radius: 14;
+                           -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.3), 10, 0, 0, 5);"/>
+        </HBox>
     </VBox>
 </ScrollPane>
