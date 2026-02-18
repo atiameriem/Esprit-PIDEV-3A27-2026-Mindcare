@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.ProfilController"
+      spacing="20"
+      style="-fx-background-color: white;">
+
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+    <!-- ================= HEADER ================= -->
+    <HBox alignment="CENTER_LEFT" spacing="15">
+        <Label text="⚙️" style="-fx-font-size: 32px;"/>
+        <VBox spacing="5">
+            <Label text="Paramètres du Profil"
+                   style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+            <Label text="Gérez vos informations personnelles et votre sécurité"
+                   style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
+        </VBox>
+    </HBox>
+
+    <Separator/>
+
+    <!-- ================= TABS ================= -->
+    <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+        <tabs>
+
+            <!-- ================= TAB 1: MON PROFIL ================= -->
+            <Tab text="Mon Profil">
+                <content>
+                    <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
+                        <content>
+                            <HBox spacing="30" alignment="TOP_CENTER" style="-fx-padding: 20;">
+
+                                <!-- ================= INFORMATIONS PERSONNELLES ================= -->
+                                <VBox spacing="15"
+                                      prefWidth="450"
+                                      style="-fx-background-color: #F9F9F9; -fx-padding: 20; -fx-background-radius: 10;">
+
+                                    <Label text="👤 Informations Personnelles"
+                                           style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+                                    <Label text="Nom *"/>
+                                    <TextField fx:id="nomField"/>
+
+                                    <Label text="Email *"/>
+                                    <TextField fx:id="emailField"/>
+
+                                    <Label text="Téléphone *"/>
+                                    <TextField fx:id="telephoneField"/>
+
+                                    <Button text="💾 Enregistrer les modifications"
+                                            onAction="#handleSave"
+                                            style="-fx-background-color: #7B1FA2; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"/>
+
+                                    <Label fx:id="profileMessageLabel"/>
+
+                                </VBox>
+
+                                <!-- ================= SECURITE ================= -->
+                                <VBox spacing="15"
+                                      prefWidth="450"
+                                      style="-fx-background-color: #F9F9F9; -fx-padding: 20; -fx-background-radius: 10;">
+
+                                    <Label text="🔒 Sécurité"
+                                           style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+                                    <Label text="Mot de passe actuel *"/>
+                                    <PasswordField fx:id="currentPasswordField"/>
+
+                                    <Label text="Nouveau mot de passe *"/>
+                                    <PasswordField fx:id="newPasswordField"/>
+
+                                    <Label text="Confirmer le nouveau mot de passe *"/>
+                                    <PasswordField fx:id="confirmPasswordField"/>
+
+                                    <Button text="🔐 Changer le mot de passe"
+                                            onAction="#handleChangePassword"
+                                            style="-fx-background-color: #7B1FA2; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"/>
+
+                                    <Label fx:id="passwordMessageLabel"/>
+
+                                </VBox>
+                            </HBox>
+                        </content>
+                    </ScrollPane>
+                </content>
+            </Tab>
+
+            <!-- ================= TAB 2: GESTION USERS ================= -->
+            <Tab text="Gestion Utilisateurs">
+                <content>
+                    <VBox spacing="15" style="-fx-padding: 20;">
+
+                        <HBox alignment="CENTER_LEFT" spacing="20">
+                            <Label text="📋 Gestion des utilisateurs"
+                                   style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button text="➕ Ajouter un utilisateur" onAction="#handleAddUser"
+                                    style="-fx-background-color: #2E7D32; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"/>
+                        </HBox>
+
+                        <TableView fx:id="usersTable" prefHeight="400" VBox.vgrow="ALWAYS">
+
+                            <columns>
+                                <TableColumn fx:id="colNom" text="Nom" prefWidth="120"/>
+                                <TableColumn fx:id="colPrenom" text="Prénom" prefWidth="120"/>
+                                <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
+                                <TableColumn fx:id="colTelephone" text="Téléphone" prefWidth="150"/>
+                                <TableColumn fx:id="colRole" text="Rôle" prefWidth="120"/>
+                                <TableColumn fx:id="colDate" text="Date d'inscription" prefWidth="140"/>
+                                <TableColumn fx:id="colAction" text="Actions" prefWidth="150"/>
+                            </columns>
+
+                        </TableView>
+
+                    </VBox>
+                </content>
+            </Tab>
+
+        </tabs>
+    </TabPane>
+
+</VBox>

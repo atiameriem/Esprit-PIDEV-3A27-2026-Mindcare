@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<HBox xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.LoginController"
+      style="-fx-background-color: white;" prefWidth="1200" prefHeight="700">
+
+    <!-- Section Gauche : Illustration -->
+    <VBox alignment="CENTER" style="-fx-background-color: #E3F2FD;" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+        <ImageView fx:id="brandingImageViewSignup" fitWidth="300" preserveRatio="true">
+             <image>
+                <Image url="@login_image.png"/>
+            </image>
+        </ImageView>
+    </VBox>
+
+    <!-- Section Droite : Formulaire -->
+    <ScrollPane fitToWidth="true" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-background: white;">
+        <StackPane>
+            <VBox spacing="20" alignment="TOP_CENTER" maxWidth="600" style="-fx-padding: 40;">
+                <Label text="Créer un compte" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #1565C0;"/>
+                <Label text="Rejoignez MindCare aujourd'hui" style="-fx-font-size: 14px; -fx-text-fill: #757575;"/>
+
+                <GridPane vgap="15" hgap="15">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                    </columnConstraints>
+                    
+                    <!-- Nom & Prénom -->
+                    <VBox spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                        <Label text="Nom" style="-fx-font-weight: bold; -fx-text-fill: #424242;"/>
+                        <TextField fx:id="signupNomField" promptText="Votre nom" style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #E0E0E0;"/>
+                    </VBox>
+                    <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                        <Label text="Prénom" style="-fx-font-weight: bold; -fx-text-fill: #424242;"/>
+                        <TextField fx:id="signupPrenomField" promptText="Votre prénom" style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #E0E0E0;"/>
+                    </VBox>
+
+                    <!-- Email -->
+                    <VBox spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2">
+                        <Label text="Email" style="-fx-font-weight: bold; -fx-text-fill: #424242;"/>
+                        <TextField fx:id="signupEmailField" promptText="exemple@email.com" style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #E0E0E0;"/>
+                    </VBox>
+
+                    <!-- Telephone & Age -->
+                    <VBox spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                        <Label text="Téléphone" style="-fx-font-weight: bold; -fx-text-fill: #424242;"/>
+                        <TextField fx:id="signupPhoneField" promptText="+33 6..." style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #E0E0E0;"/>
+                    </VBox>
+                    <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                        <Label text="Age" style="-fx-font-weight: bold; -fx-text-fill: #424242;"/>
+                        <TextField fx:id="signupAgeField" promptText="Age" style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #E0E0E0;"/>
+                    </VBox>
+
+                    <!-- Mot de passe -->
+                    <VBox spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2">
+                        <Label text="Mot de passe" style="-fx-font-weight: bold; -fx-text-fill: #424242;"/>
+                        <PasswordField fx:id="signupPasswordField" promptText="........" style="-fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #E0E0E0;"/>
+                    </VBox>
+
+                    <!-- Role -->
+                    <VBox spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2">
+                        <Label text="Rôle" style="-fx-font-weight: bold; -fx-text-fill: #424242;"/>
+                        <ComboBox fx:id="signupRoleComboBox" promptText="Sélectionnez votre rôle" maxWidth="Infinity" style="-fx-padding: 5; -fx-background-radius: 5; -fx-border-color: #E0E0E0;"/>
+                    </VBox>
+                </GridPane>
+
+                <Button text="Créer un compte" onAction="#handleSignupAction" maxWidth="Infinity"
+                        style="-fx-background-color: #1976D2; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 12; -fx-background-radius: 5; -fx-cursor: hand;"/>
+
+                <HBox alignment="CENTER" spacing="5">
+                    <Label text="Vous avez déjà un compte ?" style="-fx-text-fill: #757575;"/>
+                    <Hyperlink text="Se connecter" onAction="#handleBackToLogin" style="-fx-text-fill: #1565C0; -fx-font-weight: bold; -fx-border-color: transparent;"/>
+                </HBox>
+                
+                 <Label fx:id="signupMessageLabel" textFill="RED"/>
+            </VBox>
+        </StackPane>
+    </ScrollPane>
+
+</HBox>
