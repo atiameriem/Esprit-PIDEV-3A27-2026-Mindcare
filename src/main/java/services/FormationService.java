@@ -69,7 +69,7 @@ public class FormationService implements IService<Formation> {
         List<Formation> formations = new ArrayList<>();
         String query = "SELECT * FROM formation";
         try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(query)) {
+                ResultSet resultSet = statement.executeQuery(query)) {
             while (resultSet.next()) {
                 Formation f = new Formation();
                 f.setId(resultSet.getInt("id_formation"));

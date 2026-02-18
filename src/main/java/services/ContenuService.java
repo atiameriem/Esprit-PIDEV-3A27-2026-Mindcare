@@ -65,7 +65,7 @@ public class ContenuService implements IService<Contenu> {
         List<Contenu> contenus = new ArrayList<>();
         String query = "SELECT * FROM contenu";
         try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(query)) {
+                ResultSet resultSet = statement.executeQuery(query)) {
             while (resultSet.next()) {
                 contenus.add(mapResultSetToContenu(resultSet));
             }
@@ -85,19 +85,6 @@ public class ContenuService implements IService<Contenu> {
             }
         }
         return contenus;
-    }
-
-    public Contenu findById(int id) throws SQLException {
-        String query = "SELECT * FROM contenu WHERE id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, id);
-            try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToContenu(rs);
-                }
-            }
-        }
-        return null;
     }
 
     private Contenu mapResultSetToContenu(ResultSet rs) throws SQLException {

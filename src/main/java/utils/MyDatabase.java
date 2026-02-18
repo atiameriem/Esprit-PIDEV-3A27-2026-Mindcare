@@ -13,9 +13,9 @@ public class MyDatabase {
 
     private static MyDatabase instance;
 
-    private MyDatabase(){
+    private MyDatabase() {
         try {
-            connection = DriverManager.getConnection(URL,USER,PASS);
+            connection = DriverManager.getConnection(URL, USER, PASS);
             System.out.println("Connection established");
         } catch (SQLException e) {
             System.err.println(e.getMessage());
@@ -23,7 +23,7 @@ public class MyDatabase {
     }
 
     public static MyDatabase getInstance() {
-        if(instance == null)
+        if (instance == null)
             instance = new MyDatabase();
         return instance;
     }
