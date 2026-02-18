@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.image.*?>
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.ReserverFormationController"
+      spacing="20"
+      style="-fx-background-color: white;">
+
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+    <!-- ===== HEADER ===== -->
+    <HBox alignment="CENTER_LEFT" spacing="15">
+        <Label text="🎓" style="-fx-font-size: 32px;"/>
+        <VBox spacing="5">
+            <Label text="Formations en psychologie"
+                   style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+            <Label text="Gérez vos formations et réservations"
+                   style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
+        </VBox>
+        <Pane HBox.hgrow="ALWAYS"/>
+        <Button text="➕ Ajouter une formation"
+                onAction="#openAjouterFormation"
+                style="-fx-background-color: #7B1FA2;
+                       -fx-text-fill: white;
+                       -fx-padding: 10 20;
+                       -fx-background-radius: 5;"/>
+    </HBox>
+
+    <Separator/>
+
+    <!-- ===== BARRE DE RECHERCHE & FILTRES ===== -->
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField"
+                   promptText="Rechercher une formation..."
+                   prefWidth="400"
+                   style="-fx-padding: 10;"/>
+
+        <ComboBox fx:id="sortCombo" prefWidth="150" promptText="Trier par">
+             <items>
+                <FXCollections fx:factory="observableArrayList">
+                    <String fx:value="Prix croissant"/>
+                    <String fx:value="Prix décroissant"/>
+                    <String fx:value="Date"/>
+                </FXCollections>
+            </items>
+        </ComboBox>
+
+        <ComboBox fx:id="categoryCombo" prefWidth="150" promptText="Catégorie">
+            <items>
+                <FXCollections fx:factory="observableArrayList">
+                    <String fx:value="Toutes"/>
+                    <String fx:value="Débutant"/>
+                    <String fx:value="Avancé"/>
+                </FXCollections>
+            </items>
+        </ComboBox>
+    </HBox>
+
+    <!-- ===== CONTENU SCROLLABLE ===== -->
+    <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true"
+                style="-fx-background-color: white; -fx-background: white;">
+
+        <VBox spacing="30" style="-fx-padding: 10;">
+
+            <!-- SECTION 1: GRILLE DES FORMATIONS -->
+            <FlowPane fx:id="formationsFlowPane" hgap="20" vgap="20" alignment="TOP_LEFT">
+                
+                <!-- Les cartes seront ajoutées dynamiquement par le contrôleur -->
+
+            </FlowPane>
+
+            <Separator/>
+
+            <!-- SECTION 2: FORMATIONS À VENIR -->
+            <VBox spacing="15">
+                <Label text="Formations à venir"
+                       style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+                <HBox spacing="20">
+                     <VBox prefWidth="250" spacing="5"
+                          style="-fx-background-color: white;
+                                 -fx-background-radius: 12;
+                                 -fx-padding: 12;
+                                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10,0,0,4);">
+                        <Label text="Bases de la Psychologie Positive"
+                               style="-fx-font-weight: bold;"/>
+                        <Label text="📅 22 mai, 25h"
+                               style="-fx-text-fill: #777;"/>
+                    </VBox>
+
+                    <VBox prefWidth="250" spacing="5"
+                          style="-fx-background-color: white;
+                                 -fx-background-radius: 12;
+                                 -fx-padding: 12;
+                                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10,0,0,4);">
+                        <Label text="Techniques de Thérapie Familiale"
+                               style="-fx-font-weight: bold;"/>
+                        <Label text="📅 28 mai, 22h"
+                               style="-fx-text-fill: #777;"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+        </VBox>
+    </ScrollPane>
+
+</VBox>

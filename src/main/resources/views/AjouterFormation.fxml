@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.image.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.AjouterFormationController"
+      spacing="20"
+      style="-fx-background-color: #F4F6F9;">
+
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+    <!-- ===== TITRE ===== -->
+    <Label text="Ajouter une Formation"
+           style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
+
+    <!-- ===== CARTE FORMATION ===== -->
+    <VBox spacing="15"
+          style="-fx-background-color: white;
+                 -fx-padding: 20;
+                 -fx-background-radius: 12;
+                 -fx-effect: dropshadow(gaussian, #DDD, 8, 0, 0, 3);">
+
+        <TextField fx:id="titreField"
+                   promptText="Titre de la formation"/>
+
+        <TextArea fx:id="descriptionArea"
+                  promptText="Description"
+                  prefRowCount="3"/>
+
+        <TextField fx:id="dureeField"
+                   promptText="Durée (ex: 6 semaines)"/>
+
+        <ComboBox fx:id="niveauCombo"
+                  promptText="Niveau"/>
+
+        <!-- Section Image -->
+        <VBox spacing="10">
+            <Label text="Image de la formation" style="-fx-font-weight: bold;"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <ImageView fx:id="imagePreview" 
+                          fitHeight="120" 
+                          fitWidth="200" 
+                          preserveRatio="true"
+                          style="-fx-background-color: #F0F0F0; -fx-border-color: #DDD; -fx-border-width: 1;"/>
+                <VBox spacing="5">
+                    <Button text="Choisir une image" onAction="#selectImage"/>
+                    <Label fx:id="imagePathLabel" text="Aucune image sélectionnée" 
+                           style="-fx-text-fill: #666; -fx-font-size: 11px;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+    </VBox>
+
+    <!-- ===== BOUTON SUIVANT ===== -->
+    <Button text="Suivant →"
+            onAction="#goToModules"
+            style="-fx-background-color: #3B82F6;
+                   -fx-text-fill: white;
+                   -fx-padding: 10 20;
+                   -fx-background-radius: 8;"/>
+
+</VBox>
