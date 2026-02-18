@@ -50,6 +50,7 @@ public class SuivieController {
         currentPatientId = patientId;
     }
 
+    // ────────────── Chargement des données patient ──────────────
     private void loadPatientData(int patientId) {
         try {
             String patientName = getPatientName(patientId);
@@ -69,13 +70,14 @@ public class SuivieController {
                 scoreAnglais.setText("0/100");
                 scoreMaths.setText("0/100");
                 lblCoinsGagnes.setText("0 coins");
+                updateCircle(circleFrancais, 0);
+                updateCircle(circleAnglais, 0);
+                updateCircle(circleMaths, 0);
                 return;
             }
 
             int totalScore = 0;
-            for (String ligne : historique) {
-                totalScore += extraireScore(ligne);
-            }
+            for (String ligne : historique) totalScore += extraireScore(ligne);
             int scoreMoyen = totalScore / historique.size();
 
             Random rand = new Random(currentPatientId);
@@ -99,6 +101,7 @@ public class SuivieController {
         }
     }
 
+    // ────────────── Graphique évolutif ──────────────
     private void chargerGraphiqueReel() {
         evolutionChart.getData().clear();
 
@@ -114,14 +117,18 @@ public class SuivieController {
             seriesHumeur.setName("Humeur");
 
             Random rand = new Random(currentPatientId);
+            LocalDateTime limite = LocalDateTime.now().minusDays(getSelectedDays());
 
             for (String ligne : historique) {
-                int score = extraireScore(ligne);
-                String date = extraireDate(ligne);
+                LocalDateTime dateTime = extraireDateTime(ligne);
+                if (dateTime.isBefore(limite)) continue;
 
-                seriesBienEtre.getData().add(new XYChart.Data<>(date, score + rand.nextDouble() * 10));
+                int score = extraireScore(ligne);
+                String date = dateTime.format(DateTimeFormatter.ofPattern("dd/MM"));
+
+                seriesBienEtre.getData().add(new XYChart.Data<>(date, Math.min(100, score + rand.nextDouble() * 10)));
                 seriesStress.getData().add(new XYChart.Data<>(date, Math.max(0, score - rand.nextDouble() * 15)));
-                seriesHumeur.getData().add(new XYChart.Data<>(date, score + rand.nextDouble() * 8));
+                seriesHumeur.getData().add(new XYChart.Data<>(date, Math.min(100, score + rand.nextDouble() * 8)));
             }
 
             evolutionChart.getData().addAll(seriesBienEtre, seriesStress, seriesHumeur);
@@ -138,10 +145,11 @@ public class SuivieController {
         evolutionChart.layout();
 
         try {
+            // Couleurs cohérentes avec les cercles
             Node fillVert = evolutionChart.lookup(".default-color0.chart-series-area-fill");
             Node lineVert = evolutionChart.lookup(".default-color0.chart-series-area-line");
-            if (fillVert != null) fillVert.setStyle("-fx-fill: rgba(123,198,167,0.3);");
-            if (lineVert != null) lineVert.setStyle("-fx-stroke: #7BC6A7; -fx-stroke-width: 3px;");
+            if (fillVert != null) fillVert.setStyle("-fx-fill: rgba(167,139,250,0.3);");
+            if (lineVert != null) lineVert.setStyle("-fx-stroke: #A78BFA; -fx-stroke-width: 3px;");
 
             Node fillRose = evolutionChart.lookup(".default-color1.chart-series-area-fill");
             Node lineRose = evolutionChart.lookup(".default-color1.chart-series-area-line");
@@ -155,9 +163,10 @@ public class SuivieController {
 
             Node plot = evolutionChart.lookup(".chart-plot-background");
             if (plot != null) plot.setStyle("-fx-background-color: #FAFBFC;");
-        } catch (Exception e) {}
+        } catch (Exception ignored) {}
     }
 
+    // ────────────── Extraction score et date ──────────────
     private int extraireScore(String ligne) {
         try {
             int start = ligne.indexOf("Score: ") + 7;
@@ -168,31 +177,43 @@ public class SuivieController {
         }
     }
 
-    private String extraireDate(String ligne) {
+    private LocalDateTime extraireDateTime(String ligne) {
         try {
             int start = ligne.indexOf("Date: ") + 6;
             String dateStr = ligne.substring(start).trim();
-            LocalDateTime dt = LocalDateTime.parse(dateStr);
-            return dt.format(DateTimeFormatter.ofPattern("dd/MM"));
+            return LocalDateTime.parse(dateStr);
         } catch (Exception e) {
-            return "??";
+            return LocalDateTime.now();
         }
     }
 
+    // ────────────── Cercles de progression ──────────────
     private void updateCircle(Circle circle, int score) {
         double percentage = score / 100.0;
-        double circumference = 314;
+        double radius = circle.getRadius();
+        double circumference = 2 * Math.PI * radius;
         double dashOffset = circumference * (1 - percentage);
-        circle.setStyle("-fx-stroke-dasharray: " + circumference +
-                "; -fx-stroke-dashoffset: " + dashOffset + ";");
+        circle.setStyle("-fx-stroke-dasharray: " + circumference + "; -fx-stroke-dashoffset: " + dashOffset + ";");
     }
 
+    // ────────────── ComboBox Période ──────────────
     private void configurerCombo() {
         comboPeriode.getItems().addAll("7 jours", "30 jours", "90 jours");
         comboPeriode.getSelectionModel().select("30 jours");
         comboPeriode.setOnAction(e -> chargerGraphiqueReel());
     }
 
+    private int getSelectedDays() {
+        String sel = comboPeriode.getSelectionModel().getSelectedItem();
+        switch (sel) {
+            case "7 jours": return 7;
+            case "30 jours": return 30;
+            case "90 jours": return 90;
+            default: return 30;
+        }
+    }
+
+    // ────────────── Noms fictifs des patients ──────────────
     private String getPatientName(int patientId) {
         switch (patientId) {
             case 1: return "Mohamed";
@@ -202,6 +223,7 @@ public class SuivieController {
         }
     }
 
+    // ────────────── Navigation vers espace psychologue ──────────────
     @FXML
     private void ouvrirEspacePraticien() {
         try {
