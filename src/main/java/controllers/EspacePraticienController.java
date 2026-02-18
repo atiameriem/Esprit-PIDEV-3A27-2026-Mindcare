@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 public class EspacePraticienController {
 
@@ -28,6 +29,9 @@ public class EspacePraticienController {
     @FXML private VBox       listePatients;
 
     private final ServiceQuiz serviceQuiz = new ServiceQuiz();
+
+    // Cache des patients pour la recherche et le filtre
+    private Map<Integer, String> tousLesPatients = new LinkedHashMap<>();
 
     // SCORE_MAX : 3 questions × valeur max 2 = 6
     private static final int SCORE_MAX = 6;
@@ -65,11 +69,9 @@ public class EspacePraticienController {
                 "Tous", "En progression", "Stables", "En difficulté", "Nouveaux"
         ));
         comboFiltre.getSelectionModel().selectFirst();
-        comboFiltre.setOnAction(e -> chargerPatients());
+        comboFiltre.setOnAction(e -> filtrerEtAfficher());
 
-        fieldRecherche.textProperty().addListener((obs, old, newVal) -> {
-            // TODO: filtrer la liste en temps réel
-        });
+        fieldRecherche.textProperty().addListener((obs, old, newVal) -> filtrerEtAfficher());
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -134,17 +136,76 @@ public class EspacePraticienController {
     // Charger liste patients
     // ══════════════════════════════════════════════════════════════
     private void chargerPatients() {
-        listePatients.getChildren().clear();
         try {
-            Map<Integer, String> patients = serviceQuiz.getTousLesPatients();
-            for (Map.Entry<Integer, String> entry : patients.entrySet()) {
-                listePatients.getChildren().add(
-                        creerCartePatient(entry.getKey(), entry.getValue())
-                );
-            }
+            tousLesPatients = serviceQuiz.getTousLesPatients();
         } catch (SQLException e) {
             System.err.println("❌ Erreur chargement patients : " + e.getMessage());
+            return;
         }
+        filtrerEtAfficher();
+    }
+
+    private void filtrerEtAfficher() {
+        listePatients.getChildren().clear();
+
+        String recherche   = fieldRecherche.getText().toLowerCase().trim();
+        String filtre      = comboFiltre.getSelectionModel().getSelectedItem();
+
+        for (Map.Entry<Integer, String> entry : tousLesPatients.entrySet()) {
+            int    idPatient  = entry.getKey();
+            String nomPatient = entry.getValue();
+
+            // ── Filtre recherche ──────────────────────────────────
+            if (!recherche.isEmpty() && !nomPatient.toLowerCase().contains(recherche)) {
+                continue;
+            }
+
+            // ── Filtre ComboBox ───────────────────────────────────
+            if (filtre != null && !filtre.equals("Tous")) {
+                try {
+                    List<String> historique = serviceQuiz.getHistoriquePatient(idPatient);
+                    boolean inclure = false;
+
+                    switch (filtre) {
+                        case "Nouveaux":
+                            inclure = historique.isEmpty();
+                            break;
+                        case "En progression":
+                            inclure = calculerProgression(historique) > 0;
+                            break;
+                        case "Stables":
+                            inclure = calculerProgression(historique) == 0 && !historique.isEmpty();
+                            break;
+                        case "En difficulté":
+                            inclure = calculerProgression(historique) < 0;
+                            break;
+                        default:
+                            inclure = true;
+                    }
+                    if (!inclure) continue;
+                } catch (SQLException e) {
+                    System.err.println("Erreur filtre : " + e.getMessage());
+                }
+            }
+
+            listePatients.getChildren().add(creerCartePatient(idPatient, nomPatient));
+        }
+
+        // Message si aucun résultat
+        if (listePatients.getChildren().isEmpty()) {
+            Label lblVide = new Label("Aucun patient trouvé.");
+            lblVide.setStyle("-fx-font-size: 13px; -fx-text-fill: #9CA3AF; -fx-padding: 20;");
+            listePatients.getChildren().add(lblVide);
+        }
+    }
+
+    private int calculerProgression(List<String> historique) {
+        if (historique.size() < 2) return 0;
+        String apres = historique.get(historique.size() - 1);
+        String avant  = historique.get(historique.size() - 2);
+        int scoreApres = extraireScore(apres);
+        int scoreAvant = extraireScore(avant);
+        return scoreApres - scoreAvant;
     }
 
     // ══════════════════════════════════════════════════════════════
