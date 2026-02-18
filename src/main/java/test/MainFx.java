@@ -17,10 +17,7 @@ public class MainFx extends Application {
         stage.setScene(scene);
         stage.show();
 
-        // Pour passer à MindCarepatient.fxml plus tard :
-        // Parent root1 = FXMLLoader.load(getClass().getResource("/MindCareLayoutpatient.fxml"));
-        // Scene scene1 = new Scene(root1, 1200, 700);
-        // stage.setScene(scene1);
+
     }
 
 

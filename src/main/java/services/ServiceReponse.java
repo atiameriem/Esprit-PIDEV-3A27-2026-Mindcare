@@ -259,8 +259,10 @@ public class ServiceReponse implements IService<Reponse> {
             if (i < typesQuiz.size() - 1) inClause.append(",");
         }
 
-        String req = "SELECT r.* FROM reponse r JOIN quiz q ON r.id_quiz = q.id_quiz " +
-                "WHERE r.id_users = ? AND q.type_quiz IN (" + inClause + ")";
+        // Correction : remplacer type_quiz par type_test
+        String req = "SELECT r.* FROM reponse r " +
+                "JOIN quiz q ON r.id_quiz = q.id_quiz " +
+                "WHERE r.id_users = ? AND q.type_test IN (" + inClause + ")";
 
         try (PreparedStatement pst = cnx.prepareStatement(req)) {
             pst.setInt(1, idPatient);
@@ -277,5 +279,6 @@ public class ServiceReponse implements IService<Reponse> {
 
         return reponses;
     }
+
 
 }

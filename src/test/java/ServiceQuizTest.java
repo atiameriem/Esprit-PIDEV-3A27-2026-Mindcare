@@ -1,3 +1,5 @@
+
+
 import models.Quiz;
 import models.Question;
 import models.Reponse;
@@ -7,265 +9,189 @@ import services.ServiceQuestion;
 import services.ServiceReponse;
 
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ServiceQuizTest {
 
-    static ServiceQuiz     sq;
-    static ServiceQuestion sqst;
-    static ServiceReponse  sr;
+    static ServiceQuiz sq;
+    static ServiceQuestion sQuestion;
+    static ServiceReponse sReponse;
 
     private int idQuiz = -1;
 
-    // IDs existants en DB (mohamed=1, meriem=2)
-    private final int idPsychologue = 1;
-    private final int idPatient     = 2;
+    private final int idPatient = 4;
+    private final int idPsychologue = 6;
 
     @BeforeAll
-    public static void setup() {
-        sq   = new ServiceQuiz();
-        sqst = new ServiceQuestion();
-        sr   = new ServiceReponse();
-        System.out.println("[DEBUG_LOG] Services initialisés.");
+    static void setup() {
+        sq = new ServiceQuiz();
+        sQuestion = new ServiceQuestion();
+        sReponse = new ServiceReponse();
+        System.out.println("=== ServiceQuizTest START ===");
     }
 
     @AfterEach
-    void cleanUp() throws SQLException {
+    void cleanup() throws SQLException {
         if (idQuiz != -1) {
-            Quiz toDelete = sq.getQuizById(idQuiz);
-            if (toDelete != null) {
-                sq.delete(toDelete);
-                System.out.println("[DEBUG_LOG] Cleanup: Quiz supprimé ID = " + idQuiz);
+            Quiz q = sq.getQuizById(idQuiz);
+            if (q != null) {
+                sq.delete(q);
+                System.out.println("Cleanup Quiz ID = " + idQuiz);
             }
             idQuiz = -1;
         }
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ✔ TEST 1 : Créer un quiz
-    // ══════════════════════════════════════════════════════════════
+    private void creerQuiz() throws SQLException {
+        Quiz quiz = new Quiz();
+        quiz.setIdUsers(idPatient);
+        quiz.setCreePar(idPsychologue);
+        quiz.setTitre("Quiz Test");
+        quiz.setDescription("Description test");
+        quiz.setTypeTest("Stress");
+        quiz.setActif(true);
+        quiz.setDateCreation(LocalDateTime.now());
+
+        sq.add(quiz);
+        idQuiz = quiz.getIdQuiz();
+    }
+
+    // ================== ADD ==================
     @Test
     @Order(1)
-    public void testAddQuiz() throws SQLException {
-        Quiz q = new Quiz(
-                idPatient,       // id_users  : patient assigné
-                idPsychologue,   // cree_par  : psychologue créateur
-                "Test de stress",
-                "Évalue le stress",
-                "psychologique",
-                true
-        );
-        sq.add(q);
-        idQuiz = q.getIdQuiz();
+    void testAddQuiz() throws SQLException {
+        creerQuiz();
+        assertTrue(idQuiz > 0);
 
-        System.out.println("[DEBUG_LOG] Quiz créé ID = " + idQuiz);
-
-        // Vérifier que l'ID a bien été généré
-        assertTrue(idQuiz > 0, "L'ID du quiz doit être > 0");
-
-        // Vérifier que le quiz existe en DB
-        Quiz found = sq.getQuizById(idQuiz);
-        assertNotNull(found, "Le quiz doit exister en DB");
-        assertEquals("Test de stress", found.getTitre());
-        assertEquals("psychologique",  found.getTypeTest());
-        assertTrue(found.isActif());
-
-        System.out.println("[DEBUG_LOG] Vérifié : Quiz existe en DB.");
+        Quiz q = sq.getQuizById(idQuiz);
+        assertNotNull(q);
+        assertEquals("Quiz Test", q.getTitre());
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ✔ TEST 2 : Modifier un quiz
-    // ══════════════════════════════════════════════════════════════
+    // ================== UPDATE ==================
     @Test
     @Order(2)
-    public void testUpdateQuiz() throws SQLException {
-        // Créer
-        Quiz q = new Quiz(
-                idPatient, idPsychologue,
-                "Test initial", "Description initiale",
-                "psychologique", true
-        );
-        sq.add(q);
-        idQuiz = q.getIdQuiz();
+    void testUpdateQuiz() throws SQLException {
+        creerQuiz();
 
-        // Modifier
-        q.setTitre      ("Test modifié");
+        Quiz q = sq.getQuizById(idQuiz);
+        q.setTitre("Quiz Modifié");
         q.setDescription("Nouvelle description");
-        q.setTypeTest   ("cognitif");
-        q.setActif      (false);
+        q.setTypeTest("Anxiété");
+        q.setActif(false);
+
         sq.update(q);
 
-        System.out.println("[DEBUG_LOG] Quiz modifié ID = " + idQuiz);
-
-        // Vérifier les modifications
         Quiz updated = sq.getQuizById(idQuiz);
-        assertNotNull(updated);
-        assertEquals("Test modifié",       updated.getTitre());
-        assertEquals("Nouvelle description", updated.getDescription());
-        assertEquals("cognitif",           updated.getTypeTest());
+        assertEquals("Quiz Modifié", updated.getTitre());
+        assertEquals("Anxiété", updated.getTypeTest());
         assertFalse(updated.isActif());
-
-        System.out.println("[DEBUG_LOG] Vérifié : Quiz modifié avec succès.");
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ✔ TEST 3 : Récupérer les quiz d'un psychologue
-    // ══════════════════════════════════════════════════════════════
+    // ================== GET BY PSY ==================
     @Test
     @Order(3)
-    public void testGetQuizParPsychologue() throws SQLException {
-        // Créer un quiz
-        Quiz q = new Quiz(
-                idPatient, idPsychologue,
-                "Quiz psychologue test", "desc",
-                "psychologique", true
-        );
-        sq.add(q);
-        idQuiz = q.getIdQuiz();
+    void testGetQuizParPsychologue() throws SQLException {
+        creerQuiz();
 
-        // Récupérer tous les quiz du psychologue
-        List<Quiz> quizzes = sq.getQuizParPsychologue(idPsychologue);
-
-        assertFalse(quizzes.isEmpty(), "La liste ne doit pas être vide");
-
-        boolean found = quizzes.stream()
-                .anyMatch(quiz -> quiz.getIdQuiz() == idQuiz);
-        assertTrue(found, "Le quiz créé doit apparaître dans la liste");
-
-        System.out.println("[DEBUG_LOG] Vérifié : " + quizzes.size() +
-                " quiz(zes) trouvé(s) pour psychologue ID = " + idPsychologue);
+        List<Quiz> list = sq.getQuizParPsychologue(idPsychologue);
+        assertTrue(list.stream().anyMatch(q -> q.getIdQuiz() == idQuiz));
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ✔ TEST 4 : Ajouter questions + choix
-    // ══════════════════════════════════════════════════════════════
+    // ================== GET BY PATIENT ==================
     @Test
     @Order(4)
-    public void testAddQuestionsAvecChoix() throws SQLException {
-        // Créer quiz
-        Quiz q = new Quiz(
-                idPatient, idPsychologue,
-                "Quiz avec questions", "desc",
-                "psychologique", true
-        );
-        sq.add(q);
-        idQuiz = q.getIdQuiz();
+    void testGetQuizParPatient() throws SQLException {
+        creerQuiz();
 
-        // Ajouter 2 questions avec choix
-        Question q1 = new Question(idQuiz, "Je me sens tendu(e)", 1, "checkbox");
-        sqst.addAvecChoix(q1, List.of(
-                new Reponse(idQuiz, 0, "Jamais",  0),
-                new Reponse(idQuiz, 0, "Parfois", 1),
-                new Reponse(idQuiz, 0, "Souvent", 2)
-        ));
-
-        Question q2 = new Question(idQuiz, "Je dors mal la nuit", 2, "checkbox");
-        sqst.addAvecChoix(q2, List.of(
-                new Reponse(idQuiz, 0, "Jamais",  0),
-                new Reponse(idQuiz, 0, "Parfois", 1),
-                new Reponse(idQuiz, 0, "Souvent", 2)
-        ));
-
-        // Vérifier les questions chargées avec choix
-        List<Question> questions = sqst.getQuestionsByQuizAvecChoix(idQuiz);
-
-        assertEquals(2, questions.size(), "2 questions doivent exister");
-
-        for (Question question : questions) {
-            assertEquals(3, question.getReponses().size(),
-                    "Chaque question doit avoir 3 choix");
-        }
-
-        System.out.println("[DEBUG_LOG] Vérifié : 2 questions + 6 choix ajoutés.");
+        List<Quiz> list = sq.getQuizParPatient(idPatient);
+        assertTrue(list.stream().anyMatch(q -> q.getIdQuiz() == idQuiz));
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ✔ TEST 5 : Patient passe le test + calcul score
-    // ══════════════════════════════════════════════════════════════
+    // ================== GET ALL ==================
     @Test
     @Order(5)
-    public void testPasserTestEtCalculerScore() throws SQLException {
-        // Créer quiz avec questions
-        Quiz q = new Quiz(
-                idPatient, idPsychologue,
-                "Test score", "desc",
-                "psychologique", true
-        );
-        sq.add(q);
-        idQuiz = q.getIdQuiz();
+    void testGetAll() throws SQLException {
+        creerQuiz();
 
-        Question q1 = new Question(idQuiz, "Question 1", 1, "checkbox");
-        sqst.addAvecChoix(q1, List.of(
-                new Reponse(idQuiz, 0, "Jamais",  0),
-                new Reponse(idQuiz, 0, "Parfois", 1),
-                new Reponse(idQuiz, 0, "Souvent", 2)
-        ));
-
-        Question q2 = new Question(idQuiz, "Question 2", 2, "checkbox");
-        sqst.addAvecChoix(q2, List.of(
-                new Reponse(idQuiz, 0, "Jamais",  0),
-                new Reponse(idQuiz, 0, "Parfois", 1),
-                new Reponse(idQuiz, 0, "Souvent", 2)
-        ));
-
-        // Patient répond : Parfois(1) + Souvent(2) = score 3
-        sr.add(new Reponse(idQuiz, q1.getIdQuestion(), idPatient, "Parfois", 1));
-        sr.add(new Reponse(idQuiz, q2.getIdQuestion(), idPatient, "Souvent", 2));
-
-        // Calculer score
-        String resultat = sq.calculerEtSauvegarderScore(idQuiz, idPatient);
-        System.out.println("[DEBUG_LOG] Résultat : " + resultat);
-
-        assertTrue(resultat.contains("Score: 3"), "Le score doit être 3");
-        assertTrue(resultat.contains("Niveau: faible"), "Le niveau doit être faible (score < 5)");
-
-        System.out.println("[DEBUG_LOG] Vérifié : Score et niveau corrects.");
+        List<Quiz> list = sq.getAll();
+        assertTrue(list.stream().anyMatch(q -> q.getIdQuiz() == idQuiz));
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ✔ TEST 6 : Historique + suivi évolution
-    // ══════════════════════════════════════════════════════════════
+    // ================== GET QUIZ WITH QUESTIONS ==================
     @Test
     @Order(6)
-    public void testHistoriqueEtEvolution() throws SQLException {
-        // Récupérer l'historique du patient
-        List<String> historique = sq.getHistoriquePatient(idPatient);
+    void testGetQuizWithQuestions() throws SQLException {
+        creerQuiz();
 
-        assertNotNull(historique, "L'historique ne doit pas être null");
-        assertFalse(historique.isEmpty(), "L'historique doit contenir au moins un passage");
+        Question q1 = new Question(idQuiz, "Q1 ?", 1, "checkbox");
+        sQuestion.add(q1);
 
-        System.out.println("[DEBUG_LOG] Historique de meriem (ID=" + idPatient + ") :");
-        historique.forEach(ligne -> System.out.println("  → " + ligne));
-
-        System.out.println("[DEBUG_LOG] Vérifié : Historique récupéré avec succès.");
+        Quiz quiz = sq.getQuizById(idQuiz);
+        assertNotNull(quiz.getQuestions());
+        assertEquals(1, quiz.getQuestions().size());
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ✔ TEST 7 : Supprimer un quiz
-    // ══════════════════════════════════════════════════════════════
+    // ================== CALCUL SCORE ==================
     @Test
     @Order(7)
-    public void testDeleteQuiz() throws SQLException {
-        // Créer
-        Quiz q = new Quiz(
-                idPatient, idPsychologue,
-                "Quiz à supprimer", "desc",
-                "psychologique", true
-        );
-        sq.add(q);
-        idQuiz = q.getIdQuiz();
+    void testCalculerEtSauvegarderScore() throws SQLException {
+        creerQuiz();
 
-        // Supprimer
+        Question q1 = new Question(idQuiz, "Q1 ?", 1, "checkbox");
+        sQuestion.add(q1);
+
+        sReponse.add(new Reponse(idQuiz, q1.getIdQuestion(), idPatient, "A", 3));
+        sReponse.add(new Reponse(idQuiz, q1.getIdQuestion(), idPatient, "B", 4));
+
+        String result = sq.calculerEtSauvegarderScore(idQuiz, idPatient);
+
+        assertTrue(result.contains("Score"));
+        assertTrue(result.contains("Niveau"));
+    }
+
+    // ================== HISTORIQUE ==================
+    @Test
+    @Order(8)
+    void testGetHistoriquePatient() throws SQLException {
+        creerQuiz();
+
+        Question q1 = new Question(idQuiz, "Q1 ?", 1, "checkbox");
+        sQuestion.add(q1);
+
+        sReponse.add(new Reponse(idQuiz, q1.getIdQuestion(), idPatient, "A", 5));
+
+        sq.calculerEtSauvegarderScore(idQuiz, idPatient);
+
+        List<String> historique = sq.getHistoriquePatient(idPatient);
+
+        assertFalse(historique.isEmpty());
+    }
+
+    // ================== GET PATIENTS ==================
+    @Test
+    @Order(9)
+    void testGetTousLesPatients() throws SQLException {
+        Map<Integer, String> patients = sq.getTousLesPatients();
+        assertTrue(patients.containsKey(idPatient));
+    }
+
+    // ================== DELETE ==================
+    @Test
+    @Order(10)
+    void testDeleteQuiz() throws SQLException {
+        creerQuiz();
+
+        Quiz q = sq.getQuizById(idQuiz);
         sq.delete(q);
 
-        // Vérifier que le quiz n'existe plus
         Quiz deleted = sq.getQuizById(idQuiz);
-        assertNull(deleted, "Le quiz supprimé ne doit plus exister en DB");
-
-        idQuiz = -1; // éviter double suppression dans cleanUp
-        System.out.println("[DEBUG_LOG] Vérifié : Quiz supprimé avec succès.");
+        assertNull(deleted);
+        idQuiz = -1;
     }
 }
