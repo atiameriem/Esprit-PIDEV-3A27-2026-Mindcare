@@ -8,136 +8,331 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.shape.Arc?>
 <?import javafx.scene.shape.Circle?>
 
 <ScrollPane xmlns:fx="http://javafx.com/fxml/1"
             xmlns="http://javafx.com/javafx/21"
             fx:controller="controllers.SuivieController"
             fitToWidth="true"
-            style="-fx-background: #F0F9FF; -fx-background-color: #F0F9FF;">
+            style="-fx-background: #F0F9FF; -fx-background-color: #F0F9FF; -fx-border-color: transparent;">
 
-    <VBox fx:id="mainVBox" spacing="16">
-        <padding><Insets bottom="20" left="24" right="24" top="20"/></padding>
+    <VBox spacing="16">
+        <padding><Insets bottom="24" left="24" right="24" top="20"/></padding>
 
-        <!-- HEADER -->
+        <!-- ══════════════════════════════════════════
+             HEADER
+        ══════════════════════════════════════════ -->
         <HBox alignment="CENTER_LEFT" spacing="16">
-            <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
                 <Label fx:id="lblBienvenue"
-                       style="-fx-font-size: 26px; -fx-font-weight: 900; -fx-text-fill: #1F2937;"
-                       text="Hello ! ✨"/>
-                <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280; -fx-font-weight: 600;"
-                       text="Tu es sur une super lancée cette semaine ! 🚀"/>
+                       text="Hello ! ✨"
+                       style="-fx-font-size: 26px; -fx-font-weight: 900; -fx-text-fill: #1F2937;"/>
+                <Label text="Tu es sur une super lancée cette semaine ! 🚀"
+                       style="-fx-font-size: 13px; -fx-text-fill: #6B7280; -fx-font-weight: 600;"/>
             </VBox>
+
             <Button fx:id="btnPsychologue"
+                    text="👨‍⚕️ Espace Psy"
                     onAction="#ouvrirEspacePraticien"
-                    style="-fx-background-color: rgba(59,130,246,0.15);
+                    style="-fx-background-color: rgba(59,130,246,0.12);
                            -fx-text-fill: #3B82F6;
-                           -fx-font-size: 12px;
-                           -fx-font-weight: 800;
-                           -fx-padding: 10 16 10 16;
-                           -fx-background-radius: 16;
-                           -fx-border-color: rgba(59,130,246,0.3);
-                           -fx-border-radius: 16;"
-                    text="👨‍⚕️ Espace Psy"/>
+                           -fx-font-size: 12px; -fx-font-weight: 800;
+                           -fx-padding: 10 18 10 18;
+                           -fx-background-radius: 14;
+                           -fx-border-color: rgba(59,130,246,0.25);
+                           -fx-border-radius: 14;
+                           -fx-cursor: hand;"/>
         </HBox>
 
-        <!-- SCORES CIRCULAIRES -->
+        <!-- Badge sessions -->
+        <HBox>
+            <Label fx:id="lblSessionCount"
+                   text="0 session complétée"
+                   style="-fx-background-color: rgba(167,139,250,0.12);
+                          -fx-border-color: rgba(167,139,250,0.25);
+                          -fx-border-radius: 20; -fx-background-radius: 20;
+                          -fx-padding: 4 12 4 12;
+                          -fx-font-size: 11px; -fx-font-weight: 700;
+                          -fx-text-fill: #7C3AED;"/>
+        </HBox>
+
+        <!-- ══════════════════════════════════════════
+             SCORES CIRCULAIRES (Arc — corrige le bug)
+             Arc : startAngle=90, length=0, type=OPEN
+             Le controller anime length via AnimationTimer
+        ══════════════════════════════════════════ -->
         <HBox alignment="CENTER" spacing="20">
-            <VBox alignment="CENTER" spacing="8">
-                <StackPane>
-                    <Circle fill="transparent" radius="45" stroke="#E9D5FF" strokeWidth="7"/>
-                    <Circle fx:id="circleFrancais" fill="transparent" radius="45" stroke="#A78BFA" strokeWidth="7"/>
-                    <Label fx:id="scoreFrancais"
-                           style="-fx-font-size: 18px; -fx-font-weight: 900; -fx-text-fill: #A78BFA;"
-                           text="0/100"/>
+
+            <!-- Bien-être -->
+            <VBox alignment="CENTER" spacing="8"
+                  style="-fx-background-color: white;
+                         -fx-background-radius: 20;
+                         -fx-padding: 18 16 18 16;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+                         -fx-border-color: rgba(167,139,250,0);
+                         -fx-border-radius: 20;">
+                <StackPane prefWidth="96" prefHeight="96">
+                    <!-- Fond (cercle gris clair) -->
+                    <Arc centerX="48" centerY="48"
+                         radiusX="40" radiusY="40"
+                         startAngle="0" length="360"
+                         type="OPEN"
+                         style="-fx-stroke: #E9D5FF; -fx-stroke-width: 8; -fx-fill: transparent;"/>
+                    <!-- Arc de progression animé -->
+                    <Arc fx:id="arcBienEtre"
+                         centerX="48" centerY="48"
+                         radiusX="40" radiusY="40"
+                         startAngle="90" length="0"
+                         type="OPEN"
+                         style="-fx-stroke: #A78BFA; -fx-stroke-width: 8; -fx-fill: transparent;
+                                -fx-stroke-line-cap: round;"/>
+                    <Label fx:id="scoreBienEtre" text="0/100"
+                           style="-fx-font-size: 16px; -fx-font-weight: 900; -fx-text-fill: #7C3AED;"/>
                 </StackPane>
-                <Label style="-fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #7C3AED;"
-                       text="Bien-être"/>
+                <Label text="Bien-être"
+                       style="-fx-font-size: 12px; -fx-font-weight: 700;
+                              -fx-text-fill: #7C3AED; -fx-letter-spacing: 0.5px;"/>
+                <Label fx:id="lblTrendBienEtre" text="↑ +0%"
+                       style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #065F46;
+                              -fx-background-color: rgba(16,185,129,0.1);
+                              -fx-background-radius: 20; -fx-padding: 3 10 3 10;"/>
             </VBox>
-            <VBox alignment="CENTER" spacing="8">
-                <StackPane>
-                    <Circle fill="transparent" radius="45" stroke="#FFD4E5" strokeWidth="7"/>
-                    <Circle fx:id="circleAnglais" fill="transparent" radius="45" stroke="#FF6B9D" strokeWidth="7"/>
-                    <Label fx:id="scoreAnglais"
-                           style="-fx-font-size: 18px; -fx-font-weight: 900; -fx-text-fill: #FF6B9D;"
-                           text="0/100"/>
+
+            <!-- Stress -->
+            <VBox alignment="CENTER" spacing="8"
+                  style="-fx-background-color: white;
+                         -fx-background-radius: 20;
+                         -fx-padding: 18 16 18 16;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+                         -fx-border-radius: 20;">
+                <StackPane prefWidth="96" prefHeight="96">
+                    <Arc centerX="48" centerY="48"
+                         radiusX="40" radiusY="40"
+                         startAngle="0" length="360"
+                         type="OPEN"
+                         style="-fx-stroke: #FFD4E5; -fx-stroke-width: 8; -fx-fill: transparent;"/>
+                    <Arc fx:id="arcStress"
+                         centerX="48" centerY="48"
+                         radiusX="40" radiusY="40"
+                         startAngle="90" length="0"
+                         type="OPEN"
+                         style="-fx-stroke: #FF6B9D; -fx-stroke-width: 8; -fx-fill: transparent;
+                                -fx-stroke-line-cap: round;"/>
+                    <Label fx:id="scoreStress" text="0/100"
+                           style="-fx-font-size: 16px; -fx-font-weight: 900; -fx-text-fill: #FF6B9D;"/>
                 </StackPane>
-                <Label style="-fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #FF6B9D;"
-                       text="Stress"/>
+                <Label text="Stress"
+                       style="-fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #FF6B9D;"/>
+                <Label fx:id="lblTrendStress" text="↓ -0%"
+                       style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #9D174D;
+                              -fx-background-color: rgba(255,107,157,0.1);
+                              -fx-background-radius: 20; -fx-padding: 3 10 3 10;"/>
             </VBox>
-            <VBox alignment="CENTER" spacing="8">
-                <StackPane>
-                    <Circle fill="transparent" radius="45" stroke="#D4F1FF" strokeWidth="7"/>
-                    <Circle fx:id="circleMaths" fill="transparent" radius="45" stroke="#4FACFE" strokeWidth="7"/>
-                    <Label fx:id="scoreMaths"
-                           style="-fx-font-size: 18px; -fx-font-weight: 900; -fx-text-fill: #4FACFE;"
-                           text="0/100"/>
+
+            <!-- Humeur -->
+            <VBox alignment="CENTER" spacing="8"
+                  style="-fx-background-color: white;
+                         -fx-background-radius: 20;
+                         -fx-padding: 18 16 18 16;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+                         -fx-border-radius: 20;">
+                <StackPane prefWidth="96" prefHeight="96">
+                    <Arc centerX="48" centerY="48"
+                         radiusX="40" radiusY="40"
+                         startAngle="0" length="360"
+                         type="OPEN"
+                         style="-fx-stroke: #D4F1FF; -fx-stroke-width: 8; -fx-fill: transparent;"/>
+                    <Arc fx:id="arcHumeur"
+                         centerX="48" centerY="48"
+                         radiusX="40" radiusY="40"
+                         startAngle="90" length="0"
+                         type="OPEN"
+                         style="-fx-stroke: #4FACFE; -fx-stroke-width: 8; -fx-fill: transparent;
+                                -fx-stroke-line-cap: round;"/>
+                    <Label fx:id="scoreHumeur" text="0/100"
+                           style="-fx-font-size: 16px; -fx-font-weight: 900; -fx-text-fill: #4FACFE;"/>
                 </StackPane>
-                <Label style="-fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #4FACFE;"
-                       text="Humeur"/>
+                <Label text="Humeur"
+                       style="-fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #4FACFE;"/>
+                <Label fx:id="lblTrendHumeur" text="↑ +0%"
+                       style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #065F46;
+                              -fx-background-color: rgba(16,185,129,0.1);
+                              -fx-background-radius: 20; -fx-padding: 3 10 3 10;"/>
             </VBox>
+
+            <!-- Coins -->
             <VBox alignment="CENTER" spacing="6"
-                  style="-fx-background-color: rgba(255,255,255,0.7);
-                         -fx-background-radius: 16;
-                         -fx-padding: 12;
-                         -fx-border-color: rgba(255,255,255,0.9);
-                         -fx-border-radius: 16;">
-                <Label text="🏆" style="-fx-font-size: 24px;"/>
+                  style="-fx-background-color: white;
+                         -fx-background-radius: 20;
+                         -fx-padding: 18 16 18 16;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+                         -fx-border-radius: 20;">
+                <Label text="🏆" style="-fx-font-size: 26px;"/>
                 <Label fx:id="lblCoinsGagnes" text="0 coins"
-                       style="-fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #7C3AED;"/>
+                       style="-fx-font-size: 16px; -fx-font-weight: 900; -fx-text-fill: #7C3AED;"/>
+                <Label text="COINS"
+                       style="-fx-font-size: 10px; -fx-font-weight: 700;
+                              -fx-text-fill: #9CA3AF; -fx-letter-spacing: 0.5px;"/>
             </VBox>
         </HBox>
 
-        <!-- GRAPHIQUE -->
+        <!-- ══════════════════════════════════════════
+             GRAPHIQUE
+        ══════════════════════════════════════════ -->
         <VBox spacing="12"
               style="-fx-background-color: white;
                      -fx-background-radius: 20;
-                     -fx-padding: 16;">
+                     -fx-padding: 18;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
+
             <HBox alignment="CENTER_LEFT">
                 <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label style="-fx-font-size: 15px; -fx-font-weight: 900; -fx-text-fill: #1F2937;"
-                           text="📊 Progression score"/>
-                    <Label style="-fx-font-size: 11px; -fx-text-fill: #9CA3AF;"
-                           text="Évolution sur 30 jours"/>
+                    <Label text="📊 Progression score"
+                           style="-fx-font-size: 15px; -fx-font-weight: 900; -fx-text-fill: #1F2937;"/>
+                    <Label text="Évolution dans le temps par session"
+                           style="-fx-font-size: 11px; -fx-text-fill: #9CA3AF; -fx-font-weight: 600;"/>
                 </VBox>
                 <ComboBox fx:id="comboPeriode"
                           style="-fx-background-color: #F3F4F6;
                                  -fx-background-radius: 10;
-                                 -fx-font-size: 11px;"/>
+                                 -fx-font-size: 11px; -fx-font-weight: 600;"/>
             </HBox>
+
             <AreaChart fx:id="evolutionChart"
                        animated="true"
                        legendVisible="false"
-                       prefHeight="180"
+                       prefHeight="190"
                        style="-fx-background-color: transparent;">
                 <xAxis>
-                    <CategoryAxis tickLabelFill="#9CA3AF"/>
+                    <CategoryAxis tickLabelFill="#9CA3AF"
+                                  style="-fx-font-size: 11px;"/>
                 </xAxis>
                 <yAxis>
-                    <NumberAxis lowerBound="0" upperBound="100" tickLabelFill="#9CA3AF"/>
+                    <NumberAxis lowerBound="0" upperBound="100"
+                                tickUnit="20"
+                                tickLabelFill="#9CA3AF"
+                                style="-fx-font-size: 11px;"/>
                 </yAxis>
             </AreaChart>
-            <HBox alignment="CENTER" spacing="20">
+
+            <!-- Légende manuelle -->
+            <HBox alignment="CENTER" spacing="24">
                 <HBox alignment="CENTER_LEFT" spacing="6">
                     <Circle fill="#A78BFA" radius="5"/>
-                    <Label style="-fx-font-size: 11px; -fx-text-fill: #6B7280; -fx-font-weight: 700;"
-                           text="Bien-être"/>
+                    <Label text="Bien-être"
+                           style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #6B7280;"/>
                 </HBox>
                 <HBox alignment="CENTER_LEFT" spacing="6">
                     <Circle fill="#FF6B9D" radius="5"/>
-                    <Label style="-fx-font-size: 11px; -fx-text-fill: #6B7280; -fx-font-weight: 700;"
-                           text="Stress"/>
+                    <Label text="Stress"
+                           style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #6B7280;"/>
                 </HBox>
                 <HBox alignment="CENTER_LEFT" spacing="6">
                     <Circle fill="#4FACFE" radius="5"/>
-                    <Label style="-fx-font-size: 11px; -fx-text-fill: #6B7280; -fx-font-weight: 700;"
-                           text="Humeur"/>
+                    <Label text="Humeur"
+                           style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #6B7280;"/>
                 </HBox>
             </HBox>
         </VBox>
-        <VBox prefHeight="20"/>
+
+        <!-- ══════════════════════════════════════════
+             LIGNE BAS : Conseils + Historique
+        ══════════════════════════════════════════ -->
+        <HBox spacing="16" alignment="TOP_CENTER">
+
+            <!-- Conseils personnalisés -->
+            <VBox spacing="12" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color: white;
+                         -fx-background-radius: 20;
+                         -fx-padding: 18;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
+                <Label text="💡 Conseils personnalisés"
+                       style="-fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #1F2937;"/>
+
+                <Label fx:id="lblConseil"
+                       wrapText="true"
+                       text="Chargement des conseils..."
+                       style="-fx-font-size: 13px; -fx-text-fill: #374151;
+                              -fx-background-color: rgba(167,139,250,0.08);
+                              -fx-background-radius: 12;
+                              -fx-border-color: rgba(167,139,250,0.2);
+                              -fx-border-radius: 12;
+                              -fx-padding: 12;
+                              -fx-font-weight: 600;"/>
+
+                <Separator style="-fx-background-color: #F3F4F6;"/>
+
+                <!-- Conseils fixes -->
+                <HBox spacing="10" alignment="TOP_LEFT">
+                    <Label text="🧘"
+                           style="-fx-font-size: 18px;
+                                  -fx-background-color: rgba(167,139,250,0.12);
+                                  -fx-background-radius: 10;
+                                  -fx-padding: 6 8 6 8;"/>
+                    <VBox spacing="2">
+                        <Label text="Cohérence cardiaque"
+                               style="-fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #1F2937;"/>
+                        <Label text="5 min le matin pour stabiliser ton bien-être."
+                               wrapText="true"
+                               style="-fx-font-size: 11px; -fx-text-fill: #6B7280;"/>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="10" alignment="TOP_LEFT">
+                    <Label text="😮‍💨"
+                           style="-fx-font-size: 18px;
+                                  -fx-background-color: rgba(255,107,157,0.12);
+                                  -fx-background-radius: 10;
+                                  -fx-padding: 6 8 6 8;"/>
+                    <VBox spacing="2">
+                        <Label text="Respiration 4-7-8"
+                               style="-fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #1F2937;"/>
+                        <Label text="Réduit le stress en moins de 2 minutes."
+                               wrapText="true"
+                               style="-fx-font-size: 11px; -fx-text-fill: #6B7280;"/>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="10" alignment="TOP_LEFT">
+                    <Label text="🌙"
+                           style="-fx-font-size: 18px;
+                                  -fx-background-color: rgba(79,172,254,0.12);
+                                  -fx-background-radius: 10;
+                                  -fx-padding: 6 8 6 8;"/>
+                    <VBox spacing="2">
+                        <Label text="Qualité du sommeil"
+                               style="-fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #1F2937;"/>
+                        <Label text="Objectif : 7h avant minuit pour améliorer l'humeur."
+                               wrapText="true"
+                               style="-fx-font-size: 11px; -fx-text-fill: #6B7280;"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- Historique sessions -->
+            <VBox spacing="10" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color: white;
+                         -fx-background-radius: 20;
+                         -fx-padding: 18;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
+                <Label text="📅 Dernières sessions"
+                       style="-fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #1F2937;"/>
+
+                <!-- VBox rempli dynamiquement par le controller -->
+                <VBox fx:id="historyBox" spacing="0">
+                    <Label text="Chargement de l'historique..."
+                           style="-fx-font-size: 12px; -fx-text-fill: #9CA3AF;"/>
+                </VBox>
+            </VBox>
+
+        </HBox>
+
+        <Pane prefHeight="12"/>
     </VBox>
 </ScrollPane>
