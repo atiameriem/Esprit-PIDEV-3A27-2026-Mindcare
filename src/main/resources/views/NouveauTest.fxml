@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.NouveauTestController"
+      spacing="16"
+      style="-fx-background-color: #dce8f0;">
+
+    <padding><Insets top="24" right="30" bottom="24" left="30"/></padding>
+
+    <!-- ══════════════ BOUTON RETOUR ══════════════ -->
+    <HBox>
+        <Button text="← Retour"
+                onAction="#retourListe"
+                style="-fx-background-color: transparent;
+                       -fx-text-fill: #2c3e50;
+                       -fx-font-size: 13px;
+                       -fx-font-weight: bold;
+                       -fx-cursor: hand;
+                       -fx-padding: 6 0 6 0;"/>
+    </HBox>
+
+    <!-- ══════════════ TITRE PAGE ══════════════ -->
+    <VBox spacing="4">
+        <Label fx:id="labelTitrePage"
+               text="Nouveau Test Psychologique"
+               style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+        <Label fx:id="labelSousTitrePage"
+               text="Créez un test avec ses questions et choix de réponses"
+               style="-fx-font-size: 13px; -fx-text-fill: #7f8c8d;"/>
+    </VBox>
+
+    <ScrollPane fitToWidth="true"
+                style="-fx-background: transparent; -fx-background-color: transparent;"
+                VBox.vgrow="ALWAYS">
+        <VBox spacing="16" style="-fx-background-color: transparent;">
+            <padding><Insets top="4" bottom="4"/></padding>
+
+            <!-- ══════════════ INFOS DU QUIZ ══════════════ -->
+            <VBox spacing="14"
+                  style="-fx-background-color: white;
+                         -fx-background-radius: 12;
+                         -fx-padding: 20;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+
+                <Label text="Informations du test"
+                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+
+                <!-- Titre -->
+                <VBox spacing="5">
+                    <Label text="Titre du test *"
+                           style="-fx-font-size: 12px; -fx-text-fill: #7f8c8d;"/>
+                    <TextField fx:id="fieldTitre"
+                               promptText="Ex: Évaluation de l'anxiété (GAD-7)"
+                               style="-fx-background-color: #f8f9fa;
+                                      -fx-border-color: #e0e0e0;
+                                      -fx-border-radius: 8;
+                                      -fx-background-radius: 8;
+                                      -fx-padding: 10;
+                                      -fx-font-size: 13px;"/>
+                </VBox>
+
+                <!-- Description -->
+                <VBox spacing="5">
+                    <Label text="Description"
+                           style="-fx-font-size: 12px; -fx-text-fill: #7f8c8d;"/>
+                    <TextArea fx:id="fieldDescription"
+                              promptText="Ex: Test de dépistage des troubles anxieux généralisés"
+                              prefRowCount="2"
+                              style="-fx-background-color: #f8f9fa;
+                                     -fx-border-color: #e0e0e0;
+                                     -fx-border-radius: 8;
+                                     -fx-background-radius: 8;
+                                     -fx-padding: 10;
+                                     -fx-font-size: 13px;"/>
+                </VBox>
+
+                <!-- Type test -->
+                <VBox spacing="5">
+                    <Label text="Type de test"
+                           style="-fx-font-size: 12px; -fx-text-fill: #7f8c8d;"/>
+                    <ComboBox fx:id="comboTypeTest"
+                              maxWidth="300"
+                              style="-fx-background-color: #f8f9fa;
+                                     -fx-border-color: #e0e0e0;
+                                     -fx-border-radius: 8;
+                                     -fx-background-radius: 8;
+                                     -fx-font-size: 13px;"/>
+                </VBox>
+            </VBox>
+
+            <!-- ══════════════ SECTION QUESTIONS ══════════════ -->
+            <VBox spacing="12"
+                  style="-fx-background-color: white;
+                         -fx-background-radius: 12;
+                         -fx-padding: 20;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="Questions"
+                           HBox.hgrow="ALWAYS"
+                           style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                    <Pane HBox.hgrow="ALWAYS"/>
+                    <Button text="+ Ajouter une question"
+                            onAction="#ajouterQuestion"
+                            style="-fx-background-color: #eaf2fb;
+                                   -fx-text-fill: #2c4a6e;
+                                   -fx-font-size: 12px;
+                                   -fx-font-weight: bold;
+                                   -fx-padding: 8 14 8 14;
+                                   -fx-background-radius: 8;
+                                   -fx-cursor: hand;"/>
+                </HBox>
+
+                <!-- Zone dynamique des questions -->
+                <VBox fx:id="listeQuestionsForm" spacing="12"/>
+
+                <!-- Message si aucune question -->
+                <Label fx:id="labelAucuneQuestion"
+                       text="Aucune question. Cliquez sur '+ Ajouter une question'."
+                       style="-fx-font-size: 12px; -fx-text-fill: #95a5a6; -fx-padding: 10 0 10 0;"/>
+
+            </VBox>
+
+        </VBox>
+    </ScrollPane>
+
+    <!-- ══════════════ BOUTONS ACTION ══════════════ -->
+    <HBox alignment="CENTER_RIGHT" spacing="12">
+        <Button text="Annuler"
+                onAction="#retourListe"
+                style="-fx-background-color: white;
+                       -fx-text-fill: #2c3e50;
+                       -fx-font-size: 13px;
+                       -fx-font-weight: bold;
+                       -fx-padding: 10 24 10 24;
+                       -fx-background-radius: 8;
+                       -fx-border-color: #dce0e3;
+                       -fx-border-radius: 8;
+                       -fx-cursor: hand;"/>
+        <Button fx:id="btnSauvegarder"
+                text="💾  Sauvegarder le test"
+                onAction="#sauvegarderTest"
+                style="-fx-background-color: #2c4a6e;
+                       -fx-text-fill: white;
+                       -fx-font-size: 13px;
+                       -fx-font-weight: bold;
+                       -fx-padding: 10 24 10 24;
+                       -fx-background-radius: 8;
+                       -fx-cursor: hand;"/>
+    </HBox>
+
+</VBox>
