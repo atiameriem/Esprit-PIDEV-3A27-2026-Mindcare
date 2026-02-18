@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.ForumController"
+      spacing="20"
+      style="-fx-background-color: white;">
+    <padding>
+        <javafx.geometry.Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+
+    <!-- Bouton visible (test) -->
+    <HBox alignment="CENTER_RIGHT">
+        <Button text="Bouton" />
+    </HBox>
+
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="15">
+        <Label text="💬" style="-fx-font-size: 32px;"/>
+        <VBox spacing="5">
+            <Label text="Forum - Fil d'actualité" 
+                   style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+            <Label text="Partagez et échangez avec la communauté" 
+                   style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
+        </VBox>
+        <Pane HBox.hgrow="ALWAYS"/>
+        <Button fx:id="newPostButton" text="✍️ Nouvelle publication" 
+                style="-fx-background-color: #7B1FA2; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 5;"/>
+    </HBox>
+
+    <Separator/>
+
+    <!-- Barre de recherche et filtres -->
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Rechercher dans le forum..." 
+                   prefWidth="400" style="-fx-padding: 10 10 10 10;"/>
+        
+        <ComboBox fx:id="sortCombo" prefWidth="150" promptText="Trier par">
+            <items>
+                <javafx.collections.FXCollections fx:factory="observableArrayList">
+                    <java.lang.String fx:value="Plus récents"/>
+                    <java.lang.String fx:value="Plus anciens"/>
+                    <java.lang.String fx:value="Plus aimés"/>
+                    <java.lang.String fx:value="Plus commentés"/>
+                </javafx.collections.FXCollections>
+            </items>
+        </ComboBox>
+        
+        <ComboBox fx:id="categoryCombo" prefWidth="150" promptText="Catégorie">
+            <items>
+                <javafx.collections.FXCollections fx:factory="observableArrayList">
+                    <java.lang.String fx:value="Toutes"/>
+                    <java.lang.String fx:value="Questions"/>
+                    <java.lang.String fx:value="Discussions"/>
+                    <java.lang.String fx:value="Conseils"/>
+                    <java.lang.String fx:value="Témoignages"/>
+                </javafx.collections.FXCollections>
+            </items>
+        </ComboBox>
+    </HBox>
+
+    <!-- Liste des publications -->
+    <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true" 
+                style="-fx-background-color: white; -fx-background: white;">
+        <VBox fx:id="postsContainer" spacing="15">
+            
+            <!-- Exemple de publication 1 -->
+            <VBox spacing="12" style="-fx-background-color: #F9F9F9; -fx-padding: 20 20 20 20; -fx-background-radius: 10;">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="👤" style="-fx-font-size: 24px;"/>
+                    <VBox spacing="3">
+                        <Label text="Marie Dupont" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                        <Label text="Il y a 2 heures" style="-fx-text-fill: #999; -fx-font-size: 12px;"/>
+                    </VBox>
+                    <Pane HBox.hgrow="ALWAYS"/>
+                    <Label text="💬 Questions" 
+                           style="-fx-background-color: #E3F2FD; -fx-padding: 5 10; -fx-background-radius: 15; -fx-font-size: 11px; -fx-text-fill: #1976D2;"/>
+                </HBox>
+                
+                <Label text="Comment gérer l'anxiété au travail ?" 
+                       style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                
+                <Label text="Bonjour à tous, je cherche des conseils pour mieux gérer mon stress au quotidien. Quelqu'un aurait-il des techniques à partager ?" 
+                       wrapText="true" style="-fx-text-fill: #333;"/>
+                
+                <HBox spacing="20">
+                    <Button text="❤️ 24" style="-fx-background-color: transparent; -fx-text-fill: #666;"/>
+                    <Button text="💬 15 réponses" style="-fx-background-color: transparent; -fx-text-fill: #666;"/>
+                    <Button text="🔗 Partager" style="-fx-background-color: transparent; -fx-text-fill: #666;"/>
+                </HBox>
+            </VBox>
+
+            <!-- Exemple de publication 2 -->
+            <VBox spacing="12" style="-fx-background-color: #F9F9F9; -fx-padding: 20 20 20 20; -fx-background-radius: 10;">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="👤" style="-fx-font-size: 24px;"/>
+                    <VBox spacing="3">
+                        <Label text="Dr. Pierre Martin" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                        <Label text="Il y a 5 heures" style="-fx-text-fill: #999; -fx-font-size: 12px;"/>
+                    </VBox>
+                    <Pane HBox.hgrow="ALWAYS"/>
+                    <Label text="✨ Conseils" 
+                           style="-fx-background-color: #F3E5F5; -fx-padding: 5 10; -fx-background-radius: 15; -fx-font-size: 11px; -fx-text-fill: #7B1FA2;"/>
+                </HBox>
+                
+                <Label text="5 techniques de relaxation rapides" 
+                       style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                
+                <Label text="Voici quelques techniques simples que vous pouvez pratiquer n'importe où pour vous détendre rapidement..." 
+                       wrapText="true" style="-fx-text-fill: #333;"/>
+                
+                <HBox spacing="20">
+                    <Button text="❤️ 42" style="-fx-background-color: transparent; -fx-text-fill: #666;"/>
+                    <Button text="💬 8 réponses" style="-fx-background-color: transparent; -fx-text-fill: #666;"/>
+                    <Button text="🔗 Partager" style="-fx-background-color: transparent; -fx-text-fill: #666;"/>
+                </HBox>
+            </VBox>
+
+            <!-- Exemple de publication 3 -->
+            <VBox spacing="12" style="-fx-background-color: #F9F9F9; -fx-padding: 20 20 20 20; -fx-background-radius: 10;">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="👤" style="-fx-font-size: 24px;"/>
+                    <VBox spacing="3">
+                        <Label text="Sophie Bernard" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                        <Label text="Hier" style="-fx-text-fill: #999; -fx-font-size: 12px;"/>
+                    </VBox>
+                    <Pane HBox.hgrow="ALWAYS"/>
+                    <Label text="📖 Témoignages" 
+                           style="-fx-background-color: #E8F5E9; -fx-padding: 5 10; -fx-background-radius: 15; -fx-font-size: 11px; -fx-text-fill: #388E3C;"/>
+                </HBox>
+                
+                <Label text="Mon parcours vers le bien-être" 
+                       style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                
+                <Label text="Je voulais partager mon expérience et vous dire qu'il est possible de surmonter l'anxiété..." 
+                       wrapText="true" style="-fx-text-fill: #333;"/>
+                
+                <HBox spacing="20">
+                    <Button text="❤️ 67" style="-fx-background-color: transparent; -fx-text-fill: #666;"/>
+                    <Button text="💬 23 réponses" style="-fx-background-color: transparent; -fx-text-fill: #666;"/>
+                    <Button text="🔗 Partager" style="-fx-background-color: transparent; -fx-text-fill: #666;"/>
+                </HBox>
+            </VBox>
+
+        </VBox>
+    </ScrollPane>
+
+</VBox>
