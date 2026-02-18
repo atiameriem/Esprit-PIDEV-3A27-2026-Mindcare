@@ -259,6 +259,9 @@ public class SuivieController {
     // ================================================================
     //  HISTORIQUE VISUEL
     // ================================================================
+    // SCORE_MAX pour l'historique (même valeur que updateScoresFromDB)
+    private static final int SCORE_MAX_HISTORIQUE = 6; // 3 questions × valeur max 2
+
     private void afficherHistorique(List<String> historique) {
         if (historyBox == null) return;
         historyBox.getChildren().clear();
@@ -266,13 +269,26 @@ public class SuivieController {
         // Afficher les 5 dernières sessions
         int debut = Math.max(0, historique.size() - 5);
         for (int i = historique.size() - 1; i >= debut; i--) {
-            String ligne = historique.get(i);
-            int score = extraireScore(ligne);
-            String date = extraireDate(ligne);
-            String titre = extraireTitre(ligne);
+            String ligne     = historique.get(i);
+            int scoreBrut    = extraireScore(ligne);   // score brut DB (ex: 4)
+            String date      = extraireDate(ligne);
+            String titre     = extraireTitre(ligne);
 
-            // Ligne d'historique simple
-            Label entry = new Label(date + "  ·  " + titre + "  →  " + score + "/100");
+            // ✅ Convertir le score brut en pourcentage réel
+            String titreLow = titre.toLowerCase();
+            int scorePourcent;
+            if (titreLow.contains("stress") || titreLow.contains("humeur")) {
+                // Score élevé = mauvais → inverser
+                scorePourcent = (int) Math.max(0, 100 - (scoreBrut * 100.0) / SCORE_MAX_HISTORIQUE);
+            } else {
+                // Bien-être / autres → direct
+                scorePourcent = (int) Math.min(100, (scoreBrut * 100.0) / SCORE_MAX_HISTORIQUE);
+            }
+
+            // Emoji selon le résultat
+            String emoji = scorePourcent >= 70 ? "✅" : scorePourcent >= 40 ? "🟡" : "🔴";
+
+            Label entry = new Label(date + "  ·  " + titre + "  →  " + scorePourcent + "/100  " + emoji);
             entry.setStyle("-fx-font-size: 12px; -fx-text-fill: #374151; " +
                     "-fx-font-weight: 600; -fx-padding: 6 0;");
             historyBox.getChildren().add(entry);
