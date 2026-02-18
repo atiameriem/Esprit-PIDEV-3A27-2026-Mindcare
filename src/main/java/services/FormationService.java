@@ -43,7 +43,7 @@ public class FormationService implements IService<Formation> {
 
     @Override
     public void update(Formation formation) throws SQLException {
-        String query = "UPDATE formation SET titre = ?, description = ?, duree = ?, niveau = ?, imagePath = ? WHERE id = ?";
+        String query = "UPDATE formation SET titre = ?, description = ?, duree = ?, niveau = ?, imagePath = ? WHERE id_formation = ?";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, formation.getTitre());
             statement.setString(2, formation.getDescription());
@@ -57,7 +57,7 @@ public class FormationService implements IService<Formation> {
 
     @Override
     public void delete(int id) throws SQLException {
-        String query = "DELETE FROM formation WHERE id = ?";
+        String query = "DELETE FROM formation WHERE id_formation = ?";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, id);
             statement.executeUpdate();
