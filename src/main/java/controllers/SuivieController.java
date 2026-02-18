@@ -138,10 +138,10 @@ public class SuivieController {
         evolutionChart.layout();
 
         try {
-            Node fillViolet = evolutionChart.lookup(".default-color0.chart-series-area-fill");
-            Node lineViolet = evolutionChart.lookup(".default-color0.chart-series-area-line");
-            if (fillViolet != null) fillViolet.setStyle("-fx-fill: rgba(167,139,250,0.3);");
-            if (lineViolet != null) lineViolet.setStyle("-fx-stroke: #A78BFA; -fx-stroke-width: 3px;");
+            Node fillVert = evolutionChart.lookup(".default-color0.chart-series-area-fill");
+            Node lineVert = evolutionChart.lookup(".default-color0.chart-series-area-line");
+            if (fillVert != null) fillVert.setStyle("-fx-fill: rgba(123,198,167,0.3);");
+            if (lineVert != null) lineVert.setStyle("-fx-stroke: #7BC6A7; -fx-stroke-width: 3px;");
 
             Node fillRose = evolutionChart.lookup(".default-color1.chart-series-area-fill");
             Node lineRose = evolutionChart.lookup(".default-color1.chart-series-area-line");
