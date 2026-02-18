@@ -4,7 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ProgressBar;
 
-public class ConsulterSupportController {
+public class statistique {
 
     @FXML
     private ProgressBar progressBar;

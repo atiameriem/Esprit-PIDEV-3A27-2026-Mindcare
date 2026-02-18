@@ -79,7 +79,7 @@
                     <content>
                         <VBox spacing="8" styleClass="submenu">
                             <Button text="📚  Réserver formation" styleClass="subBtn" onAction="#loadReserverFormation"/>
-                            <Button text="📖  Consulter support" styleClass="subBtn" onAction="#loadConsulterSupport"/>
+                            <Button text="📖  Statistiques formations" styleClass="subBtn" onAction="#loadConsulterSupport"/>
                         </VBox>
                     </content>
                 </TitledPane>

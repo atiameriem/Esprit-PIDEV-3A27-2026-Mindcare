@@ -11,9 +11,12 @@ import java.io.IOException;
 
 public class MindCareLayoutController {
 
-    @FXML private ComboBox<String> sortCombo;
-    @FXML private TextField searchField;
-    @FXML private VBox contentArea;
+    @FXML
+    private ComboBox<String> sortCombo;
+    @FXML
+    private TextField searchField;
+    @FXML
+    private VBox contentArea;
 
     @FXML
     public void initialize() {
@@ -21,11 +24,11 @@ public class MindCareLayoutController {
             sortCombo.getItems().setAll("Plus récents", "Plus anciens", "Plus aimés");
             sortCombo.getSelectionModel().selectFirst();
         }
-        
+
         // Charger la page d'accueil par défaut
         loadAccueil();
     }
-    
+
     /**
      * Méthode générique pour charger une vue FXML dans la zone de contenu
      */
@@ -33,74 +36,74 @@ public class MindCareLayoutController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/" + fxmlFile));
             Node view = loader.load();
-            
+
             // Remplacer le contenu de contentArea
             contentArea.getChildren().clear();
             contentArea.getChildren().add(view);
-            
+
         } catch (IOException e) {
             System.err.println("Erreur lors du chargement de la vue: " + fxmlFile);
             e.printStackTrace();
         }
     }
-    
+
     // === Méthodes d'action pour chaque bouton ===
-    
+
     @FXML
     private void loadAccueil() {
         loadView("Accueil.fxml");
     }
-    
+
     @FXML
     private void loadRendezVous() {
         loadView("RendezVous.fxml");
     }
-    
+
     @FXML
     private void loadCompteRendu() {
         loadView("CompteRendu.fxml");
     }
-    
+
     @FXML
     private void loadForum() {
         loadView("Forum.fxml");
     }
-    
+
     @FXML
     private void loadChatbot() {
         loadView("Chatbot.fxml");
     }
-    
+
     @FXML
     private void loadPasserTests() {
         loadView("PasserTests.fxml");
     }
-    
+
     @FXML
     private void loadSuivie() {
         loadView("Suivie.fxml");
     }
-    
+
     @FXML
     private void loadProfil() {
         loadView("Profil.fxml");
     }
-    
+
     @FXML
     private void loadReclamation() {
         loadView("Reclamation.fxml");
     }
-    
+
     @FXML
     private void loadReserverFormation() {
-        loadView("ReserverFormation.fxml");
+        loadView("Formation.fxml");
     }
-    
+
     @FXML
     private void loadConsulterSupport() {
-        loadView("ConsulterSupport.fxml");
+        loadView("Statistiques.fxml");
     }
-    
+
     @FXML
     private void loadLocaux() {
         loadView("Locaux.fxml");
