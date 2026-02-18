@@ -13,6 +13,7 @@ public class Main {
             // ps.update(new User(1,25, "Skander","Ben Foulen"));
             System.out.println(ps.read());
         } catch (SQLException e) {
+            System.err.println(e.getMessage());
         }
     }
 }
