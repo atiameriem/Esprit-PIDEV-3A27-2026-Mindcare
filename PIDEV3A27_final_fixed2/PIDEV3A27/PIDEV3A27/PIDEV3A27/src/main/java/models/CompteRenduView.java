@@ -7,6 +7,16 @@ import java.sql.Time;
 /**
  * DTO (vue) : compte-rendu + info du rendez-vous + noms (patient/psychologue).
  */
+
+//C’est une classe faite pour l’affichage dans l’UI.
+    //PLUS des infos du rendez-vous (jointure)
+//rvDate
+//rvTime
+//rvType
+//rvStatut
+//➕ PLUS des noms (jointure users/patient/psy)
+//patientFullName
+//psychologistFullName
 public class CompteRenduView {
 
     private int idCompteRendu;

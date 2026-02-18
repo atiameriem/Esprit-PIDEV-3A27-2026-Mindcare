@@ -16,7 +16,7 @@ import java.util.List;
  * - Les méthodes findViews* retournent CompteRenduView (JOIN users) pour afficher nom/prénom.
  */
 public class ServiceCompteRenduSeance {
-
+// //la connexion JDBC vers ta base (MySQL).
     private final Connection cnx;
 
     public ServiceCompteRenduSeance(Connection cnx) {
@@ -58,8 +58,10 @@ public class ServiceCompteRenduSeance {
         return fetchList(sql, idPsychologist);
     }
 
-    // ===================== GUARDS =====================
-
+    // ===================== sécurité =====================
+    //retroutne true ou false
+    //vérifier que le rendez-vous idAppointment appartient au psychologue
+    //SELECT 1 = “je veux juste savoir si une ligne existe”.
     public boolean appointmentBelongsToPsychologist(int idAppointment, int idPsychologist) throws SQLException {
         String sql = "SELECT 1 FROM rendez_vous WHERE id_rv=? AND id_psychologist=?";
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
@@ -70,7 +72,7 @@ public class ServiceCompteRenduSeance {
             }
         }
     }
-
+    //true si le rendez-vous appartient au patient, sinon false.
     public boolean appointmentBelongsToPatient(int idAppointment, int idPatient) throws SQLException {
         String sql = "SELECT 1 FROM rendez_vous WHERE id_rv=? AND id_patient=?";
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
@@ -89,15 +91,17 @@ public class ServiceCompteRenduSeance {
             INSERT INTO compte_rendu_seance (id_appointment, date_creationcr, progrescr, resumeseancecr, prochainesactioncr)
             VALUES (?, ?, ?, ?, ?)
         """;
-
+        //PreparedStatement avec RETURN_GENERATED_KEYS
+        // permet de récupérer l’ID auto-incrémenté.
         try (PreparedStatement pst = cnx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            //            //Remplir paramètres
             pst.setInt(1, cr.getIdAppointment());
             pst.setTimestamp(2, cr.getDateCreationCr());
             pst.setString(3, cr.getProgresCr().name());
             pst.setString(4, cr.getResumeSeanceCr());
             pst.setString(5, cr.getProchainesActionCr());
             pst.executeUpdate();
-
+            //Récupérer l’ID généré
             try (ResultSet rs = pst.getGeneratedKeys()) {
                 if (rs.next()) return rs.getInt(1);
             }
@@ -132,7 +136,11 @@ public class ServiceCompteRenduSeance {
     }
 
     // ===================== VIEWS (JOIN users) =====================
-
+//Ici tu veux afficher :
+//le compte rendu
+//infos du RDV (date/heure/type/statut)
+//noms patient / psy
+    //affich compte rendu du psy connecté
     public List<CompteRenduView> findViewsByPsychologist(int idPsychologist) throws SQLException {
         String sql = """
             SELECT cr.*,
@@ -146,9 +154,12 @@ public class ServiceCompteRenduSeance {
             WHERE rv.id_psychologist = ?
             ORDER BY cr.date_creationcr DESC
         """;
+        //Au lieu de répéter le code PreparedStatement/ResultSet,
+        // tu utilises une méthode commune fetchViews
+
         return fetchViews(sql, idPsychologist);
     }
-
+    //ecture uniquement des comptes rendus du patient.
     public List<CompteRenduView> findViewsByPatient(int idPatient) throws SQLException {
         String sql = """
             SELECT cr.*,
@@ -166,6 +177,32 @@ public class ServiceCompteRenduSeance {
     }
 
     // ===================== internal mappers =====================
+
+//au lieu de preparedstatement
+
+    private List<CompteRenduView> fetchViews(String sql, int id) throws SQLException {
+        List<CompteRenduView> out = new ArrayList<>();
+        try (PreparedStatement pst = cnx.prepareStatement(sql)) {
+            pst.setInt(1, id);
+            try (ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) out.add(mapView(rs));
+            }
+        }
+        return out;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private List<CompteRenduSeance> fetchList(String sql, Object... params) throws SQLException {
         List<CompteRenduSeance> list = new ArrayList<>();
@@ -187,16 +224,7 @@ public class ServiceCompteRenduSeance {
         return list;
     }
 
-    private List<CompteRenduView> fetchViews(String sql, int id) throws SQLException {
-        List<CompteRenduView> out = new ArrayList<>();
-        try (PreparedStatement pst = cnx.prepareStatement(sql)) {
-            pst.setInt(1, id);
-            try (ResultSet rs = pst.executeQuery()) {
-                while (rs.next()) out.add(mapView(rs));
-            }
-        }
-        return out;
-    }
+
 
     private CompteRenduView mapView(ResultSet rs) throws SQLException {
         CompteRenduView v = new CompteRenduView();

@@ -1,4 +1,3 @@
-// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
 package models;
 
 import java.sql.Timestamp;
@@ -10,10 +9,12 @@ public class CompteRenduSeance {
     private ProgresCR progresCr;
     private String resumeSeanceCr;
     private String prochainesActionCr;
-
+//pour le crud ce class
     public CompteRenduSeance() {
     }
-
+//2 constructeurs :
+//sans idCompteRendu (quand tu ajoutes, l’ID est généré par la DB)
+//avec idCompteRendu (quand tu modifies/supprimes un existant)
     public CompteRenduSeance(int idAppointment, Timestamp dateCreationCr, ProgresCR progresCr, String resumeSeanceCr, String prochainesActionCr) {
         this.idAppointment = idAppointment;
         this.dateCreationCr = dateCreationCr;

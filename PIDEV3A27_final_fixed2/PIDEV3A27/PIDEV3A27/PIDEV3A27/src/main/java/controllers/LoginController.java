@@ -15,18 +15,23 @@ public class LoginController {
 
     @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
-    @FXML private Label errorLabel;
+    @FXML private Label errorLabel; //errorLabel → message d’erreur rouge
     @FXML private Button loginButton;
 
-    private final AuthService authService = new AuthService();
+    private final AuthService authService = new AuthService(); //Service d’authentification
 
+    //Méthode appelée automatiquement au chargement
+    //Nettoyer le message d’erreur au démarrage.
     @FXML
     public void initialize() {
         if (errorLabel != null) errorLabel.setText("");
     }
 
+    //lorsqon clique sur login
     @FXML
     private void handleLogin() {
+        //Récupérer les valeurs
+        //Si getText() retourne null → on met ""
         String email = emailField.getText() == null ? "" : emailField.getText().trim();
         String pwd = passwordField.getText() == null ? "" : passwordField.getText().trim();
 
@@ -36,6 +41,7 @@ public class LoginController {
         }
 
         try {
+            //communique avec base verif les donnees
             boolean ok = authService.login(email, pwd);
             if (!ok) {
                 errorLabel.setText("Email ou mot de passe incorrect.");

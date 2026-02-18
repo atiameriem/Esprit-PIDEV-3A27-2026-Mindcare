@@ -40,6 +40,7 @@ public class CompteRenduReadController {
 
     private void loadCompteRendus() {
         try {
+            //Donc le patient ne voit que ses propres comptes-rendus.
             List<CompteRenduView> list = crService.findViewsByPatient(Session.getUserId());
 
             String kw = (searchField == null) ? "" : searchField.getText().toLowerCase().trim();
@@ -51,7 +52,7 @@ public class CompteRenduReadController {
                                 || (cr.getProgresCr() != null && cr.getProgresCr().name().toLowerCase().contains(kw))
                 ).collect(java.util.stream.Collectors.toList());
             }
-
+            //On efface toutes les cards, puis on reconstruit.
             compteRenduContainer.getChildren().clear();
 
             if (list.isEmpty()) {
@@ -120,7 +121,12 @@ public class CompteRenduReadController {
 
         VBox resumeBox = buildSection("RÉSUMÉ DE SÉANCE", cr.getResumeSeanceCr());
         VBox actionsBox = buildSection("PROCHAINES ACTIONS", cr.getProchainesActionCr());
-
+//buildCard() : Il n’y a pas :
+//bouton Ajouter
+//bouton Modifier
+//bouton Supprimer
+//popup showCompteRenduDialog(...)
+//handler handleDelete(...)
         card.getChildren().addAll(dateRow, title, psyRow, badge, resumeBox, actionsBox);
         return card;
     }

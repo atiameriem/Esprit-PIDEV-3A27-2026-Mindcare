@@ -16,6 +16,9 @@ import utils.Session;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import javafx.scene.control.ComboBox;
+import java.util.Comparator;
+
 
 /**
  * Psychologue : lecture seule de SES rendez-vous.
@@ -24,6 +27,8 @@ public class RendezVousController {
 
     @FXML private TextField searchField;
     @FXML private VBox rendezVousContainer;
+    @FXML private ComboBox<String> sortCombo;
+
 
     private ServiceRendezVous service;
     private final Connection cnx = MyDatabase.getInstance().getConnection();
@@ -35,7 +40,19 @@ public class RendezVousController {
 
         if (searchField != null) {
             searchField.textProperty().addListener((obs, o, n) -> loadRendezVous());
+
         }
+        if (sortCombo != null) {
+            sortCombo.getItems().addAll(
+                    "Date ↑ (croissant)",
+                    "Date ↓ (décroissant)"
+            );
+
+            sortCombo.getSelectionModel().select("Date ↓ (décroissant)");
+
+            sortCombo.valueProperty().addListener((obs, o, n) -> loadRendezVous());
+        }
+
     }
 
     private void loadRendezVous() {
@@ -57,6 +74,35 @@ public class RendezVousController {
                                 || (rv.getAppointmentTimeRv() != null && rv.getAppointmentTimeRv().toString().toLowerCase().contains(kw))
                 ).collect(java.util.stream.Collectors.toList());
             }
+            // ✅ TRI (date croissant / décroissant)
+            //On crée une variable sort (type String)
+            // qui contient le choix de tri.
+            //sortCombo == null → le ComboBox n’existe pas (sécurité)
+            //sortCombo.getValue() == null → l’utilisateur n’a rien sélectionné
+            //Si l’une des deux est vraie → sort = "" (chaîne vide)
+            String sort = (sortCombo == null || sortCombo.getValue() == null) ? "" : sortCombo.getValue();
+
+            //On déclare un comparateur byDateTime
+            Comparator<RendezVousView> byDateTime = Comparator
+
+                    //on trie d’abord selon la date
+                    // getAppo méthode utilisée pour prendre la date de chaque rendez-vous.
+                    //tri naturel croissant
+                    //nullsLast(...) = si la date est null,
+                    // on met cet élément à la fin (pour éviter erreur).
+                    //si deux rendez-vous ont la même date, alors compare aussi l’heure
+                    .comparing(RendezVousView::getAppointmentDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                    .thenComparing(RendezVousView::getAppointmentTimeRv, Comparator.nullsLast(Comparator.naturalOrder()));
+
+            if ("Date ↑ (croissant)".equals(sort)) {
+                //le comparateur byDateTime.
+                list.sort(byDateTime);
+            } else if ("Date ↓ (décroissant)".equals(sort)) {
+                //byDateTime.reversed() crée la version inverse du comparateur.
+                list.sort(byDateTime.reversed());
+            }
+// si rien choisi → on laisse l’ordre SQL par défaut
+
 
             rendezVousContainer.getChildren().clear();
 

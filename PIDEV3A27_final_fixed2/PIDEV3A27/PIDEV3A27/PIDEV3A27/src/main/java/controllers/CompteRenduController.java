@@ -30,21 +30,27 @@ import java.util.Optional;
  */
 public class CompteRenduController {
 
-    @FXML private TextField searchField;
-    @FXML private VBox compteRenduContainer;
-    @FXML private Button newCompteRenduButton;
+    //@FXML signifie : “ce champ existe dans le fichier FXML et JavaFX va l’injecter ici”.
+    //Les champs @FXML (liés au FXML)
+    @FXML private TextField searchField; //searchField : champ où l’utilisateur tape un mot clé
+    @FXML private VBox compteRenduContainer; //compteRenduContainer : conteneur principal où tu ajoutes les cards
+    @FXML private Button newCompteRenduButton; //bouton “Nouveau Compte-rendu”
 
-    private final Connection cnx = MyDatabase.getInstance().getConnection();
-    private ServiceCompteRenduSeance crService;
-    private ServiceRendezVous rvService;
+    private final Connection cnx = MyDatabase.getInstance().getConnection(); //une connexion SQL récupérée depuis MyDatabase (Singleton)
+    //singleton pour assurer une seule instance pour la connexion a ala base de donnee
+    private ServiceCompteRenduSeance crService; //service qui gère les comptes-rendus
+    private ServiceRendezVous rvService; //service qui gère les rendez-vous
 
+    //Une seule fois au début se faite  ,,lance le premier chargement ,,JavaFX l’appelle automatiquement
     @FXML
     public void initialize() {
-        crService = new ServiceCompteRenduSeance(cnx);
+        crService = new ServiceCompteRenduSeance(cnx); //tu crées le service CR avec la connexion DB.
         rvService = new ServiceRendezVous(cnx);
 
-        loadCompteRendus();
+        loadCompteRendus(); //tu charges et affiches tout de suite la liste.
 
+        //écoute la saisie clavier
+        //à chaque changement du texte, tu rappelles loadCompteRendus()
         if (searchField != null) {
             searchField.textProperty().addListener((obs, o, n) -> loadCompteRendus());
         }
@@ -54,23 +60,28 @@ public class CompteRenduController {
     @FXML
     private void handleNewCompteRendu() {
         try {
+            //tu récupères l’id du psy connecté depuis la Session pour affiche ses rendez vous li tebaainuu
             int idPsy = Session.getUserId();
+            //tu récupères les rendez-vous du psy
             List<RendezVousView> rdvs = rvService.findViewsByPsychologist(idPsy);
 
+            //Si aucun rendez-vous :
             if (rdvs.isEmpty()) {
                 info("Aucun rendez-vous", "Vous n'avez aucun rendez-vous pour créer un compte-rendu.");
                 return;
             }
-
+            //choisir un rendez
             RendezVousView selected = chooseRendezVous(rdvs);
+            //Si l’utilisateur annule → null → on sort.
             if (selected == null) return;
 
-            // sécurité (au cas où)
+            // sécurité (le rdv appartient au psy)
             if (!crService.appointmentBelongsToPsychologist(selected.getIdRv(), idPsy)) {
                 error("Accès refusé", "Ce rendez-vous ne vous appartient pas.");
                 return;
             }
-
+            //Ouvrir le popup en mode ajout :
+            //toEdit = null → donc c’est un ajout
             showCompteRenduDialog("Nouveau Compte-rendu", null, selected);
 
         } catch (SQLException e) {
@@ -90,11 +101,18 @@ public class CompteRenduController {
 
 
     // ── Chargement / filtre ───────────────────────────────────────────────
+    //fonction de recherche du compte rendu
     private void loadCompteRendus() {
-        try {
-            List<CompteRenduView> list = crService.findViewsByPsychologist(Session.getUserId());
 
+        try {
+            //Ici tu récupères les CR du psy
+            List<CompteRenduView> list = crService.findViewsByPsychologist(Session.getUserId());
+            //si pas de searchField → kw = ""(pas de recherche)
             String kw = (searchField == null) ? "" : searchField.getText().toLowerCase().trim();
+            //Tu gardes un compte-rendu si au moins un champ contient le mot clé :
+            //nom patient
+            //résumé
+            //prochaines actions
             if (!kw.isEmpty()) {
                 list = list.stream().filter(cr ->
                         (cr.getPatientFullName() != null && cr.getPatientFullName().toLowerCase().contains(kw))
@@ -104,7 +122,7 @@ public class CompteRenduController {
                                 || String.valueOf(cr.getIdAppointment()).contains(kw)
                 ).collect(java.util.stream.Collectors.toList());
             }
-
+        //On efface toutes les cards, puis on reconstruit.
             compteRenduContainer.getChildren().clear();
 
             if (list.isEmpty()) {
@@ -114,6 +132,7 @@ public class CompteRenduController {
                 return;
             }
 
+            //Affichage en grille de 3 colonnes
             HBox row = null;
             for (int i = 0; i < list.size(); i++) {
                 if (i % 3 == 0) {
@@ -129,7 +148,7 @@ public class CompteRenduController {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // UI Cards
+    // Construction d’une Card
     // ══════════════════════════════════════════════════════════════════════
     private VBox buildCard(CompteRenduView cr) {
         VBox card = new VBox(12);
@@ -195,13 +214,11 @@ public class CompteRenduController {
         card.getChildren().addAll(dateRow, title, patientRow, badge, resumeBox, actionsBox, btns);
         return card;
     }
-
+    //popup confirmation et puis supp
     private void handleDelete(CompteRenduView cr) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirmation");
         alert.setHeaderText("Supprimer ce compte-rendu ?");
-        alert.setContentText("Cette action est irréversible.");
-
         alert.showAndWait().ifPresent(r -> {
             if (r == ButtonType.OK) {
                 try {

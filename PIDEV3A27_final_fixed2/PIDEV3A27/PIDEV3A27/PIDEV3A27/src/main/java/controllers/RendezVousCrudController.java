@@ -23,6 +23,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import javafx.scene.control.ComboBox;
+import java.util.Comparator;
+
 
 /**
  * Patient : CRUD de ses rendez-vous avec popups + contrôle de saisie.
@@ -31,13 +34,22 @@ public class RendezVousCrudController {
 
     @FXML private TextField searchField;
     @FXML private VBox rendezVousContainer;
+    @FXML private ComboBox<String> sortCombo;
 
+
+    //objet qui fait les opérations SQL (add/update/delete/find)
     private ServiceRendezVous service;
     private final Connection cnx = MyDatabase.getInstance().getConnection();
 
+    //Tu imposes un format pour :
+    //Date : 2026-02-17
+    //Heure : 14:30
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
 
+    //Crée le service
+    //Charge la liste au début
+    //Ajoute un listener : à chaque lettre tapée dans search → recharge la liste filtrée
     @FXML
     public void initialize() {
         service = new ServiceRendezVous(cnx);
@@ -46,27 +58,45 @@ public class RendezVousCrudController {
         if (searchField != null) {
             searchField.textProperty().addListener((obs, o, n) -> loadRendezVous());
         }
-    }
+        if (sortCombo != null) {
+            sortCombo.getItems().addAll(
+                    "Date ↑ (croissant)",
+                    "Date ↓ (décroissant)"
+            );
 
+            sortCombo.getSelectionModel().select("Date ↓ (décroissant)");
+
+            sortCombo.valueProperty().addListener((obs, o, n) -> loadRendezVous());
+        }
+    }
+//Ajouter un RDV
     @FXML
     private void handleNewRendezVous() {
+        //showRendezVousDialog(null)
+        //➜ popup en mode ajout (car existing = null)
         Optional<RendezVous> created = showRendezVousDialog(null);
         created.ifPresent(rv -> {
             try {
+                //insertion DB
+                //retourne l’ID généré
                 int id = service.addAndReturnId(rv);
                 System.out.println("Inserted rendez_vous id=" + id);
+                //refresh affichage
                 loadRendezVous();
             } catch (SQLException e) {
                 showError("Erreur Ajout", e);
             }
         });
     }
-
+//Modifier un RDV
     private void handleEdit(RendezVous existing) {
         Optional<RendezVous> updated = showRendezVousDialog(existing);
+        //Si le patient valide tu fais update
         updated.ifPresent(rv -> {
             try {
+                //(jai choisis nom du psy)
                 rv.setIdRv(existing.getIdRv());
+                //le service doit vérifier id_patient = Session.getUserId()
                 service.updateForPatient(rv, Session.getUserId());
                 loadRendezVous();
             } catch (SQLException e) {
@@ -84,6 +114,7 @@ public class RendezVousCrudController {
         alert.showAndWait().ifPresent(r -> {
             if (r == ButtonType.OK) {
                 try {
+                    //✅ Ici aussi, “ForPatient” = sécurité (ne supprimer que ses RDV).
                     service.deleteForPatient(rv.getIdRv(), Session.getUserId());
                     loadRendezVous();
                 } catch (SQLException e) {
@@ -108,6 +139,26 @@ public class RendezVousCrudController {
                                 || (rv.getAppointmentTimeRv() != null && rv.getAppointmentTimeRv().toString().toLowerCase().contains(kw))
                 ).collect(java.util.stream.Collectors.toList());
             }
+            // ✅ TRI (date croissant / décroissant)
+            String sort = (sortCombo == null || sortCombo.getValue() == null) ? "" : sortCombo.getValue();
+
+            //On déclare un comparateur byDateTime
+            Comparator<RendezVousView> byDateTime = Comparator
+                    //on trie d’abord selon la date
+                    // getAppo méthode utilisée pour prendre la date de chaque rendez-vous.
+                    //tri naturel croissant
+                    //nullsLast(...) = si la date est null,
+                    // on met cet élément à la fin (pour éviter erreur).
+                    //si deux rendez-vous ont la même date, alors compare aussi l’heure
+                    .comparing(RendezVousView::getAppointmentDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                    .thenComparing(RendezVousView::getAppointmentTimeRv, Comparator.nullsLast(Comparator.naturalOrder()));
+
+            if ("Date ↑ (croissant)".equals(sort)) {
+                list.sort(byDateTime);
+            } else if ("Date ↓ (décroissant)".equals(sort)) {
+                list.sort(byDateTime.reversed());
+            }
+// si rien choisi → on laisse l’ordre SQL par défaut
 
             rendezVousContainer.getChildren().clear();
 

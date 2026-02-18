@@ -32,6 +32,12 @@
                    promptText="Rechercher (patient, statut, type, date, heure...)"
                    prefWidth="520"
                    style="-fx-padding: 10 10 10 10;"/>
+        <ComboBox fx:id="sortCombo"
+                  prefWidth="200"
+                  promptText="Trier par date"
+                  style="-fx-padding: 8 10 8 10;">
+        </ComboBox>
+
     </HBox>
 
     <!-- CARDS -->
