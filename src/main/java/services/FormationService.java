@@ -85,7 +85,7 @@ public class FormationService implements IService<Formation> {
     }
 
     public Formation findById(int id) throws SQLException {
-        String query = "SELECT * FROM formation WHERE id = ?";
+        String query = "SELECT * FROM formation WHERE id_formation = ?";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, id);
             try (ResultSet rs = statement.executeQuery()) {

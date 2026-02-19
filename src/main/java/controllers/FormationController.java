@@ -18,7 +18,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.event.ActionEvent;
 import models.Formation;
 import models.Module;
 import models.Contenu;
@@ -29,12 +28,12 @@ import services.ContenuService;
 import services.ParticipationService;
 
 import java.io.File;
-import java.io.IOException;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 public class FormationController {
 
@@ -55,14 +54,10 @@ public class FormationController {
     private Button myFormationsBtn;
 
     // === FILTRES & RECHERCHE ===
-    @FXML
-    private HBox filterBar;
+
     @FXML
     private Pane myFilterBar;
-    @FXML
-    private TextField searchField;
-    @FXML
-    private TextField myParticipationsSearchField;
+
     @FXML
     private ComboBox<String> categoryCombo;
 
@@ -111,7 +106,7 @@ public class FormationController {
     private final ModuleService moduleService = new ModuleService();
     private final ContenuService contenuService = new ContenuService();
     private final ParticipationService participationService = new ParticipationService();
-    private int currentUserId = 1;
+    private final int currentUserId = 1;
 
     private String selectedImagePath;
     private Formation existingFormation;
@@ -135,9 +130,6 @@ public class FormationController {
             categoryCombo.getSelectionModel().selectFirst();
         }
 
-        if (myParticipationsSearchField != null) {
-            myParticipationsSearchField.textProperty().addListener((obs, oldV, newV) -> filterMyParticipations(newV));
-        }
 
         if (modulesListView != null) {
             modulesListView.setCellFactory(lv -> new ListCell<Module>() {
@@ -147,7 +139,7 @@ public class FormationController {
                     if (empty || item == null)
                         setText(null);
                     else
-                        setText(item.getTitre() + (item.getId() > 0 ? " (Existant)" : " (Nouveau)"));
+                        setText(item.getTitre());
                 }
             });
             modulesListView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
@@ -157,22 +149,6 @@ public class FormationController {
         }
     }
 
-    private void filterMyParticipations(String query) {
-        if (participationsFlowPane == null)
-            return;
-        participationsFlowPane.getChildren().clear();
-        String low = query.toLowerCase().trim();
-        List<Participation> filtered = userParticipations.stream()
-                .filter(p -> p.getTitreFormation().toLowerCase().contains(low))
-                .collect(Collectors.toList());
-        if (filtered.isEmpty())
-            noParticipationsBox.setVisible(true);
-        else {
-            noParticipationsBox.setVisible(false);
-            for (Participation p : filtered)
-                participationsFlowPane.getChildren().add(createParticipationCard(p));
-        }
-    }
 
     // === NAVIGATION ===
 
@@ -186,14 +162,6 @@ public class FormationController {
         if (moduleDetailsView != null)
             moduleDetailsView.setVisible(target == moduleDetailsView);
 
-        if (filterBar != null) {
-            filterBar.setVisible(target == allFormationsView);
-            filterBar.setManaged(target == allFormationsView);
-        }
-        if (myFilterBar != null) {
-            myFilterBar.setVisible(target == myFormationsView);
-            myFilterBar.setManaged(target == myFormationsView);
-        }
     }
 
     @FXML
@@ -236,8 +204,6 @@ public class FormationController {
                 Label t = new Label(m.getTitre());
                 t.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #1F2A33;");
                 String desc = m.getDescription();
-                if (desc != null && desc.length() > 85)
-                    desc = desc.substring(0, 82) + "...";
                 Label d = new Label(desc);
                 d.setStyle("-fx-text-fill: #5F7F8B; -fx-font-size: 13px;");
                 text.getChildren().addAll(t, d);

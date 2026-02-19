@@ -2,54 +2,25 @@
 
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.geometry.*?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="controllers.ConsulterSupportController"
       spacing="20"
-      style="-fx-background-color: #F5F6FA;">
-
+      style="-fx-background-color: white;">
     <padding>
-        <Insets top="25" right="25" bottom="25" left="25"/>
+        <javafx.geometry.Insets top="30" right="30" bottom="30" left="30"/>
     </padding>
 
-    <!-- HEADER CARD -->
+
+    <!-- Bouton visible (test) -->
+    <HBox alignment="CENTER_RIGHT">
+        <Button text="Bouton" />
+    </HBox>
 
 
-    <!-- MODULE PRINCIPAL -->
-    <VBox spacing="15"
-          style="-fx-background-color: white;
-                 -fx-padding: 20;
-                 -fx-background-radius: 15;">
+    <Label text="🚧 Vue en construction"
+           style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
 
-        <Label text="Introduction à la TCC"
-               style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-
-        <!-- Progression -->
-        <VBox spacing="5">
-            <Label text="Progression"/>
-            <ProgressBar fx:id="progressBar"
-                         progress="0.6"
-                         prefHeight="8"/>
-        </VBox>
-
-        <!-- Contenu -->
-        <VBox spacing="10">
-
-            <Button text="🎧 Podcast - Qu’est-ce que la Thérapie Cognitive ?"
-                    onAction="#playPodcast"
-                    styleClass="contentBtn"/>
-
-            <Button text="📖 Les Principes de la TCC"
-                    onAction="#openPrincipes"
-                    styleClass="contentBtn"/>
-
-            <Button text="🎥 Présentation vidéo : Identifier les distorsions cognitives"
-                    onAction="#playVideo"
-                    styleClass="contentBtn"/>
-
-        </VBox>
-    </VBox>
-
+    <Label text="Cette section sera bientôt disponible."
+           style="-fx-font-size: 16px; -fx-text-fill: #666;"/>
 
 </VBox>
