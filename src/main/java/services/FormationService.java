@@ -84,5 +84,23 @@ public class FormationService implements IService<Formation> {
         return formations;
     }
 
-
+    public Formation findById(int id) throws SQLException {
+        String query = "SELECT * FROM formation WHERE id_formation = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, id);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    Formation f = new Formation();
+                    f.setId(rs.getInt("id_formation"));
+                    f.setTitre(rs.getString("titre"));
+                    f.setDescription(rs.getString("description"));
+                    f.setDuree(rs.getString("duree"));
+                    f.setNiveau(rs.getString("niveau"));
+                    f.setImagePath(rs.getString("imagePath"));
+                    return f;
+                }
+            }
+        }
+        return null;
+    }
 }
