@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.AccueilController"
+      spacing="20"
+      style="-fx-background-color: white;">
+    <padding>
+        <javafx.geometry.Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+
+    <!-- Bouton visible (test) -->
+    <HBox alignment="CENTER_RIGHT">
+        <Button text="Bouton" />
+    </HBox>
+
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="15">
+        <Label text="🏠" style="-fx-font-size: 32px;"/>
+        <VBox spacing="5">
+            <Label text="Bienvenue sur MindCare" 
+                   style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+            <Label text="Votre plateforme de bien-être mental" 
+                   style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
+        </VBox>
+    </HBox>
+
+    <Separator/>
+
+    <!-- Statistiques -->
+    <GridPane hgap="20" vgap="20">
+        <!-- Card 1: Rendez-vous -->
+        <VBox spacing="10" style="-fx-background-color: #E3F2FD; -fx-padding: 20 20 20 20; -fx-background-radius: 10;"
+              GridPane.columnIndex="0" GridPane.rowIndex="0" prefWidth="200">
+            <Label text="📅" style="-fx-font-size: 32px;"/>
+            <Label text="Rendez-vous" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="5 à venir" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1976D2;"/>
+        </VBox>
+
+        <!-- Card 2: Messages -->
+        <VBox spacing="10" style="-fx-background-color: #F3E5F5; -fx-padding: 20 20 20 20; -fx-background-radius: 10;"
+              GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="200">
+            <Label text="💬" style="-fx-font-size: 32px;"/>
+            <Label text="Messages" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="12 non lus" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #7B1FA2;"/>
+        </VBox>
+
+        <!-- Card 3: Tests -->
+        <VBox spacing="10" style="-fx-background-color: #E8F5E9; -fx-padding: 20 20 20 20; -fx-background-radius: 10;"
+              GridPane.columnIndex="2" GridPane.rowIndex="0" prefWidth="200">
+            <Label text="📊" style="-fx-font-size: 32px;"/>
+            <Label text="Tests complétés" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="8 tests" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #388E3C;"/>
+        </VBox>
+
+        <!-- Card 4: Formations -->
+        <VBox spacing="10" style="-fx-background-color: #FFF3E0; -fx-padding: 20 20 20 20; -fx-background-radius: 10;"
+              GridPane.columnIndex="3" GridPane.rowIndex="0" prefWidth="200">
+            <Label text="🎓" style="-fx-font-size: 32px;"/>
+            <Label text="Formations" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="3 en cours" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #F57C00;"/>
+        </VBox>
+    </GridPane>
+
+    <!-- Section rapide -->
+    <VBox spacing="15" VBox.vgrow="ALWAYS">
+        <Label text="Actions rapides" 
+               style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+        
+        <HBox spacing="15">
+            <Button text="📅 Nouveau rendez-vous" 
+                    style="-fx-background-color: #1976D2; -fx-text-fill: white; -fx-padding: 15 30; -fx-font-size: 14px; -fx-background-radius: 5;"/>
+            <Button text="💬 Accéder au forum" 
+                    style="-fx-background-color: #7B1FA2; -fx-text-fill: white; -fx-padding: 15 30; -fx-font-size: 14px; -fx-background-radius: 5;"/>
+            <Button text="📊 Passer un test" 
+                    style="-fx-background-color: #388E3C; -fx-text-fill: white; -fx-padding: 15 30; -fx-font-size: 14px; -fx-background-radius: 5;"/>
+        </HBox>
+    </VBox>
+
+    <!-- Dernières activités -->
+    <VBox spacing="10">
+        <Label text="Dernières activités" 
+               style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+        
+        <VBox spacing="8" style="-fx-background-color: #F5F5F5; -fx-padding: 15 15 15 15; -fx-background-radius: 5;">
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="✅" style="-fx-font-size: 18px;"/>
+                <Label text="Test d'anxiété complété - Il y a 2 jours" 
+                       style="-fx-font-size: 14px;"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="📅" style="-fx-font-size: 18px;"/>
+                <Label text="Rendez-vous avec Dr. Dubois - Il y a 3 jours" 
+                       style="-fx-font-size: 14px;"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="💬" style="-fx-font-size: 18px;"/>
+                <Label text="Nouveau message sur le forum - Il y a 5 jours" 
+                       style="-fx-font-size: 14px;"/>
+            </HBox>
+        </VBox>
+    </VBox>
+
+</VBox>

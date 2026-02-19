@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.fxml.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.ForumController"
+            stylesheets="@../css/forum.css"
+            styleClass="root">
+
+    <!-- TOP -->
+    <top>
+        <VBox spacing="10" styleClass="topArea">
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <TextField fx:id="searchField"
+                           promptText="Rechercher..."
+                           HBox.hgrow="ALWAYS"
+                           styleClass="searchField"/>
+
+                <ComboBox fx:id="sortCombo"
+                          promptText="Trier par"
+                          prefWidth="160"
+                          styleClass="combo"/>
+
+                <Button fx:id="addPostButton"
+                        text="+ Ajouter un Post"
+                        styleClass="primaryBtn"/>
+            </HBox>
+
+            <!-- Tabs -->
+            <HBox spacing="16" alignment="CENTER_LEFT" styleClass="tabsBar">
+                <fx:define>
+                    <ToggleGroup fx:id="tabsGroup"/>
+                </fx:define>
+
+                <ToggleButton fx:id="tabAllPosts"
+                              text="Tous les posts"
+                              toggleGroup="$tabsGroup"
+                              selected="true"
+                              styleClass="tabBtn"/>
+
+                <ToggleButton fx:id="tabMyPosts"
+                              text="Mes posts"
+                              toggleGroup="$tabsGroup"
+                              styleClass="tabBtn"/>
+
+                <!-- Visible uniquement pour admin (géré dans le controller) -->
+                <ToggleButton fx:id="tabReports"
+                              text="Signalements"
+                              toggleGroup="$tabsGroup"
+                              styleClass="tabBtn"/>
+            </HBox>
+
+            <Separator/>
+        </VBox>
+    </top>
+
+    <!-- CENTER -->
+    <center>
+        <HBox spacing="16" styleClass="contentArea">
+
+            <!-- LEFT COLUMN : VIDE, rempli par le controller depuis DB -->
+            <ScrollPane fitToWidth="true" HBox.hgrow="ALWAYS" styleClass="scroll">
+                <VBox fx:id="postsContainer" spacing="12" styleClass="leftColumn"/>
+            </ScrollPane>
+
+            <!-- RIGHT COLUMN : optionnel (si tu ne la remplis pas par code, laisse vide) -->
+            <VBox spacing="12" prefWidth="280" styleClass="rightColumn"/>
+        </HBox>
+    </center>
+
+</BorderPane>

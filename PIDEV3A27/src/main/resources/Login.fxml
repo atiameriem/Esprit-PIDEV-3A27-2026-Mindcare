@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.LoginController"
+            stylesheets="@css/forum.css">
+    <center>
+        <VBox alignment="CENTER" spacing="12" maxWidth="420">
+            <padding>
+                <Insets top="40" right="40" bottom="40" left="40"/>
+            </padding>
+
+            <Label text="MindCare" styleClass="postTitle"/>
+            <Label text="Connexion" style="-fx-font-size: 18px; -fx-font-weight: 700;"/>
+
+            <TextField fx:id="tfEmailOrUsername" promptText="Email ou Nom" styleClass="searchField"/>
+            <PasswordField fx:id="pfPassword" promptText="Mot de passe" styleClass="searchField"/>
+
+            <Button text="Se connecter" onAction="#onLogin" styleClass="primaryBtn" maxWidth="Infinity"/>
+
+            <Label fx:id="lblError" text="" wrapText="true"
+                   style="-fx-text-fill: #d32f2f; -fx-font-weight: 600;"/>
+        </VBox>
+    </center>
+</BorderPane>
