@@ -618,7 +618,13 @@ public class FormationController {
         }
     }
 
-
+    @FXML
+    private void openAjouterFormation() {
+        this.isEditMode = false;
+        this.existingFormation = null;
+        this.modulesToAdd.clear();
+        showFormationPopup();
+    }
 
     private void openEditFormation(Formation f) {
         this.isEditMode = true;
