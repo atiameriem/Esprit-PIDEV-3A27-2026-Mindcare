@@ -194,8 +194,8 @@ public class ReclamationController {
             private final HBox pane = new HBox(10, editBtn, deleteBtn);
 
             {
-                editBtn.setStyle("-fx-background-color: #FFC107; -fx-text-fill: white;");
-                deleteBtn.setStyle("-fx-background-color: #D32F2F; -fx-text-fill: white;");
+                editBtn.setStyle("-fx-background-color: #d9cbe8; -fx-text-fill: white;");
+                deleteBtn.setStyle("-fx-background-color: #5646c5; -fx-text-fill: white;");
 
                 editBtn.setOnAction(event -> {
                     Reclamation r = getTableView().getItems().get(getIndex());

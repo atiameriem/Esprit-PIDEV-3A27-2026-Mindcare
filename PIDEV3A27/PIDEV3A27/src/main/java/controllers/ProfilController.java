@@ -196,8 +196,8 @@ public class ProfilController {
             private final Button btnDelete = new Button("🗑️");
 
             {
-                btnEdit.setStyle("-fx-background-color: #FFC107; -fx-text-fill: black; -fx-font-size: 12px; -fx-padding: 5 10; -fx-background-radius: 5; -fx-cursor: hand;");
-                btnDelete.setStyle("-fx-background-color: #F44336; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 5 10; -fx-background-radius: 5; -fx-cursor: hand;");
+                btnEdit.setStyle("-fx-background-color: #bca4d5; -fx-text-fill: black; -fx-font-size: 12px; -fx-padding: 5 10; -fx-background-radius: 5; -fx-cursor: hand;");
+                btnDelete.setStyle("-fx-background-color: #5022c5; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 5 10; -fx-background-radius: 5; -fx-cursor: hand;");
 
                 btnEdit.setOnAction(event -> {
                     User user = getTableView().getItems().get(getTableRow().getIndex());
