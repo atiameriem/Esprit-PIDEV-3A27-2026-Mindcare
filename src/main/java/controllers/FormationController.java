@@ -678,7 +678,7 @@ public class FormationController {
             f.setNiveau(niveauCombo.getValue());
             f.setImagePath(selectedImagePath);
 
-            // ✅ Assurer que moduleEnCours est inclus
+
             if (moduleEnCours != null && !modulesToAdd.contains(moduleEnCours)
                     && !moduleEnCours.getTitre().isEmpty()) {
                 modulesToAdd.add(moduleEnCours);
@@ -739,10 +739,10 @@ public class FormationController {
                     return;
                 }
             }
-            iv.setImage(new Image(getClass().getResource("/images/psychologie.jpg").toExternalForm()));
+            iv.setImage(new Image(getClass().getResource("/images/noimg.jpg").toExternalForm()));
         } catch (Exception e) {
             try {
-                iv.setImage(new Image(getClass().getResource("/images/psychologie.jpg").toExternalForm()));
+                iv.setImage(new Image(getClass().getResource("/images/noimg.jpg").toExternalForm()));
             } catch (Exception ex) {
                 /* Image Missing */ }
         }
