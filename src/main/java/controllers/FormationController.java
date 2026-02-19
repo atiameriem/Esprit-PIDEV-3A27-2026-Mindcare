@@ -678,15 +678,34 @@ public class FormationController {
             f.setNiveau(niveauCombo.getValue());
             f.setImagePath(selectedImagePath);
 
+            // ✅ Assurer que moduleEnCours est inclus
+            if (moduleEnCours != null && !modulesToAdd.contains(moduleEnCours)
+                    && !moduleEnCours.getTitre().isEmpty()) {
+                modulesToAdd.add(moduleEnCours);
+            }
+
             if (isEditMode) {
                 formationService.update(f);
-                // On met à jour les modules (logique simplifiée)
                 for (Module m : modulesToAdd) {
+                    m.setFormationId(f.getId());
                     if (m.getId() == 0) {
-                        m.setFormationId(f.getId());
                         moduleService.create(m);
+                        // Sauvegarde les contenus liés au module
+                        for (Contenu c : m.getContenus()) {
+                            c.setModuleId(m.getId());
+                            contenuService.create(c);
+                        }
                     } else {
                         moduleService.update(m);
+                        // Sauvegarde ou met à jour les contenus liés
+                        for (Contenu c : m.getContenus()) {
+                            if (c.getId() == 0) {
+                                c.setModuleId(m.getId());
+                                contenuService.create(c);
+                            } else {
+                                contenuService.update(c);
+                            }
+                        }
                     }
                 }
             } else {
@@ -694,13 +713,22 @@ public class FormationController {
                 for (Module m : modulesToAdd) {
                     m.setFormationId(id);
                     moduleService.create(m);
+                    // Sauvegarde les contenus liés au module
+                    for (Contenu c : m.getContenus()) {
+                        c.setModuleId(m.getId());
+                        contenuService.create(c);
+                    }
                 }
             }
+
             ((Stage) titreField.getScene().getWindow()).close();
+            // Réinitialiser moduleEnCours
+            moduleEnCours = null;
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     private void setImageSafe(ImageView iv, String path) {
         try {
