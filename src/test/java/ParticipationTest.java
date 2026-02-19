@@ -25,7 +25,7 @@ public class ParticipationTest {
         ps = new ParticipationService();
         fs = new FormationService();
 
-        // Créer une formation test si elle n'existe pas
+        // Créer une formation test
         List<Formation> formations = fs.read();
         Formation f = formations.stream()
                 .filter(fo -> "Formation Test".equals(fo.getTitre()))
