@@ -19,27 +19,35 @@ import java.util.List;
 
 public class PasserTestsController {
 
+    // ⬇️ Conteneur FXML pour la liste des tests
     @FXML private VBox listeTests;
+
+    // ⬇️ Bouton pour créer un nouveau test
     @FXML private Button btnNouveauTest;
 
+    // ⬇️ Services pour accéder aux données des quiz et des questions
     private final ServiceQuiz     serviceQuiz     = new ServiceQuiz();
     private final ServiceQuestion serviceQuestion = new ServiceQuestion();
 
-    // ← à remplacer par la session utilisateur
+    // ⬇️ Identifiant du psychologue (à remplacer par la session réelle)
     private final int idPsychologue = 6;
 
+    // ⬇️ Initialisation automatique après chargement du FXML
     @FXML
     public void initialize() {
-        chargerQuizzes();
+        chargerQuizzes(); // Charger tous les quiz disponibles
     }
 
+    // ⬇️ Charge tous les quiz et crée leur carte dans l'interface
     private void chargerQuizzes() {
         try {
-            List<Quiz> quizzes = serviceQuiz.getAll();
-            listeTests.getChildren().clear();
+            List<Quiz> quizzes = serviceQuiz.getAll(); // Récupérer tous les quiz
+            listeTests.getChildren().clear();          // Vider l'affichage précédent
 
             for (Quiz quiz : quizzes) {
+                // Compter le nombre de questions pour chaque quiz
                 int nbQuestions = serviceQuestion.countQuestionsByQuiz(quiz.getIdQuiz());
+                // Ajouter la carte visuelle du quiz
                 listeTests.getChildren().add(creerCarteQuiz(quiz, nbQuestions));
             }
 
@@ -48,11 +56,9 @@ public class PasserTestsController {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // Crée une carte quiz comme dans l'image
-    // ══════════════════════════════════════════════════════════════
+    // ⬇️ Crée une carte visuelle pour un quiz avec icône, infos et boutons d'action
     private HBox creerCarteQuiz(Quiz quiz, int nbQuestions) {
-        // Carte principale
+        // Carte principale du quiz
         HBox carte = new HBox(16);
         carte.setAlignment(Pos.CENTER_LEFT);
         carte.setPadding(new Insets(18, 20, 18, 20));
@@ -60,7 +66,7 @@ public class PasserTestsController {
                 "-fx-background-radius: 12;" +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);");
 
-        // ── Icône cerveau ──────────────────────────────────────────
+        // ── Icône cerveau pour le visuel
         StackPane iconBox = new StackPane();
         iconBox.setPrefSize(50, 50);
         iconBox.setMinSize(50, 50);
@@ -69,7 +75,7 @@ public class PasserTestsController {
         icon.setStyle("-fx-font-size: 20px;");
         iconBox.getChildren().add(icon);
 
-        // ── Infos quiz ─────────────────────────────────────────────
+        // ── Informations sur le quiz (titre, description, métadonnées)
         VBox infos = new VBox(4);
         HBox.setHgrow(infos, Priority.ALWAYS);
 
@@ -80,12 +86,11 @@ public class PasserTestsController {
         description.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
         description.setWrapText(true);
 
-        // Ligne durée + questions
+        // ── Métadonnées : durée estimée et nombre de questions
         HBox meta = new HBox(16);
         meta.setAlignment(Pos.CENTER_LEFT);
 
-        // Durée estimée (2 min par question)
-        int dureeMin = Math.max(5, nbQuestions * 2);
+        int dureeMin = Math.max(5, nbQuestions * 2); // 2 min par question, minimum 5 min
         Label duree = new Label("⏱ " + dureeMin + " min");
         duree.setStyle("-fx-font-size: 11px; -fx-text-fill: #95a5a6;");
 
@@ -95,10 +100,11 @@ public class PasserTestsController {
         meta.getChildren().addAll(duree, questions);
         infos.getChildren().addAll(titre, description, meta);
 
-        // ── Boutons action ─────────────────────────────────────────
+        // ── Boutons d'action : Éditer, Supprimer, Passer
         HBox actions = new HBox(8);
         actions.setAlignment(Pos.CENTER_RIGHT);
 
+        // Bouton édition
         Button btnEdit = new Button("✏");
         btnEdit.setStyle("-fx-background-color: transparent;" +
                 "-fx-font-size: 14px;" +
@@ -106,6 +112,7 @@ public class PasserTestsController {
                 "-fx-text-fill: #95a5a6;");
         btnEdit.setOnAction(e -> ouvrirEditionQuiz(quiz));
 
+        // Bouton suppression
         Button btnDelete = new Button("🗑");
         btnDelete.setStyle("-fx-background-color: transparent;" +
                 "-fx-font-size: 14px;" +
@@ -113,6 +120,7 @@ public class PasserTestsController {
                 "-fx-text-fill: #e74c3c;");
         btnDelete.setOnAction(e -> supprimerQuiz(quiz));
 
+        // Bouton pour passer le quiz
         Button btnPasser = new Button("Passer  ›");
         btnPasser.setStyle("-fx-background-color: #2c4a6e;" +
                 "-fx-text-fill: white;" +
@@ -125,14 +133,12 @@ public class PasserTestsController {
 
         actions.getChildren().addAll(btnEdit, btnDelete, btnPasser);
 
+        // ⬇️ Assemblage final de la carte
         carte.getChildren().addAll(iconBox, infos, actions);
         return carte;
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // Actions
-    // ══════════════════════════════════════════════════════════════
-
+    // ⬇️ Ouvre l'interface pour passer le quiz
     private void passerQuiz(Quiz quiz) {
         try {
             FXMLLoader loader = new FXMLLoader(
@@ -144,9 +150,8 @@ public class PasserTestsController {
             PassageQuizController ctrl = loader.getController();
             ctrl.setQuiz(quiz);
 
-            // Charger dans le contentArea parent
-            VBox parent = (VBox) listeTests.getScene()
-                    .lookup("#contentArea");
+            // Charger la vue dans le contentArea parent
+            VBox parent = (VBox) listeTests.getScene().lookup("#contentArea");
             if (parent != null) {
                 parent.getChildren().setAll(vue);
             }
@@ -156,6 +161,7 @@ public class PasserTestsController {
         }
     }
 
+    // ⬇️ Ouvre l'interface pour créer ou éditer un quiz
     private void ouvrirEditionQuiz(Quiz quiz) {
         try {
             FXMLLoader loader = new FXMLLoader(
@@ -165,7 +171,7 @@ public class PasserTestsController {
 
             // Passer le quiz au controller en mode édition
             NouveauTestController ctrl = loader.getController();
-            ctrl.setQuizPourEdition(quiz); // ← pré-remplissage automatique
+            ctrl.setQuizPourEdition(quiz); // Pré-remplissage automatique des champs
 
             VBox parent = (VBox) listeTests.getScene().lookup("#contentArea");
             if (parent != null) parent.getChildren().setAll(vue);
@@ -175,16 +181,18 @@ public class PasserTestsController {
         }
     }
 
+    // ⬇️ Supprime un quiz et rafraîchit la liste
     private void supprimerQuiz(Quiz quiz) {
         try {
             serviceQuiz.delete(quiz);
-            chargerQuizzes(); // rafraîchir la liste
+            chargerQuizzes(); // Rafraîchir la liste après suppression
             System.out.println("🗑 Quiz supprimé : " + quiz.getTitre());
         } catch (SQLException e) {
             System.err.println("❌ Erreur suppression : " + e.getMessage());
         }
     }
 
+    // ⬇️ Ouvre l'interface pour créer un nouveau test
     @FXML
     private void ouvrirNouveauTest() {
         try {

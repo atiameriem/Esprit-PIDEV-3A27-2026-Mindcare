@@ -44,16 +44,19 @@ public class NouveauTestController {
     private final List<QuestionBloc> questionBlocs = new ArrayList<>();
 
     // ══════════════════════════════════════════════════════════════
+    // Initialise les composants FXML (comboTypeTest)
+    // ══════════════════════════════════════════════════════════════
     @FXML
     public void initialize() {
         comboTypeTest.setItems(FXCollections.observableArrayList(
-                "psychologique", "cognitif", "comportemental", "émotionnel", "STRESS","BIEN_ETRE", "HUMEUR"
+                "psychologique", "cognitif", "comportemental", "émotionnel",
+                "STRESS", "BIEN_ETRE", "HUMEUR"
         ));
         comboTypeTest.getSelectionModel().selectFirst();
     }
 
     // ══════════════════════════════════════════════════════════════
-    // ✔ MODE ÉDITION — appelé depuis PasserTestsController
+    // Configure le contrôleur pour modifier un quiz existant (mode édition)
     // ══════════════════════════════════════════════════════════════
     public void setQuizPourEdition(Quiz quiz) {
         this.quizEnEdition = quiz;
@@ -73,10 +76,13 @@ public class NouveauTestController {
             comboTypeTest.getSelectionModel().select(quiz.getTypeTest());
         }
 
-        // Charger les questions existantes
+        // Charger les questions existantes du quiz
         chargerQuestionsExistantes(quiz.getIdQuiz());
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // Charge les questions et leurs choix depuis la base pour un quiz donné
+    // ══════════════════════════════════════════════════════════════
     private void chargerQuestionsExistantes(int idQuiz) {
         try {
             List<Question> questions =
@@ -103,7 +109,7 @@ public class NouveauTestController {
     }
 
     // ══════════════════════════════════════════════════════════════
-    // ✔ Ajouter un bloc question vide
+    // Ajoute un nouveau bloc question vide
     // ══════════════════════════════════════════════════════════════
     @FXML
     private void ajouterQuestion() {
@@ -114,10 +120,11 @@ public class NouveauTestController {
     }
 
     // ══════════════════════════════════════════════════════════════
-    // ✔ Sauvegarder — création OU mise à jour
+    // Sauvegarde le quiz (création ou mise à jour selon le mode)
     // ══════════════════════════════════════════════════════════════
     @FXML
     private void sauvegarderTest() {
+        // Validation des champs
         if (fieldTitre.getText().trim().isEmpty()) {
             afficherAlerte("Erreur", "Le titre est obligatoire."); return;
         }
@@ -143,7 +150,9 @@ public class NouveauTestController {
         }
     }
 
-    // ── Création ──────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════
+    // Crée un nouveau quiz et sauvegarde toutes les questions + choix
+    // ══════════════════════════════════════════════════════════════
     private void creerNouveauQuiz() throws SQLException {
         Quiz quiz = new Quiz(
                 idPatient, idPsychologue,
@@ -157,15 +166,17 @@ public class NouveauTestController {
         retourListe();
     }
 
-    // ── Mise à jour ───────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════
+    // Met à jour un quiz existant et recrée ses questions + choix
+    // ══════════════════════════════════════════════════════════════
     private void mettreAJourQuiz() throws SQLException {
-        // 1. Mettre à jour les infos du quiz
+        // Mettre à jour les infos du quiz
         quizEnEdition.setTitre      (fieldTitre.getText().trim());
         quizEnEdition.setDescription(fieldDescription.getText().trim());
         quizEnEdition.setTypeTest   (comboTypeTest.getValue());
         serviceQuiz.update(quizEnEdition);
 
-        // 2. Supprimer les anciennes questions et leurs choix
+        // Supprimer anciennes questions et leurs choix
         List<Question> anciennes =
                 serviceQuestion.getQuestionsByQuiz(quizEnEdition.getIdQuiz());
         for (Question q : anciennes) {
@@ -174,7 +185,7 @@ public class NouveauTestController {
             serviceQuestion.delete(q);
         }
 
-        // 3. Recréer toutes les questions + choix
+        // Recréer toutes les questions + choix
         sauvegarderQuestions(quizEnEdition.getIdQuiz());
 
         afficherInfo("Succès",
@@ -182,7 +193,9 @@ public class NouveauTestController {
         retourListe();
     }
 
-    // ── Sauvegarder questions + choix ─────────────────────────────
+    // ══════════════════════════════════════════════════════════════
+    // Sauvegarde toutes les questions et leurs choix pour un quiz donné
+    // ══════════════════════════════════════════════════════════════
     private void sauvegarderQuestions(int idQuiz) throws SQLException {
         for (int i = 0; i < questionBlocs.size(); i++) {
             QuestionBloc bloc = questionBlocs.get(i);
@@ -198,7 +211,7 @@ public class NouveauTestController {
     }
 
     // ══════════════════════════════════════════════════════════════
-    // Navigation
+    // Retourne à la liste des tests
     // ══════════════════════════════════════════════════════════════
     @FXML
     private void retourListe() {
@@ -214,18 +227,24 @@ public class NouveauTestController {
         }
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // Affiche une alerte warning avec un titre et un message
+    // ══════════════════════════════════════════════════════════════
     private void afficherAlerte(String t, String m) {
         Alert a = new Alert(Alert.AlertType.WARNING);
         a.setTitle(t); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // Affiche un message d'information avec un titre et un message
+    // ══════════════════════════════════════════════════════════════
     private void afficherInfo(String t, String m) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle(t); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
     }
 
     // ══════════════════════════════════════════════════════════════
-    // Classe interne : bloc question
+    // Classe interne représentant un bloc question avec ses choix
     // ══════════════════════════════════════════════════════════════
     private class QuestionBloc {
 
@@ -234,6 +253,9 @@ public class NouveauTestController {
         private final VBox      choixContainer;
         private final List<ChoixEntry> choixEntries = new ArrayList<>();
 
+        // ══════════════════════════════════════════════════════════
+        // Initialise un bloc question avec son numéro et optionnellement les données existantes
+        // ══════════════════════════════════════════════════════════
         QuestionBloc(int numero, Question question) {
             node = new VBox(10);
             node.setPadding(new Insets(16));
@@ -241,7 +263,7 @@ public class NouveauTestController {
                     "-fx-background-radius: 10;" +
                     "-fx-border-color: #e0e0e0; -fx-border-radius: 10;");
 
-            // En-tête
+            // En-tête avec numéro et bouton supprimer
             HBox header = new HBox(10);
             header.setAlignment(Pos.CENTER_LEFT);
             Label num = new Label("Question " + numero);
@@ -253,7 +275,7 @@ public class NouveauTestController {
             del.setOnAction(e -> supprimerBloc());
             header.getChildren().addAll(num, del);
 
-            // Champ texte question
+            // Champ texte de la question
             fieldTexte = new TextField(question != null ? question.getTexteQuestion() : "");
             fieldTexte.setPromptText("Texte de la question...");
             fieldTexte.setStyle("-fx-background-color:white;-fx-border-color:#e0e0e0;" +
@@ -271,7 +293,7 @@ public class NouveauTestController {
                     "-fx-font-size:12px;-fx-font-weight:bold;-fx-cursor:hand;");
             addChoix.setOnAction(e -> ajouterChoix("", choixEntries.size()));
 
-            // Pré-remplir les choix si édition, sinon 2 vides
+            // Pré-remplir les choix si édition, sinon créer 2 choix vides
             if (question != null && question.getReponses() != null
                     && !question.getReponses().isEmpty()) {
                 for (Reponse r : question.getReponses()) {
@@ -286,6 +308,9 @@ public class NouveauTestController {
                     choixContainer, addChoix);
         }
 
+        // ══════════════════════════════════════════════════════════
+        // Ajoute un choix dans le bloc question
+        // ══════════════════════════════════════════════════════════
         private void ajouterChoix(String texte, int valeur) {
             HBox ligne = new HBox(8);
             ligne.setAlignment(Pos.CENTER_LEFT);
@@ -321,6 +346,9 @@ public class NouveauTestController {
             choixContainer.getChildren().add(ligne);
         }
 
+        // ══════════════════════════════════════════════════════════
+        // Supprime le bloc question
+        // ══════════════════════════════════════════════════════════
         private void supprimerBloc() {
             listeQuestionsForm.getChildren().remove(node);
             questionBlocs.remove(this);
@@ -329,12 +357,19 @@ public class NouveauTestController {
 
         VBox             getNode()          { return node; }
         String           getTexteQuestion() { return fieldTexte.getText(); }
+
+        // ══════════════════════════════════════════════════════════
+        // Récupère tous les choix valides (non vides)
+        // ══════════════════════════════════════════════════════════
         List<ChoixEntry> getChoix() {
             List<ChoixEntry> v = new ArrayList<>();
             for (ChoixEntry e : choixEntries) if (!e.texte.isEmpty()) v.add(e);
             return v;
         }
 
+        // ══════════════════════════════════════════════════════════
+        // Classe interne pour représenter un choix avec texte et valeur
+        // ══════════════════════════════════════════════════════════
         class ChoixEntry {
             String texte; int valeur;
             ChoixEntry(TextField ft, Spinner<Integer> sv) {

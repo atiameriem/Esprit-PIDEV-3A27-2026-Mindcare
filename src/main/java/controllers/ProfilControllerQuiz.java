@@ -19,20 +19,31 @@ import java.util.*;
 
 public class ProfilControllerQuiz {
 
+    // ⬇️ Conteneur FXML pour afficher les cartes de résultats
     @FXML private VBox   containerReponses;
+
+    // ⬇️ Bouton pour fermer la fenêtre / revenir en arrière
     @FXML private Button btnRetour;
+
+    // ⬇️ Label affichant le nom ou titre du patient
     @FXML private Label  lblTitrePatient;
 
+    // ⬇️ Identifiant du patient dont on affiche les résultats
     private int idPatient;
-    private static final int SCORE_MAX = 6; // 3 questions × valeur max 2
 
+    // ⬇️ Score maximum possible pour normalisation (3 questions × 2 pts)
+    private static final int SCORE_MAX = 6;
+
+    // ⬇️ Service pour récupérer les réponses du patient depuis la base
     private final ServiceReponse serviceReponse = new ServiceReponse();
 
+    // ⬇️ Setter appelé depuis un autre controller pour définir le patient
     public void setIdPatient(int idPatient) {
         this.idPatient = idPatient;
-        afficherResultats();
+        afficherResultats(); // Mettre à jour l'affichage
     }
 
+    // ⬇️ Ferme la fenêtre actuelle lorsqu'on clique sur "Retour"
     @FXML
     private void handleRetour() {
         Stage stage = (Stage) btnRetour.getScene().getWindow();
@@ -40,14 +51,16 @@ public class ProfilControllerQuiz {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Afficher les résultats groupés par quiz
+    //  Affiche tous les résultats du patient, groupés par quiz
     // ════════════════════════════════════════════════════════════
     private void afficherResultats() {
-        containerReponses.getChildren().clear();
+        containerReponses.getChildren().clear(); // Vider l'ancien contenu
 
         try {
+            // Récupérer les détails de toutes les réponses du patient
             List<String> details = serviceReponse.getDetailsReponsesPatient(idPatient);
 
+            // Aucun résultat
             if (details.isEmpty()) {
                 Label lblVide = new Label("Aucun résultat disponible pour ce patient.");
                 lblVide.setStyle("-fx-font-size: 13px; -fx-text-fill: #9CA3AF; -fx-padding: 20;");
@@ -55,19 +68,20 @@ public class ProfilControllerQuiz {
                 return;
             }
 
-            // ── Grouper les lignes par quiz ───────────────────────
+            // ── Grouper les réponses par quiz ───────────────────────
             // Structure : Map<titreQuiz, List<ligne>>
             Map<String, List<String>> parQuiz = new LinkedHashMap<>();
 
             for (String ligne : details) {
-                // Format : "Quiz: nom | Question: texte | Réponse: texte | Valeur: x"
+                // Format attendu : "Quiz: nom | Question: texte | Réponse: texte | Valeur: x"
                 String[] parts   = ligne.split("\\|");
                 String titreQuiz = parts[0].replace("Quiz:", "").trim();
 
+                // Ajouter la ligne dans la liste du quiz correspondant
                 parQuiz.computeIfAbsent(titreQuiz, k -> new ArrayList<>()).add(ligne);
             }
 
-            // ── Créer une carte par quiz ──────────────────────────
+            // ── Créer une carte pour chaque quiz
             for (Map.Entry<String, List<String>> entry : parQuiz.entrySet()) {
                 containerReponses.getChildren().add(
                         creerCarteQuiz(entry.getKey(), entry.getValue())
@@ -80,18 +94,18 @@ public class ProfilControllerQuiz {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Carte d'un quiz complet avec toutes ses questions
+    //  Crée la carte visuelle d'un quiz avec son score et ses questions
     // ════════════════════════════════════════════════════════════
     private VBox creerCarteQuiz(String titreQuiz, List<String> lignes) {
         String titreLow = titreQuiz.toLowerCase();
 
-        // Calculer score total du quiz
+        // ── Calcul du score brut total du quiz
         int scoreBrut = 0;
         for (String ligne : lignes) {
             scoreBrut += extraireValeur(ligne);
         }
 
-        // Conversion en pourcentage réel
+        // ── Conversion en pourcentage réel selon le type de quiz
         int scorePourcent;
         if (titreLow.contains("stress") || titreLow.contains("humeur")) {
             scorePourcent = (int) Math.max(0, 100 - (scoreBrut * 100.0) / SCORE_MAX);
@@ -99,7 +113,7 @@ public class ProfilControllerQuiz {
             scorePourcent = (int) Math.min(100, (scoreBrut * 100.0) / SCORE_MAX);
         }
 
-        // Couleurs MindCare selon le type
+        // ── Définir couleurs et emoji selon le type de quiz
         String couleur, couleurFond, emoji;
         if (titreLow.contains("stress")) {
             couleur = "#FF6B9D"; couleurFond = "#FFD4E5"; emoji = "🌸 ";
@@ -111,7 +125,7 @@ public class ProfilControllerQuiz {
             couleur = "#A78BFA"; couleurFond = "#E9D5FF"; emoji = "📝 ";
         }
 
-        // ── Carte principale blanche ──────────────────────────────
+        // ── Carte principale blanche
         VBox carte = new VBox(12);
         carte.setPadding(new Insets(18));
         carte.setStyle(
@@ -120,7 +134,7 @@ public class ProfilControllerQuiz {
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);"
         );
 
-        // ── HEADER : arc + titre + score ──────────────────────────
+        // ── HEADER : arc de progression + titre + score
         HBox header = new HBox(14);
         header.setAlignment(Pos.CENTER_LEFT);
 
@@ -128,12 +142,14 @@ public class ProfilControllerQuiz {
         StackPane arcPane = new StackPane();
         arcPane.setPrefSize(72, 72);
 
+        // Cercle de fond
         Arc arcFond = new Arc(36, 36, 28, 28, 0, 360);
         arcFond.setType(ArcType.OPEN);
         arcFond.setStroke(Color.web(couleurFond));
         arcFond.setStrokeWidth(7);
         arcFond.setFill(Color.TRANSPARENT);
 
+        // Arc représentant le score
         Arc arcScore = new Arc(36, 36, 28, 28, 90, -(scorePourcent / 100.0) * 360);
         arcScore.setType(ArcType.OPEN);
         arcScore.setStroke(Color.web(couleur));
@@ -141,11 +157,12 @@ public class ProfilControllerQuiz {
         arcScore.setFill(Color.TRANSPARENT);
         arcScore.setStrokeLineCap(StrokeLineCap.ROUND);
 
+        // Label pourcentage
         Label lblPct = new Label(scorePourcent + "%");
         lblPct.setStyle("-fx-font-size: 12px; -fx-font-weight: 900; -fx-text-fill: " + couleur + ";");
         arcPane.getChildren().addAll(arcFond, arcScore, lblPct);
 
-        // Titre + badge
+        // ── Titre + badge
         VBox titreBox = new VBox(5);
         HBox.setHgrow(titreBox, Priority.ALWAYS);
 
@@ -158,7 +175,7 @@ public class ProfilControllerQuiz {
         Label lblBrut = new Label("Score : " + scoreBrut + "/" + SCORE_MAX);
         lblBrut.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF; -fx-font-weight: 600;");
 
-        // Badge niveau
+        // Badge du niveau selon le score
         String niveauTexte, niveauStyle;
         if (scorePourcent >= 70) {
             niveauTexte = "↑ Bon";
@@ -179,12 +196,12 @@ public class ProfilControllerQuiz {
         header.getChildren().addAll(arcPane, titreBox);
         carte.getChildren().add(header);
 
-        // ── SÉPARATEUR ────────────────────────────────────────────
+        // ── SÉPARATEUR
         Separator sep = new Separator();
         sep.setStyle("-fx-background-color: #F3F4F6;");
         carte.getChildren().add(sep);
 
-        // ── QUESTIONS / RÉPONSES ──────────────────────────────────
+        // ── Détails des questions et réponses
         for (String ligne : lignes) {
             String question = extraireQuestion(ligne);
             String reponse  = extraireReponse(ligne);
@@ -194,17 +211,17 @@ public class ProfilControllerQuiz {
             ligneBox.setAlignment(Pos.CENTER_LEFT);
             ligneBox.setPadding(new Insets(4, 0, 4, 0));
 
-            // Point coloré
+            // Point coloré à gauche
             Label dot = new Label("●");
             dot.setStyle("-fx-text-fill: " + couleur + "; -fx-font-size: 10px;");
 
-            // Question
+            // Texte de la question
             Label lblQ = new Label(question);
             lblQ.setWrapText(true);
             lblQ.setStyle("-fx-font-size: 12px; -fx-text-fill: #374151; -fx-font-weight: 600;");
             HBox.setHgrow(lblQ, Priority.ALWAYS);
 
-            // Réponse + valeur
+            // Réponse avec valeur et fond coloré
             Label lblR = new Label(reponse + "  (" + valeur + "pt)");
             lblR.setStyle("-fx-font-size: 12px; -fx-font-weight: 700;" +
                     "-fx-padding: 3 10 3 10; -fx-background-radius: 12;" +
@@ -219,8 +236,8 @@ public class ProfilControllerQuiz {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Extraction depuis les lignes
-    //  Format : "Quiz: nom | Question: texte | Réponse: texte | Valeur: x"
+    //  Méthodes utilitaires pour extraire question, réponse et valeur
+    //  depuis la ligne : "Quiz: nom | Question: texte | Réponse: texte | Valeur: x"
     // ════════════════════════════════════════════════════════════
     private String extraireQuestion(String ligne) {
         try {
