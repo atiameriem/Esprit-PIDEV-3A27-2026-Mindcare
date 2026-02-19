@@ -678,42 +678,37 @@ public class FormationController {
             f.setNiveau(niveauCombo.getValue());
             f.setImagePath(selectedImagePath);
 
-
-            if (moduleEnCours != null && !modulesToAdd.contains(moduleEnCours)
-                    && !moduleEnCours.getTitre().isEmpty()) {
-                modulesToAdd.add(moduleEnCours);
-            }
-
             if (isEditMode) {
                 formationService.update(f);
+
                 for (Module m : modulesToAdd) {
                     m.setFormationId(f.getId());
+
                     if (m.getId() == 0) {
                         moduleService.create(m);
-                        // Sauvegarde les contenus liés au module
-                        for (Contenu c : m.getContenus()) {
-                            c.setModuleId(m.getId());
-                            contenuService.create(c);
-                        }
                     } else {
                         moduleService.update(m);
-                        // Sauvegarde ou met à jour les contenus liés
-                        for (Contenu c : m.getContenus()) {
-                            if (c.getId() == 0) {
-                                c.setModuleId(m.getId());
-                                contenuService.create(c);
-                            } else {
-                                contenuService.update(c);
-                            }
+                    }
+
+                    // === Sauvegarde des contenus liés ===
+                    for (Contenu c : m.getContenus()) {
+                        c.setModuleId(m.getId());
+                        if (c.getId() == 0) {
+                            contenuService.create(c);
+                        } else {
+                            contenuService.update(c);
                         }
                     }
                 }
+
             } else {
                 int id = formationService.create(f);
+
                 for (Module m : modulesToAdd) {
                     m.setFormationId(id);
                     moduleService.create(m);
-                    // Sauvegarde les contenus liés au module
+
+                    // === Sauvegarde des contenus liés ===
                     for (Contenu c : m.getContenus()) {
                         c.setModuleId(m.getId());
                         contenuService.create(c);
@@ -722,8 +717,7 @@ public class FormationController {
             }
 
             ((Stage) titreField.getScene().getWindow()).close();
-            // Réinitialiser moduleEnCours
-            moduleEnCours = null;
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -739,10 +733,10 @@ public class FormationController {
                     return;
                 }
             }
-            iv.setImage(new Image(getClass().getResource("/images/noimg.jpg").toExternalForm()));
+            iv.setImage(new Image(getClass().getResource("/images/psychologie.jpg").toExternalForm()));
         } catch (Exception e) {
             try {
-                iv.setImage(new Image(getClass().getResource("/images/noimg.jpg").toExternalForm()));
+                iv.setImage(new Image(getClass().getResource("/images/psychologie.jpg").toExternalForm()));
             } catch (Exception ex) {
                 /* Image Missing */ }
         }
