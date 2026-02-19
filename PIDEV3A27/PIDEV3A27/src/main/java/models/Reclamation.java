@@ -79,6 +79,6 @@ public class Reclamation {
         return "Reclamation{id=" + id + ", idUser=" + idUser +
                 ", type=" + (type != null ? type.name() : "null") +
                 ", statut='" + statut + "', date=" + date +
-                ", description='" + description + "'}";
+
     }
 }
