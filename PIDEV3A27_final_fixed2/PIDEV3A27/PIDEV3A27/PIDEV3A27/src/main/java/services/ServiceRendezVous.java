@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ServiceRendezVous {
- //la connexion JDBC vers ta base (MySQL).
+    //la connexion JDBC vers ta base (MySQL).
     private final Connection cnx;
- //constructeur qui stocke la connexion dans l’objet
+    //constructeur qui stocke la connexion dans l’objet
     public ServiceRendezVous(Connection cnx) {
         this.cnx = cnx;
     }
@@ -19,7 +19,7 @@ public class ServiceRendezVous {
     //Retourne une liste de RendezVous __ne prendre que les RDV de ce psy sans nom
     public List<RendezVous> findByPsychologist(int idPsychologist) throws SQLException {
         String sql = """
-            SELECT id_rv, id_patient, id_psychologist, statutrv, appointment_date, type_rendez_vous, appointment_timerv
+            SELECT id_rv, id_patient, id_psychologist, statutrv, confirmation_status, appointment_date, type_rendez_vous, appointment_timerv
             FROM rendez_vous
             WHERE id_psychologist = ?
             ORDER BY appointment_date DESC, appointment_timerv DESC
@@ -43,10 +43,10 @@ public class ServiceRendezVous {
         }
         return list;
     }
-//Donc elle récupère les RDV du patient.
+    //Donc elle récupère les RDV du patient.
     public List<RendezVous> findByPatient(int idPatient) throws SQLException {
         String sql = """
-            SELECT id_rv, id_patient, id_psychologist, statutrv, appointment_date, type_rendez_vous, appointment_timerv
+            SELECT id_rv, id_patient, id_psychologist, statutrv, confirmation_status, appointment_date, type_rendez_vous, appointment_timerv
             FROM rendez_vous
             WHERE id_patient = ?
             ORDER BY appointment_date DESC, appointment_timerv DESC
@@ -64,7 +64,7 @@ public class ServiceRendezVous {
         return list;
     }
 
-    //SELECT 1 = on ne récupère pas les colonnes, juste une seule ligne pour dire “existe ou non”.
+    //SELECT 1 = juste une seule ligne pour dire “existe ou non”.
     //Je veux une ligne qui a cet id de rendez-vous ET cet id patient
     public boolean existsRendezVousForPatient(int idRv, int idPatient) throws SQLException {
         String sql = "SELECT 1 FROM rendez_vous WHERE id_rv=? AND id_patient=?";
@@ -132,7 +132,7 @@ public class ServiceRendezVous {
         }
         return out;
     }
-//C’est une fonction de mapping
+    //C’est une fonction de mapping
 //Transformer UNE ligne du résultat SQL (ResultSet) en objet Java RendezVousView.
     private RendezVousView mapView(ResultSet rs) throws SQLException {
         //objet vide.
@@ -143,8 +143,13 @@ public class ServiceRendezVous {
         v.setIdPatient(rs.getInt("id_patient"));
         v.setIdPsychologist(rs.getInt("id_psychologist"));
 
+        // statutrv peut être vide tant que le psy n'a pas encore choisi (ou si la DB autorise une valeur vide)
         String statut = rs.getString("statutrv");
-        if (statut != null && !statut.isEmpty()) v.setStatutRv(RendezVous.StatutRV.valueOf(statut));
+        if (statut != null && !statut.trim().isEmpty()) v.setStatutRv(RendezVous.StatutRV.valueOf(statut.trim()));
+
+        // ✅ confirmation_status : (confirme / annule / en_attente)
+        String conf = rs.getString("confirmation_status");
+        if (conf != null && !conf.trim().isEmpty()) v.setConfirmationStatus(RendezVous.ConfirmationStatus.valueOf(conf.trim()));
 
         String type = rs.getString("type_rendez_vous");
         if (type != null && !type.isEmpty()) v.setTypeRendezVous(RendezVous.TypeRV.valueOf(type));
@@ -160,7 +165,7 @@ public class ServiceRendezVous {
 
         return v;
     }
-//safeFullName sert à construire un nom complet sécurisé même si les données sont incomplètes.
+    //safeFullName sert à construire un nom complet sécurisé même si les données sont incomplètes.
     private String safeFullName(String prenom, String nom) {
         //Si prenom == null
         //➜ alors p = "" (chaîne vide)
@@ -170,9 +175,9 @@ public class ServiceRendezVous {
         String n = nom == null ? "" : nom.trim();
         return (p + " " + n).trim();
     }
-//vérifie si l’utilisateur existe ET a le rôle psychologue.
+    //vérifie si l’utilisateur existe ET a le rôle psychologue.
 //utilisé dans le popup pour empêcher choisir un “psy” invalide.
-public boolean isPsychologistUser(int idPsychologist) throws SQLException {
+    public boolean isPsychologistUser(int idPsychologist) throws SQLException {
         String sql = "SELECT 1 FROM users WHERE id_users=? AND role='psychologue'";
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
             pst.setInt(1, idPsychologist);
@@ -187,8 +192,8 @@ public boolean isPsychologistUser(int idPsychologist) throws SQLException {
 
     public int addAndReturnId(RendezVous rv) throws SQLException {
         String sql = """
-            INSERT INTO rendez_vous (id_patient, id_psychologist, statutrv, appointment_date, type_rendez_vous, appointment_timerv)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO rendez_vous (id_patient, id_psychologist, statutrv, confirmation_status, appointment_date, type_rendez_vous, appointment_timerv)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """;
 
         //PreparedStatement avec RETURN_GENERATED_KEYS
@@ -197,11 +202,15 @@ public boolean isPsychologistUser(int idPsychologist) throws SQLException {
             //Remplir paramètres
             pst.setInt(1, rv.getIdPatient());
             pst.setInt(2, rv.getIdPsychologist());
-            pst.setString(3, rv.getStatutRv().name());
-            pst.setDate(4, rv.getAppointmentDate());
+            // ✅ Au moment de l'ajout par le patient :
+            // - statutrv n'est pas choisi par le patient (le psy le fera plus tard)
+            // - confirmation_status = en_attente (par défaut)
+            pst.setString(3, (rv.getStatutRv() == null) ? "" : rv.getStatutRv().name());
+            pst.setString(4, (rv.getConfirmationStatus() == null) ? RendezVous.ConfirmationStatus.en_attente.name() : rv.getConfirmationStatus().name());
+            pst.setDate(5, rv.getAppointmentDate());
             //.name() convertit l’enum en texte exactement égal au nom enum.
-            pst.setString(5, rv.getTypeRendezVous().name());
-            pst.setTime(6, rv.getAppointmentTimeRv());
+            pst.setString(6, rv.getTypeRendezVous().name());
+            pst.setTime(7, rv.getAppointmentTimeRv());
             pst.executeUpdate();
             //Récupérer l’ID généré
             try (ResultSet rs = pst.getGeneratedKeys()) {
@@ -215,27 +224,28 @@ public boolean isPsychologistUser(int idPsychologist) throws SQLException {
         //pdate seulement si id_rv correspond ET id_patient correspond au patient connecté
         String sql = """
             UPDATE rendez_vous
-            SET id_psychologist=?, statutrv=?, appointment_date=?, type_rendez_vous=?, appointment_timerv=?
-            WHERE id_rv=? AND id_patient=?
+            SET id_psychologist=?, appointment_date=?, type_rendez_vous=?, appointment_timerv=?
+            WHERE id_rv=? AND id_patient=? AND confirmation_status='en_attente'
         """;
 
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
             pst.setInt(1, rv.getIdPsychologist());
-            pst.setString(2, rv.getStatutRv().name());
-            pst.setDate(3, rv.getAppointmentDate());
-            pst.setString(4, rv.getTypeRendezVous().name());
-            pst.setTime(5, rv.getAppointmentTimeRv());
-            pst.setInt(6, rv.getIdRv());
-            pst.setInt(7, idPatient);
+            pst.setDate(2, rv.getAppointmentDate());
+            pst.setString(3, rv.getTypeRendezVous().name());
+            pst.setTime(4, rv.getAppointmentTimeRv());
+            pst.setInt(5, rv.getIdRv());
+            pst.setInt(6, idPatient);
             pst.executeUpdate();
         }
     }
 
     public void deleteForPatient(int idRv, int idPatient) throws SQLException {
-    //Pourquoi supprimer CR avant ?
+        //Pourquoi supprimer CR avant ?
         //Car CR dépend du RDV (clé étrangère)
+        //creation de deux variables
         String delCR = "DELETE FROM compte_rendu_seance WHERE id_appointment = ?";
-        String delRV = "DELETE FROM rendez_vous WHERE id_rv=? AND id_patient=?";
+        // ✅ Patient ne peut supprimer que si le psy n'a pas encore confirmé (en_attente)
+        String delRV = "DELETE FROM rendez_vous WHERE id_rv=? AND id_patient=? AND confirmation_status='en_attente'";
 
         try {
             cnx.setAutoCommit(false);
@@ -288,14 +298,56 @@ public boolean isPsychologistUser(int idPsychologist) throws SQLException {
 
 
     private RendezVous map(ResultSet rs) throws SQLException {
+        String statut = rs.getString("statutrv");
+        RendezVous.StatutRV st = (statut == null || statut.trim().isEmpty()) ? null : RendezVous.StatutRV.valueOf(statut.trim());
+
+        String conf = rs.getString("confirmation_status");
+        RendezVous.ConfirmationStatus cs = (conf == null || conf.trim().isEmpty()) ? null : RendezVous.ConfirmationStatus.valueOf(conf.trim());
+
         return new RendezVous(
                 rs.getInt("id_rv"),
                 rs.getInt("id_patient"),
                 rs.getInt("id_psychologist"),
-                RendezVous.StatutRV.valueOf(rs.getString("statutrv")),
+                st,
+                cs,
                 rs.getDate("appointment_date"),
                 RendezVous.TypeRV.valueOf(rs.getString("type_rendez_vous")),
                 rs.getTime("appointment_timerv")
         );
+    }
+
+    // ===== Actions Psychologue =====
+
+    // ✅ Confirmer/Annuler un rendez-vous (confirmation_status) :
+    // - sécurisée : seulement si le rendez-vous appartient à ce psychologue
+    public void updateConfirmationStatusForPsychologist(int idRv, int idPsychologist, RendezVous.ConfirmationStatus status) throws SQLException {
+        String sql = """
+            UPDATE rendez_vous
+            SET confirmation_status=?
+            WHERE id_rv=? AND id_psychologist=?
+        """;
+        try (PreparedStatement pst = cnx.prepareStatement(sql)) {
+            pst.setString(1, status.name());
+            pst.setInt(2, idRv);
+            pst.setInt(3, idPsychologist);
+            pst.executeUpdate();
+        }
+    }
+
+    // ✅ Mettre à jour l'état du rendez-vous (statutrv) après confirmation
+    // - sécurisée : seulement si appartient au psy
+    // - logique : seulement si confirmation_status = confirme
+    public void updateStatutForPsychologist(int idRv, int idPsychologist, RendezVous.StatutRV statut) throws SQLException {
+        String sql = """
+            UPDATE rendez_vous
+            SET statutrv=?
+            WHERE id_rv=? AND id_psychologist=? AND confirmation_status='confirme'
+        """;
+        try (PreparedStatement pst = cnx.prepareStatement(sql)) {
+            pst.setString(1, statut == null ? "" : statut.name());
+            pst.setInt(2, idRv);
+            pst.setInt(3, idPsychologist);
+            pst.executeUpdate();
+        }
     }
 }

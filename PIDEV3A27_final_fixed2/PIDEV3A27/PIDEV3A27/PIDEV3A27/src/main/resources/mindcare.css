@@ -120,7 +120,7 @@
     -fx-background-color: transparent;
 }
 
-.submenu{ 
+.submenu{
     -fx-padding: 6 0 0 14;
     -fx-background-color: transparent;
 }
@@ -154,13 +154,13 @@
     -fx-padding: 14 18;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 16, 0, 0, 2);
 }
-.contentTopTitle{ 
-    -fx-font-size: 20px; 
-    -fx-font-weight: 800; 
-    -fx-text-fill: -text; 
+.contentTopTitle{
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -text;
 }
-.contentTopSubtitle{ 
-    -fx-text-fill: rgba(31,42,51,0.55); 
+.contentTopSubtitle{
+    -fx-text-fill: rgba(31,42,51,0.55);
     -fx-font-size: 13px;
 }
 

@@ -9,7 +9,7 @@ import java.sql.Time;
  */
 
 //C’est une classe faite pour l’affichage dans l’UI.
-    //PLUS des infos du rendez-vous (jointure)
+//PLUS des infos du rendez-vous (jointure)
 //rvDate
 //rvTime
 //rvType

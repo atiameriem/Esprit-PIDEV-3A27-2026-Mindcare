@@ -65,9 +65,15 @@ public class CompteRenduController {
             //tu récupères les rendez-vous du psy
             List<RendezVousView> rdvs = rvService.findViewsByPsychologist(idPsy);
 
-            //Si aucun rendez-vous :
+            // ✅ Règle métier : compte-rendu seulement si RDV = confirmé + terminé
+            rdvs = rdvs.stream().filter(rv ->
+                    rv.getConfirmationStatus() == models.RendezVous.ConfirmationStatus.confirme
+                            && rv.getStatutRv() == models.RendezVous.StatutRV.termine
+            ).toList();
+
+            //Si aucun rendez-vous terminé :
             if (rdvs.isEmpty()) {
-                info("Aucun rendez-vous", "Vous n'avez aucun rendez-vous pour créer un compte-rendu.");
+                info("Aucune consultation terminée", "Le compte-rendu est disponible uniquement pour les rendez-vous confirmés et terminés.");
                 return;
             }
             //choisir un rendez
@@ -122,7 +128,7 @@ public class CompteRenduController {
                                 || String.valueOf(cr.getIdAppointment()).contains(kw)
                 ).collect(java.util.stream.Collectors.toList());
             }
-        //On efface toutes les cards, puis on reconstruit.
+            //On efface toutes les cards, puis on reconstruit.
             compteRenduContainer.getChildren().clear();
 
             if (list.isEmpty()) {

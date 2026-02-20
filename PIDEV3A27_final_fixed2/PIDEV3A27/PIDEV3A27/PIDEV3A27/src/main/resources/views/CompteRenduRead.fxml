@@ -24,7 +24,7 @@
     <Separator/>
 
     <HBox spacing="15" alignment="CENTER_LEFT">
-        <TextField fx:id="searchField" promptText="Rechercher (résumé, actions, id rendez-vous...)" prefWidth="520"
+        <TextField fx:id="searchField" promptText="Rechercher ici" prefWidth="520"
                    style="-fx-padding: 10 10 10 10;"/>
     </HBox>
 

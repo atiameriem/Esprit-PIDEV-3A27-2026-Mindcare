@@ -18,7 +18,8 @@
         <VBox spacing="5">
             <Label text="Mes Rendez-vous"
                    style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
-            <Label text="Consultez les rendez-vous existants (lecture seule)"
+            <!-- ✅ Sous-titre : même style que "Compte-rendu" -->
+            <Label text="Gardez une vue claire sur vos consultations et leurs statuts"
                    style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
         </VBox>
         <Pane HBox.hgrow="ALWAYS"/>
@@ -29,7 +30,7 @@
     <!-- SEARCH -->
     <HBox spacing="15" alignment="CENTER_LEFT">
         <TextField fx:id="searchField"
-                   promptText="Rechercher (patient, statut, type, date, heure...)"
+                   promptText="Rechercher ici"
                    prefWidth="520"
                    style="-fx-padding: 10 10 10 10;"/>
         <ComboBox fx:id="sortCombo"
@@ -38,15 +39,25 @@
                   style="-fx-padding: 8 10 8 10;">
         </ComboBox>
 
+        <!-- ✅ Visible seulement si au moins un RDV est confirmé + terminé -->
+        <Button fx:id="terminatedConsultationsButton"
+                text="📄  Consultations terminées"
+                onAction="#openCompteRenduFromRendezVous"
+                visible="false" managed="false"
+                style="-fx-background-color: #0f766e; -fx-text-fill: white; -fx-padding: 10 14; -fx-background-radius: 8;"/>
+
     </HBox>
 
     <!-- CARDS -->
-    <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true"
+    <!-- ✅ Demandé : pas de scroll horizontal -->
+    <ScrollPane fx:id="listScroll" VBox.vgrow="ALWAYS" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
                 style="-fx-background-color: white; -fx-background: white;">
-        <VBox fx:id="rendezVousContainer" spacing="15"
-              style="-fx-background-color: white; -fx-padding: 5 0 5 0;">
+        <TilePane fx:id="rendezVousContainer"
+                  prefColumns="2" hgap="18" vgap="18"
+                  tileAlignment="TOP_LEFT"
+                  style="-fx-background-color: white; -fx-padding: 5 0 5 0;">
             <!-- Cards générées en Java -->
-        </VBox>
+        </TilePane>
     </ScrollPane>
 
 </VBox>

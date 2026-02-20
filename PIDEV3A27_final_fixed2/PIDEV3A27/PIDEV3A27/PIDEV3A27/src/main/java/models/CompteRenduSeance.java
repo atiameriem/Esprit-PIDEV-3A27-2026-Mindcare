@@ -9,10 +9,10 @@ public class CompteRenduSeance {
     private ProgresCR progresCr;
     private String resumeSeanceCr;
     private String prochainesActionCr;
-//pour le crud ce class
+    //pour le crud ce class
     public CompteRenduSeance() {
     }
-//2 constructeurs :
+    //2 constructeurs :
 //sans idCompteRendu (quand tu ajoutes, l’ID est généré par la DB)
 //avec idCompteRendu (quand tu modifies/supprimes un existant)
     public CompteRenduSeance(int idAppointment, Timestamp dateCreationCr, ProgresCR progresCr, String resumeSeanceCr, String prochainesActionCr) {

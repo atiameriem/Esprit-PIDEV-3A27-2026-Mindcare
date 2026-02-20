@@ -14,6 +14,8 @@ public class RendezVousView {
     private int idPsychologist;
 
     private RendezVous.StatutRV statutRv;
+    // ✅ Nouveau champ (DB) : confirmation_status (confirme/annule/en_attente)
+    private RendezVous.ConfirmationStatus confirmationStatus;
     private Date appointmentDate;
     private RendezVous.TypeRV typeRendezVous;
     private Time appointmentTimeRv;
@@ -32,6 +34,9 @@ public class RendezVousView {
 
     public RendezVous.StatutRV getStatutRv() { return statutRv; }
     public void setStatutRv(RendezVous.StatutRV statutRv) { this.statutRv = statutRv; }
+
+    public RendezVous.ConfirmationStatus getConfirmationStatus() { return confirmationStatus; }
+    public void setConfirmationStatus(RendezVous.ConfirmationStatus confirmationStatus) { this.confirmationStatus = confirmationStatus; }
 
     public Date getAppointmentDate() { return appointmentDate; }
     public void setAppointmentDate(Date appointmentDate) { this.appointmentDate = appointmentDate; }
@@ -53,7 +58,8 @@ public class RendezVousView {
         String time = appointmentTimeRv == null ? "" : appointmentTimeRv.toString();
         String who  = patientFullName == null ? "" : patientFullName;
         String type = typeRendezVous == null ? "" : typeRendezVous.name();
-        return date + " " + time + "  •  " + who + "  •  " + type;
+        String conf = confirmationStatus == null ? "" : confirmationStatus.name();
+        return date + " " + time + "  •  " + who + "  •  " + type + (conf.isBlank() ? "" : "  •  " + conf);
     }
 
 

@@ -40,7 +40,8 @@
                     <content>
                         <VBox spacing="8" styleClass="submenu">
                             <Button text="📅  Rendez-vous" styleClass="subBtn" onAction="#loadRendezVous"/>
-                            <Button text="📄  Compte-rendu" styleClass="subBtn" onAction="#loadCompteRendu"/>
+                            <!-- ✅ Demande prof : supprimer le bouton Compte-rendu du sidebar.
+                                 Le compte-rendu est maintenant accessible depuis l'interface Rendez-vous (bouton "Consultations terminées"). -->
                         </VBox>
                     </content>
                 </TitledPane>
@@ -102,7 +103,7 @@
     <center>
         <StackPane styleClass="contentWrap">
             <VBox spacing="18" styleClass="contentInner">
-                
+
                 <!-- Header with title and logout button -->
                 <HBox alignment="CENTER_LEFT" spacing="14" styleClass="contentHeader">
                     <!-- Left: brand title with icon -->

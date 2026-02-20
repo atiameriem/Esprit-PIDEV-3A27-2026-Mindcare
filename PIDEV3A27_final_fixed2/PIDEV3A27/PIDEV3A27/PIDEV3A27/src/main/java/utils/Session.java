@@ -1,7 +1,7 @@
 package utils;
 //Stocker les informations de l’utilisateur connecté
 public class Session {
-// static pour dire Ces variables appartiennent à la classe
+    // static pour dire Ces variables appartiennent à la classe
     public enum Role { PATIENT, PSYCHOLOGUE }
 
     private static int userId;

@@ -32,7 +32,8 @@ public class ServiceRendezVousTest {
         srv = new ServiceRendezVous(cnx);
         System.out.println("[DEBUG_LOG] Setup OK");
     }
-//@AfterEach : s’exécute après chaque test.
+
+    //@AfterEach : s’exécute après chaque test.
     //Objectif : supprimer ce qui a été créé pendant le test.
     @AfterEach
     void cleanUp() throws SQLException {
@@ -68,10 +69,16 @@ public class ServiceRendezVousTest {
         RendezVous rv = new RendezVous();
         rv.setIdPatient(PATIENT_ID);
         rv.setIdPsychologist(PSY_ID);
-        rv.setStatutRv(RendezVous.StatutRV.prevu);
+
+        // ✅ NEW: côté patient, statutrv n'est pas choisi
+        rv.setStatutRv(null);
+
         rv.setAppointmentDate(Date.valueOf("2026-04-04"));
         rv.setTypeRendezVous(RendezVous.TypeRV.premiere_consultation);
         rv.setAppointmentTimeRv(Time.valueOf("10:30:00"));
+
+        // ✅ NEW: côté patient, confirmation_status = en_attente
+        rv.setConfirmationStatus(RendezVous.ConfirmationStatus.en_attente);
 
         //insert en base.
         //idRv = id pour cleanup après test.
@@ -79,19 +86,24 @@ public class ServiceRendezVousTest {
         idRv = id;
 
         System.out.println("[DEBUG_LOG] Created RV with ID: " + id);
-        pauseForDemo("Va dans phpMyAdmin → table rendez_vous et trouve l'ID = " + id);
-//vérifie que l’id auto-incrémenté est valide.
+        pauseForDemo("Va dans phpMyAdmin → table rendez_vous et trouve l'ID = " + id +
+                " et vérifie: confirmation_status=en_attente");
+
+        //vérifie que l’id auto-incrémenté est valide.
         assertTrue(id > 0);
 
-//récupère la liste des RV du patient.
-//vérifie qu’elle n’est pas vide.
+        //récupère la liste des RV du patient.
+        //vérifie qu’elle n’est pas vide.
         List<RendezVous> list = srv.findByPatient(PATIENT_ID);
         assertFalse(list.isEmpty());
 
         //cherche dans la liste si l’id créé est présent.
-        //si absent → test échoue.
-        boolean found = list.stream().anyMatch(x -> x.getIdRv() == id);
-        assertTrue(found, "Created RV should exist in DB");
+        boolean found = list.stream().anyMatch(x ->
+                x.getIdRv() == id &&
+                        x.getConfirmationStatus() == RendezVous.ConfirmationStatus.en_attente
+        );
+
+        assertTrue(found, "Created RV should exist in DB with confirmation_status=en_attente");
     }
 
     @Test
@@ -101,42 +113,52 @@ public class ServiceRendezVousTest {
         RendezVous rv = new RendezVous();
         rv.setIdPatient(PATIENT_ID);
         rv.setIdPsychologist(PSY_ID);
-        rv.setStatutRv(RendezVous.StatutRV.prevu);
+
+        // ✅ NEW: statutrv pas choisi par patient
+        rv.setStatutRv(null);
+
         rv.setAppointmentDate(Date.valueOf("2026-04-04"));
         rv.setTypeRendezVous(RendezVous.TypeRV.premiere_consultation);
         rv.setAppointmentTimeRv(Time.valueOf("10:30:00"));
+
+        // ✅ NEW: patient -> en_attente
+        rv.setConfirmationStatus(RendezVous.ConfirmationStatus.en_attente);
+
         int id = srv.addAndReturnId(rv);
         idRv = id;
 
-        // update
+        // update (patient peut modifier date/time/type TANT QUE en_attente)
         RendezVous upd = new RendezVous();
-        //setIdRv(id) :→ indique quel RV modifier.
         upd.setIdRv(id);
         upd.setIdPatient(PATIENT_ID);
         upd.setIdPsychologist(PSY_ID);
-        upd.setStatutRv(RendezVous.StatutRV.termine);
+
+        // ✅ IMPORTANT: patient ne touche pas statutrv
+        upd.setStatutRv(null);
+
         upd.setAppointmentDate(Date.valueOf("2026-04-05"));
         upd.setTypeRendezVous(RendezVous.TypeRV.suivi);
         upd.setAppointmentTimeRv(Time.valueOf("12:00:00"));
 
-        //update avec contrôle :
-        // seulement si le RV appartient au patient donné
+        // ✅ on garde en_attente lors de l'update patient
+        upd.setConfirmationStatus(RendezVous.ConfirmationStatus.en_attente);
+
         srv.updateForPatient(upd, PATIENT_ID);
 
         System.out.println("[DEBUG_LOG] Updated RV ID: " + id);
         pauseForDemo("Va dans phpMyAdmin → table rendez_vous → ID = " + id +
-                " et vérifie: type=suivi, statut=termine, time=12:00:00, date=2026-04-05");
+                " et vérifie: type=suivi, time=12:00:00, date=2026-04-05, confirmation_status=en_attente");
 
-        //Tu lis la liste et tu vérifies que la ligne a bien changé :
         List<RendezVous> list = srv.findByPatient(PATIENT_ID);
+
         boolean found = list.stream().anyMatch(x ->
                 x.getIdRv() == id
                         && x.getTypeRendezVous() == RendezVous.TypeRV.suivi
-                        && x.getStatutRv() == RendezVous.StatutRV.termine
                         && "12:00:00".equals(x.getAppointmentTimeRv().toString())
+                        && x.getConfirmationStatus() == RendezVous.ConfirmationStatus.en_attente
         );
 
-        assertTrue(found, "RV should be updated");
+        assertTrue(found, "RV should be updated (patient) while still en_attente");
     }
 
     @Test
@@ -146,10 +168,17 @@ public class ServiceRendezVousTest {
         RendezVous rv = new RendezVous();
         rv.setIdPatient(PATIENT_ID);
         rv.setIdPsychologist(PSY_ID);
-        rv.setStatutRv(RendezVous.StatutRV.prevu);
+
+        // ✅ statutrv pas choisi au départ par patient
+        rv.setStatutRv(null);
+
         rv.setAppointmentDate(Date.valueOf("2026-04-06"));
         rv.setTypeRendezVous(RendezVous.TypeRV.urgence);
         rv.setAppointmentTimeRv(Time.valueOf("09:00:00"));
+
+        // ✅ NEW
+        rv.setConfirmationStatus(RendezVous.ConfirmationStatus.en_attente);
+
         int id = srv.addAndReturnId(rv);
         idRv = id;
 
@@ -157,17 +186,18 @@ public class ServiceRendezVousTest {
         List<RendezVousView> views = srv.findViewsByPsychologist(PSY_ID);
         assertFalse(views.isEmpty());
 
-        //trouver le RV qu’on vient d’ajouter
         RendezVousView v = views.stream().filter(x -> x.getIdRv() == id).findFirst().orElse(null);
         assertNotNull(v);
 
         //vérifie que la jointure users a bien ramené les noms.
-        //vérifier noms non vides
         assertNotNull(v.getPatientFullName());
         assertFalse(v.getPatientFullName().isBlank());
 
         assertNotNull(v.getPsychologistFullName());
         assertFalse(v.getPsychologistFullName().isBlank());
+
+        // ✅ NEW: check confirmation status visible côté psy
+        assertEquals(RendezVous.ConfirmationStatus.en_attente, v.getConfirmationStatus());
     }
 
     @Test
@@ -177,10 +207,17 @@ public class ServiceRendezVousTest {
         RendezVous rv = new RendezVous();
         rv.setIdPatient(PATIENT_ID);
         rv.setIdPsychologist(PSY_ID);
-        rv.setStatutRv(RendezVous.StatutRV.prevu);
+
+        // ✅ patient ne choisit pas statut
+        rv.setStatutRv(null);
+
         rv.setAppointmentDate(Date.valueOf("2026-04-07"));
         rv.setTypeRendezVous(RendezVous.TypeRV.suivi);
         rv.setAppointmentTimeRv(Time.valueOf("15:00:00"));
+
+        // ✅ NEW: en attente
+        rv.setConfirmationStatus(RendezVous.ConfirmationStatus.en_attente);
+
         int id = srv.addAndReturnId(rv);
         idRv = id;
 
@@ -192,28 +229,25 @@ public class ServiceRendezVousTest {
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
             pst.setInt(1, id);
             pst.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
-            // ✅ safe enum value (adapt if your enum differs)
             pst.setString(3, CompteRenduSeance.ProgresCR.amelioration_stable.name());
             pst.setString(4, "Résumé test JUnit");
             pst.setString(5, "Action test JUnit");
             pst.executeUpdate();
         }
 
-        //vérifier existence avant delete
         assertTrue(exists("SELECT 1 FROM compte_rendu_seance WHERE id_appointment=?", id));
         assertTrue(exists("SELECT 1 FROM rendez_vous WHERE id_rv=?", id));
 
         pauseForDemo("AVANT delete: vérifie dans phpMyAdmin que RV(ID=" + id +
-                ") existe ET qu'il y a un compte rendu dans compte_rendu_seance(id_appointment=" + id + ")");
+                ") existe ET qu'il y a un compte rendu (id_appointment=" + id + ")");
 
-        // delete should remove CR + RV
+        // ✅ delete patient (selon ta logique, normalement seulement si en_attente)
         srv.deleteForPatient(id, PATIENT_ID);
         idRv = -1; // already deleted
 
         pauseForDemo("APRÈS delete: vérifie que RV(ID=" + id +
                 ") n'existe plus ET que compte_rendu_seance(id_appointment=" + id + ") n'existe plus");
 
-        //confirme suppression.
         assertFalse(exists("SELECT 1 FROM compte_rendu_seance WHERE id_appointment=?", id));
         assertFalse(exists("SELECT 1 FROM rendez_vous WHERE id_rv=?", id));
     }

@@ -27,7 +27,7 @@ public class ValidationUtils {
         }
         return null;
     }
-//max1000
+    //max1000
     public static String maxLength(String s, String fieldName, int max) {
         if (s == null) return null;
         String t = s.trim();
@@ -38,7 +38,7 @@ public class ValidationUtils {
     }
 
 
-//yyyy-MM-dd
+    //yyyy-MM-dd
     public static LocalDate parseDate(String s, DateTimeFormatter fmt) {
         try {
             return LocalDate.parse(s.trim(), fmt);
@@ -46,7 +46,7 @@ public class ValidationUtils {
             return null;
         }
     }
-//h:m
+    //h:m
     public static LocalTime parseTime(String s, DateTimeFormatter fmt) {
         try {
             return LocalTime.parse(s.trim(), fmt);

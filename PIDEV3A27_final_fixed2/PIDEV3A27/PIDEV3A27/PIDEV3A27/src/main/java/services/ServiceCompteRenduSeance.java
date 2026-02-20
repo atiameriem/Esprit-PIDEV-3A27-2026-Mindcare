@@ -16,7 +16,7 @@ import java.util.List;
  * - Les méthodes findViews* retournent CompteRenduView (JOIN users) pour afficher nom/prénom.
  */
 public class ServiceCompteRenduSeance {
-// //la connexion JDBC vers ta base (MySQL).
+    // //la connexion JDBC vers ta base (MySQL).
     private final Connection cnx;
 
     public ServiceCompteRenduSeance(Connection cnx) {
@@ -175,6 +175,20 @@ public class ServiceCompteRenduSeance {
         """;
         return fetchViews(sql, idPatient);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // ===================== internal mappers =====================
 

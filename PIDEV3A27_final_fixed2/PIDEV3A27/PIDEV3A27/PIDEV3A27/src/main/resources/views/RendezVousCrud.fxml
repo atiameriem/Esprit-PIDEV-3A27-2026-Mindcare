@@ -15,9 +15,14 @@
 
     <!-- HEADER -->
     <HBox alignment="CENTER_LEFT" spacing="15">
+        <!-- Header identique au style "Compte-rendu" -->
         <VBox spacing="5">
-            <Label text="Rendez-vous" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
-            <Label text="Gérez vos rendez-vous (patient)" style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
+
+            <Label text="Mes Rendez-vous"
+                   style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+            <!-- ✅ Sous-titre : même style que "Compte-rendu" -->
+            <Label text="Planifiez et suivez vos rendez-vous en toute simplicité"
+                   style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
         </VBox>
         <Pane HBox.hgrow="ALWAYS"/>
         <Button text="+ Nouveau Rendez-vous" onAction="#handleNewRendezVous"
@@ -28,18 +33,33 @@
 
     <!-- Search -->
     <HBox spacing="15" alignment="CENTER_LEFT">
-        <TextField fx:id="searchField" promptText="Rechercher (date, statut, type, id...)" prefWidth="520"
+        <!-- ✅ Demandé : pas de texte par défaut, seulement un prompt simple -->
+        <TextField fx:id="searchField" promptText="Rechercher ici" prefWidth="520"
                    style="-fx-padding: 10 10 10 10;"/>
         <ComboBox fx:id="sortCombo"
                   prefWidth="200"
                   promptText="Trier par date"
                   style="-fx-padding: 8 10 8 10;">
         </ComboBox>
+
+        <!-- ✅ Patient : accès à la lecture des comptes-rendus (lecture seule) -->
+        <Button fx:id="patientCompteRenduButton"
+                text="📄  Mes comptes-rendus"
+                onAction="#openCompteRenduRead"
+                visible="false" managed="false"
+                style="-fx-background-color: #0f766e; -fx-text-fill: white; -fx-padding: 10 14; -fx-background-radius: 8;"/>
     </HBox>
 
     <!-- List -->
-    <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true" style="-fx-background-color: white; -fx-background: white;">
-        <VBox fx:id="rendezVousContainer" spacing="15" style="-fx-background-color: white; -fx-padding: 5 0 5 0;"/>
+    <!-- ✅ Demandé : pas de scroll horizontal -->
+    <ScrollPane fx:id="listScroll" VBox.vgrow="ALWAYS" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                style="-fx-background-color: white; -fx-background: white;">
+        <TilePane fx:id="rendezVousContainer"
+                  prefColumns="2" hgap="18" vgap="18"
+                  tileAlignment="TOP_LEFT"
+                  style="-fx-background-color: white; -fx-padding: 5 0 5 0;">
+            <!-- Cards générées en Java -->
+        </TilePane>
     </ScrollPane>
 
 </VBox>

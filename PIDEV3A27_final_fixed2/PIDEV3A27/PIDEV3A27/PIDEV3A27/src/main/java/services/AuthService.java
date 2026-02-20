@@ -12,13 +12,13 @@ import java.sql.SQLException;
  * Auth minimal pour la session (2 users ou plus) : email + mot_de_passe.
  */
 //Vérifier si l’email et le mot de passe existent en base
-    //Créer la session utilisateur
+//Créer la session utilisateur
 public class AuthService {
 
     //cnx = connexion à la base de données.
     //final = elle ne changera jamais après initialisation.
     private final Connection cnx;
-//MyDatabase.getInstance()
+    //MyDatabase.getInstance()
 // → Singleton (une seule connexion pour toute l’application)
     //retourne la connexion MySQL et on la stock dans cnx
     public AuthService() {
@@ -42,7 +42,7 @@ public class AuthService {
                 int id = rs.getInt("id_users");
                 String fullName = rs.getString("prenom") + " " + rs.getString("nom");
                 String roleDb = rs.getString("role"); // patient | psychologue
-    //Est-ce que roleDb est égal à "psychologue" ?
+                //Est-ce que roleDb est égal à "psychologue" ?
                 Session.Role role = "psychologue".equalsIgnoreCase(roleDb)
                         ? Session.Role.PSYCHOLOGUE
                         : Session.Role.PATIENT;

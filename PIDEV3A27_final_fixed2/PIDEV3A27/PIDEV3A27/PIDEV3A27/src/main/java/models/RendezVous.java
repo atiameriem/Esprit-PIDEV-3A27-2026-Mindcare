@@ -8,6 +8,8 @@ public class RendezVous {
     private int idPatient;
     private int idPsychologist;
     private StatutRV statutRv;
+    // ✅ Nouveau champ : confirmation du rendez-vous (fait par le psychologue)
+    private ConfirmationStatus confirmationStatus;
     private Date appointmentDate;
     private TypeRV typeRendezVous;
     private Time appointmentTimeRv;
@@ -24,11 +26,37 @@ public class RendezVous {
         this.appointmentTimeRv = appointmentTimeRv;
     }
 
+    // ✅ Constructeur pratique côté patient : on passe aussi confirmation_status
+    //    (ex: en_attente) sans avoir un id_rv (car il est auto-incrémenté en base).
+    public RendezVous(int idPatient, int idPsychologist, StatutRV statutRv, ConfirmationStatus confirmationStatus,
+                      Date appointmentDate, TypeRV typeRendezVous, Time appointmentTimeRv) {
+        this.idPatient = idPatient;
+        this.idPsychologist = idPsychologist;
+        this.statutRv = statutRv;
+        this.confirmationStatus = confirmationStatus;
+        this.appointmentDate = appointmentDate;
+        this.typeRendezVous = typeRendezVous;
+        this.appointmentTimeRv = appointmentTimeRv;
+    }
+
     public RendezVous(int idRv, int idPatient, int idPsychologist, StatutRV statutRv, Date appointmentDate, TypeRV typeRendezVous, Time appointmentTimeRv) {
         this.idRv = idRv;
         this.idPatient = idPatient;
         this.idPsychologist = idPsychologist;
         this.statutRv = statutRv;
+        this.appointmentDate = appointmentDate;
+        this.typeRendezVous = typeRendezVous;
+        this.appointmentTimeRv = appointmentTimeRv;
+    }
+
+    // ✅ Constructeur pratique quand on veut aussi passer confirmation_status
+    public RendezVous(int idRv, int idPatient, int idPsychologist, StatutRV statutRv, ConfirmationStatus confirmationStatus,
+                      Date appointmentDate, TypeRV typeRendezVous, Time appointmentTimeRv) {
+        this.idRv = idRv;
+        this.idPatient = idPatient;
+        this.idPsychologist = idPsychologist;
+        this.statutRv = statutRv;
+        this.confirmationStatus = confirmationStatus;
         this.appointmentDate = appointmentDate;
         this.typeRendezVous = typeRendezVous;
         this.appointmentTimeRv = appointmentTimeRv;
@@ -66,6 +94,14 @@ public class RendezVous {
         this.statutRv = statutRv;
     }
 
+    public ConfirmationStatus getConfirmationStatus() {
+        return confirmationStatus;
+    }
+
+    public void setConfirmationStatus(ConfirmationStatus confirmationStatus) {
+        this.confirmationStatus = confirmationStatus;
+    }
+
     public Date getAppointmentDate() {
         return this.appointmentDate;
     }
@@ -91,13 +127,16 @@ public class RendezVous {
     }
 
     public String toString() {
-        return "Rendez-vous | Statut=" + this.statutRv + " | Type=" + this.typeRendezVous + " | Date=" + this.appointmentDate + " | Heure=" + this.appointmentTimeRv;
+        return "Rendez-vous | Confirmation=" + this.confirmationStatus
+                + " | Statut=" + this.statutRv
+                + " | Type=" + this.typeRendezVous
+                + " | Date=" + this.appointmentDate
+                + " | Heure=" + this.appointmentTimeRv;
     }
 
     public static enum StatutRV {
-        prevu,
         termine,
-        annule;
+        en_cours;
 
         private StatutRV() {
         }
@@ -109,6 +148,19 @@ public class RendezVous {
         urgence;
 
         private TypeRV() {
+        }
+    }
+
+    // ✅ Confirmation du rendez-vous :
+    // - en_attente : patient vient de créer/modifier (psy n'a pas encore répondu)
+    // - confirme   : psy accepte (patient ne peut plus modifier/supprimer)
+    // - annule     : psy refuse/annule
+    public static enum ConfirmationStatus {
+        confirme,
+        annule,
+        en_attente;
+
+        private ConfirmationStatus() {
         }
     }
 }
