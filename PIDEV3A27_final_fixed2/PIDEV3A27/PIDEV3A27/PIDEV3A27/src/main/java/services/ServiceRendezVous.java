@@ -4,49 +4,41 @@ import models.RendezVous;
 import models.RendezVousView;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ServiceRendezVous {
-    //la connexion JDBC vers ta base (MySQL).
+
     private final Connection cnx;
-    //constructeur qui stocke la connexion dans l’objet
+
     public ServiceRendezVous(Connection cnx) {
         this.cnx = cnx;
     }
 
-    // ===== READ du psychologue son interface cest le read onlyy)
-    //Retourne une liste de RendezVous __ne prendre que les RDV de ce psy sans nom
+    // ====================== READ ======================
+
     public List<RendezVous> findByPsychologist(int idPsychologist) throws SQLException {
         String sql = """
-            SELECT id_rv, id_patient, id_psychologist, statutrv, confirmation_status, appointment_date, type_rendez_vous, appointment_timerv
+            SELECT id_rv, id_patient, id_psychologist, statutrv, confirmation_status,
+                   appointment_date, type_rendez_vous, appointment_timerv
             FROM rendez_vous
             WHERE id_psychologist = ?
             ORDER BY appointment_date DESC, appointment_timerv DESC
         """;
-        //order by les plus récents en haut.
 
-//On prépare une liste vide.
         List<RendezVous> list = new ArrayList<>();
-        //PreparedStatement exécute la requête.
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
             pst.setInt(1, idPsychologist);
-            //executeQuery() car c’est un SELECT.
-            //ResultSet contient les lignes.
-            //rs.next() avance ligne par ligne.
-            //map(rs) transforme une ligne SQL → objet RendezVous.
             try (ResultSet rs = pst.executeQuery()) {
-                while (rs.next()) {
-                    list.add(map(rs));
-                }
+                while (rs.next()) list.add(map(rs));
             }
         }
         return list;
     }
-    //Donc elle récupère les RDV du patient.
+
     public List<RendezVous> findByPatient(int idPatient) throws SQLException {
         String sql = """
-            SELECT id_rv, id_patient, id_psychologist, statutrv, confirmation_status, appointment_date, type_rendez_vous, appointment_timerv
+            SELECT id_rv, id_patient, id_psychologist, statutrv, confirmation_status,
+                   appointment_date, type_rendez_vous, appointment_timerv
             FROM rendez_vous
             WHERE id_patient = ?
             ORDER BY appointment_date DESC, appointment_timerv DESC
@@ -56,36 +48,26 @@ public class ServiceRendezVous {
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
             pst.setInt(1, idPatient);
             try (ResultSet rs = pst.executeQuery()) {
-                while (rs.next()) {
-                    list.add(map(rs));
-                }
+                while (rs.next()) list.add(map(rs));
             }
         }
         return list;
     }
 
-    //SELECT 1 = juste une seule ligne pour dire “existe ou non”.
-    //Je veux une ligne qui a cet id de rendez-vous ET cet id patient
     public boolean existsRendezVousForPatient(int idRv, int idPatient) throws SQLException {
         String sql = "SELECT 1 FROM rendez_vous WHERE id_rv=? AND id_patient=?";
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
-            //remplace le 1er ? par idRv et 2eme par idpatient
             pst.setInt(1, idRv);
             pst.setInt(2, idPatient);
             try (ResultSet rs = pst.executeQuery()) {
-                //rs contient le résultat
                 return rs.next();
             }
-            //retourne 1 ou 0 lignes
         }
     }
 
+    // ====================== VIEWS ======================
 
-    // ===== VIEWS (avec noms) =====
-//Ici tu ne veux pas juste l’entity, tu veux aussi les noms patient/psy.
     public List<RendezVousView> findViewsByPsychologist(int idPsychologist) throws SQLException {
-        // afficher  toutes les colonnes du rendez_vous
-        //JOINTURE SQL avec users
         String sql = """
             SELECT rv.*,
                    p.nom  AS patient_nom, p.prenom AS patient_prenom,
@@ -96,21 +78,17 @@ public class ServiceRendezVous {
             WHERE rv.id_psychologist=?
             ORDER BY rv.appointment_date DESC, rv.appointment_timerv DESC
         """;
-        //table principale rendez vous
-        //récupère l’utilisateur patient et psy
 
         List<RendezVousView> out = new ArrayList<>();
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
             pst.setInt(1, idPsychologist);
             try (ResultSet rs = pst.executeQuery()) {
-                //mapView crée un RendezVousView
                 while (rs.next()) out.add(mapView(rs));
             }
         }
         return out;
     }
 
-    //Donc elle récupère les RDV du patient.
     public List<RendezVousView> findViewsByPatient(int idPatient) throws SQLException {
         String sql = """
             SELECT rv.*,
@@ -132,32 +110,32 @@ public class ServiceRendezVous {
         }
         return out;
     }
-    //C’est une fonction de mapping
-//Transformer UNE ligne du résultat SQL (ResultSet) en objet Java RendezVousView.
+
     private RendezVousView mapView(ResultSet rs) throws SQLException {
-        //objet vide.
         RendezVousView v = new RendezVousView();
 
-//mapping des id ,id_rv en sql et v.setid en java
         v.setIdRv(rs.getInt("id_rv"));
         v.setIdPatient(rs.getInt("id_patient"));
         v.setIdPsychologist(rs.getInt("id_psychologist"));
 
-        // statutrv peut être vide tant que le psy n'a pas encore choisi (ou si la DB autorise une valeur vide)
         String statut = rs.getString("statutrv");
-        if (statut != null && !statut.trim().isEmpty()) v.setStatutRv(RendezVous.StatutRV.valueOf(statut.trim()));
+        if (statut != null && !statut.trim().isEmpty()) {
+            v.setStatutRv(RendezVous.StatutRV.valueOf(statut.trim()));
+        }
 
-        // ✅ confirmation_status : (confirme / annule / en_attente)
         String conf = rs.getString("confirmation_status");
-        if (conf != null && !conf.trim().isEmpty()) v.setConfirmationStatus(RendezVous.ConfirmationStatus.valueOf(conf.trim()));
+        if (conf != null && !conf.trim().isEmpty()) {
+            v.setConfirmationStatus(RendezVous.ConfirmationStatus.valueOf(conf.trim()));
+        }
 
         String type = rs.getString("type_rendez_vous");
-        if (type != null && !type.isEmpty()) v.setTypeRendezVous(RendezVous.TypeRV.valueOf(type));
+        if (type != null && !type.trim().isEmpty()) {
+            v.setTypeRendezVous(RendezVous.TypeRV.valueOf(type.trim()));
+        }
 
         v.setAppointmentDate(rs.getDate("appointment_date"));
         v.setAppointmentTimeRv(rs.getTime("appointment_timerv"));
 
-        //récupère prénom/nom du patient et psy
         String patientFull = safeFullName(rs.getString("patient_prenom"), rs.getString("patient_nom"));
         String psyFull = safeFullName(rs.getString("psy_prenom"), rs.getString("psy_nom"));
         v.setPatientFullName(patientFull);
@@ -165,18 +143,13 @@ public class ServiceRendezVous {
 
         return v;
     }
-    //safeFullName sert à construire un nom complet sécurisé même si les données sont incomplètes.
+
     private String safeFullName(String prenom, String nom) {
-        //Si prenom == null
-        //➜ alors p = "" (chaîne vide)
-        //Sinon
-        //➜ p = prenom.trim()
         String p = prenom == null ? "" : prenom.trim();
         String n = nom == null ? "" : nom.trim();
         return (p + " " + n).trim();
     }
-    //vérifie si l’utilisateur existe ET a le rôle psychologue.
-//utilisé dans le popup pour empêcher choisir un “psy” invalide.
+
     public boolean isPsychologistUser(int idPsychologist) throws SQLException {
         String sql = "SELECT 1 FROM users WHERE id_users=? AND role='psychologue'";
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
@@ -187,32 +160,30 @@ public class ServiceRendezVous {
         }
     }
 
-
-    // ===== CRUD (Patient) =====
+    // ====================== CRUD PATIENT ======================
 
     public int addAndReturnId(RendezVous rv) throws SQLException {
         String sql = """
-            INSERT INTO rendez_vous (id_patient, id_psychologist, statutrv, confirmation_status, appointment_date, type_rendez_vous, appointment_timerv)
+            INSERT INTO rendez_vous (id_patient, id_psychologist, statutrv, confirmation_status,
+                                    appointment_date, type_rendez_vous, appointment_timerv)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """;
 
-        //PreparedStatement avec RETURN_GENERATED_KEYS
-        // permet de récupérer l’ID auto-incrémenté.
         try (PreparedStatement pst = cnx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            //Remplir paramètres
             pst.setInt(1, rv.getIdPatient());
             pst.setInt(2, rv.getIdPsychologist());
-            // ✅ Au moment de l'ajout par le patient :
-            // - statutrv n'est pas choisi par le patient (le psy le fera plus tard)
-            // - confirmation_status = en_attente (par défaut)
+
             pst.setString(3, (rv.getStatutRv() == null) ? "" : rv.getStatutRv().name());
-            pst.setString(4, (rv.getConfirmationStatus() == null) ? RendezVous.ConfirmationStatus.en_attente.name() : rv.getConfirmationStatus().name());
+            pst.setString(4, (rv.getConfirmationStatus() == null)
+                    ? RendezVous.ConfirmationStatus.en_attente.name()
+                    : rv.getConfirmationStatus().name());
+
             pst.setDate(5, rv.getAppointmentDate());
-            //.name() convertit l’enum en texte exactement égal au nom enum.
             pst.setString(6, rv.getTypeRendezVous().name());
             pst.setTime(7, rv.getAppointmentTimeRv());
+
             pst.executeUpdate();
-            //Récupérer l’ID généré
+
             try (ResultSet rs = pst.getGeneratedKeys()) {
                 if (rs.next()) return rs.getInt(1);
             }
@@ -221,7 +192,6 @@ public class ServiceRendezVous {
     }
 
     public void updateForPatient(RendezVous rv, int idPatient) throws SQLException {
-        //pdate seulement si id_rv correspond ET id_patient correspond au patient connecté
         String sql = """
             UPDATE rendez_vous
             SET id_psychologist=?, appointment_date=?, type_rendez_vous=?, appointment_timerv=?
@@ -240,33 +210,26 @@ public class ServiceRendezVous {
     }
 
     public void deleteForPatient(int idRv, int idPatient) throws SQLException {
-        //Pourquoi supprimer CR avant ?
-        //Car CR dépend du RDV (clé étrangère)
-        //creation de deux variables
         String delCR = "DELETE FROM compte_rendu_seance WHERE id_appointment = ?";
-        // ✅ Patient ne peut supprimer que si le psy n'a pas encore confirmé (en_attente)
         String delRV = "DELETE FROM rendez_vous WHERE id_rv=? AND id_patient=? AND confirmation_status='en_attente'";
 
         try {
             cnx.setAutoCommit(false);
 
-            // 1) supprimer le compte-rendu lié au rendez-vous
             try (PreparedStatement pst1 = cnx.prepareStatement(delCR)) {
                 pst1.setInt(1, idRv);
                 pst1.executeUpdate();
             }
 
-            // 2) supprimer le rendez-vous (sécurisé: seulement si appartient au patient)
             try (PreparedStatement pst2 = cnx.prepareStatement(delRV)) {
                 pst2.setInt(1, idRv);
                 pst2.setInt(2, idPatient);
                 pst2.executeUpdate();
             }
-//valide les deux suppressions en même temps.
+
             cnx.commit();
 
         } catch (SQLException e) {
-            //si une suppression échoue, on annule tout.
             cnx.rollback();
             throw e;
         } finally {
@@ -274,35 +237,16 @@ public class ServiceRendezVous {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private RendezVous map(ResultSet rs) throws SQLException {
         String statut = rs.getString("statutrv");
-        RendezVous.StatutRV st = (statut == null || statut.trim().isEmpty()) ? null : RendezVous.StatutRV.valueOf(statut.trim());
+        RendezVous.StatutRV st = (statut == null || statut.trim().isEmpty())
+                ? null
+                : RendezVous.StatutRV.valueOf(statut.trim());
 
         String conf = rs.getString("confirmation_status");
-        RendezVous.ConfirmationStatus cs = (conf == null || conf.trim().isEmpty()) ? null : RendezVous.ConfirmationStatus.valueOf(conf.trim());
+        RendezVous.ConfirmationStatus cs = (conf == null || conf.trim().isEmpty())
+                ? null
+                : RendezVous.ConfirmationStatus.valueOf(conf.trim());
 
         return new RendezVous(
                 rs.getInt("id_rv"),
@@ -316,11 +260,10 @@ public class ServiceRendezVous {
         );
     }
 
-    // ===== Actions Psychologue =====
+    // ====================== ACTIONS PSY ======================
 
-    // ✅ Confirmer/Annuler un rendez-vous (confirmation_status) :
-    // - sécurisée : seulement si le rendez-vous appartient à ce psychologue
-    public void updateConfirmationStatusForPsychologist(int idRv, int idPsychologist, RendezVous.ConfirmationStatus status) throws SQLException {
+    public void updateConfirmationStatusForPsychologist(int idRv, int idPsychologist,
+                                                        RendezVous.ConfirmationStatus status) throws SQLException {
         String sql = """
             UPDATE rendez_vous
             SET confirmation_status=?
@@ -334,10 +277,8 @@ public class ServiceRendezVous {
         }
     }
 
-    // ✅ Mettre à jour l'état du rendez-vous (statutrv) après confirmation
-    // - sécurisée : seulement si appartient au psy
-    // - logique : seulement si confirmation_status = confirme
-    public void updateStatutForPsychologist(int idRv, int idPsychologist, RendezVous.StatutRV statut) throws SQLException {
+    public void updateStatutForPsychologist(int idRv, int idPsychologist,
+                                            RendezVous.StatutRV statut) throws SQLException {
         String sql = """
             UPDATE rendez_vous
             SET statutrv=?
@@ -349,5 +290,168 @@ public class ServiceRendezVous {
             pst.setInt(3, idPsychologist);
             pst.executeUpdate();
         }
+    }
+
+    // ====================== KPI STATS (Confirmé/Annulé/...) ======================
+
+    public static class RendezVousStats {
+        public int total;
+        public int confirmed;
+        public int pending;
+        public int cancelled;
+        public int finished;
+    }
+
+    public RendezVousStats getStatsForPsychologist(int psyId) throws SQLException {
+        RendezVousStats s = new RendezVousStats();
+
+        // total
+        try (PreparedStatement pst = cnx.prepareStatement(
+                "SELECT COUNT(*) FROM rendez_vous WHERE id_psychologist=?")) {
+            pst.setInt(1, psyId);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) s.total = rs.getInt(1);
+            }
+        }
+
+        // confirmation_status
+        try (PreparedStatement pst = cnx.prepareStatement(
+                "SELECT confirmation_status, COUNT(*) FROM rendez_vous WHERE id_psychologist=? GROUP BY confirmation_status")) {
+            pst.setInt(1, psyId);
+            try (ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    String status = rs.getString(1);
+                    int count = rs.getInt(2);
+                    if (status == null) continue;
+
+                    if ("confirme".equalsIgnoreCase(status)) s.confirmed = count;
+                    else if ("en_attente".equalsIgnoreCase(status)) s.pending = count;
+                    else if ("annule".equalsIgnoreCase(status)) s.cancelled = count;
+                }
+            }
+        }
+
+        // terminés
+        try (PreparedStatement pst = cnx.prepareStatement(
+                "SELECT COUNT(*) FROM rendez_vous WHERE id_psychologist=? AND statutrv='termine'")) {
+            pst.setInt(1, psyId);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) s.finished = rs.getInt(1);
+            }
+        }
+
+        return s;
+    }
+
+    // ====================== STAT 6 DERNIERS MOIS (BarChart) ======================
+
+    private String prettyTypeLabel(String raw) {
+        if (raw == null) return "Inconnu";
+        raw = raw.trim().toLowerCase();
+
+        return switch (raw) {
+            case "premiere_consultation" -> "Première consultation";
+            case "suivi" -> "Suivi";
+            case "urgence" -> "Urgence";
+            default -> raw;
+        };
+    }
+
+    public static class MonthTypeCount {
+        public final String monthLabel; // "Jan", "Fév", ...
+        public final String typeLabel;  // "Suivi", ...
+        public final int count;
+
+        public MonthTypeCount(String monthLabel, String typeLabel, int count) {
+            this.monthLabel = monthLabel;
+            this.typeLabel = typeLabel;
+            this.count = count;
+        }
+    }
+
+    public List<MonthTypeCount> countByTypeLast6Months(int psyId) throws SQLException {
+        String sql =
+                "SELECT YEAR(appointment_date) as y, MONTH(appointment_date) as m, type_rendez_vous, COUNT(*) as c " +
+                        "FROM rendez_vous " +
+                        "WHERE id_psychologist=? " +
+                        "  AND appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) " +
+                        "GROUP BY y, m, type_rendez_vous " +
+                        "ORDER BY y, m";
+
+        List<MonthTypeCount> out = new ArrayList<>();
+
+        try (PreparedStatement pst = cnx.prepareStatement(sql)) {
+            pst.setInt(1, psyId);
+            try (ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    int month = rs.getInt("m");
+                    String typeRaw = rs.getString("type_rendez_vous");
+                    int count = rs.getInt("c");
+
+                    String monthLabel = monthToFrShort(month);
+                    String typeLabel = prettyTypeLabel(typeRaw);
+
+                    out.add(new MonthTypeCount(monthLabel, typeLabel, count));
+                }
+            }
+        }
+
+        return out;
+    }
+
+    private String monthToFrShort(int m) {
+        return switch (m) {
+            case 1 -> "Jan";
+            case 2 -> "Fév";
+            case 3 -> "Mar";
+            case 4 -> "Avr";
+            case 5 -> "Mai";
+            case 6 -> "Juin";
+            case 7 -> "Juil";
+            case 8 -> "Aoû";
+            case 9 -> "Sep";
+            case 10 -> "Oct";
+            case 11 -> "Nov";
+            case 12 -> "Déc";
+            default -> "M" + m;
+        };
+    }
+
+    // ====================== COMPAT: si ton controller appelle encore cette méthode ======================
+    // Map<typeLabel, Map<monthIndex(1..6), count>>
+    public Map<String, Map<Integer, Integer>> getStatsByTypeForJanToJun(int psyId, int year) {
+        Map<String, Map<Integer, Integer>> result = new LinkedHashMap<>();
+
+        String sql = """
+            SELECT MONTH(appointment_date) AS mois,
+                   type_rendez_vous        AS type,
+                   COUNT(*)                AS total
+            FROM rendez_vous
+            WHERE id_psychologist = ?
+              AND YEAR(appointment_date) = ?
+              AND MONTH(appointment_date) BETWEEN 1 AND 6
+            GROUP BY MONTH(appointment_date), type_rendez_vous
+            ORDER BY mois ASC
+        """;
+
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, psyId);
+            ps.setInt(2, year);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int mois = rs.getInt("mois"); // 1..6
+                    String typeRaw = rs.getString("type");
+                    int total = rs.getInt("total");
+
+                    String typeLabel = prettyTypeLabel(typeRaw);
+                    result.computeIfAbsent(typeLabel, k -> new HashMap<>()).put(mois, total);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 }

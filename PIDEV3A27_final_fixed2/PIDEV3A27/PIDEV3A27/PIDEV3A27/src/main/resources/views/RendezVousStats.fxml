@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.RendezVousStatsController"
+      spacing="18"
+      stylesheets="@../stats.css"
+      styleClass="page">
+
+    <!-- HEADER -->
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="header">
+        <Button text="← Retour" onAction="#goBack" styleClass="btn-back"/>
+
+        <VBox spacing="4">
+            <Label text="Tableau de bord des rendez-vous" styleClass="section-title"/>
+            <Label text="Vue d'ensemble de vos statistiques et rendez-vous"
+                   styleClass="section-subtitle"/>
+        </VBox>
+    </HBox>
+
+    <Separator styleClass="sep"/>
+
+    <!-- STAT 1 -->
+    <Label text="Nombre total de rendez-vous" styleClass="section-title"/>
+
+    <HBox spacing="16">
+
+        <VBox spacing="10" prefWidth="240" styleClass="kpi-green-card">
+            <HBox spacing="10">
+                <Label text="Confirmés" styleClass="kpi-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="✓" styleClass="kpi-icon"/>
+            </HBox>
+            <Label fx:id="lblConfirmed" text="0" styleClass="kpi-value"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <ProgressBar fx:id="pbConfirmed" prefWidth="160" progress="0" styleClass="kpi-progress"/>
+                <Label fx:id="lblConfirmedPct" text="0%" styleClass="kpi-pct"/>
+            </HBox>
+        </VBox>
+
+        <VBox spacing="10" prefWidth="240" styleClass="kpi-amber-card">
+            <HBox spacing="10">
+                <Label text="En attente" styleClass="kpi-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="🕒" styleClass="kpi-icon"/>
+            </HBox>
+            <Label fx:id="lblPending" text="0" styleClass="kpi-value"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <ProgressBar fx:id="pbPending" prefWidth="160" progress="0" styleClass="kpi-progress"/>
+                <Label fx:id="lblPendingPct" text="0%" styleClass="kpi-pct"/>
+            </HBox>
+        </VBox>
+
+        <VBox spacing="10" prefWidth="240" styleClass="kpi-red-card">
+            <HBox spacing="10">
+                <Label text="Annulés" styleClass="kpi-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="✖" styleClass="kpi-icon"/>
+            </HBox>
+            <Label fx:id="lblCancelled" text="0" styleClass="kpi-value"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <ProgressBar fx:id="pbCancelled" prefWidth="160" progress="0" styleClass="kpi-progress"/>
+                <Label fx:id="lblCancelledPct" text="0%" styleClass="kpi-pct"/>
+            </HBox>
+        </VBox>
+
+        <VBox spacing="10" prefWidth="240" styleClass="kpi-blue-card">
+            <HBox spacing="10">
+                <Label text="Terminés" styleClass="kpi-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="📅" styleClass="kpi-icon"/>
+            </HBox>
+            <Label fx:id="lblFinished" text="0" styleClass="kpi-value"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <ProgressBar fx:id="pbFinished" prefWidth="160" progress="0" styleClass="kpi-progress"/>
+                <Label fx:id="lblFinishedPct" text="0%" styleClass="kpi-pct"/>
+            </HBox>
+        </VBox>
+
+    </HBox>
+
+    <!-- STAT 2 -->
+    <Label text="Tendances sur 6 mois" styleClass="section-title"/>
+    <Label text="Répartition des rendez-vous par type sur Janvier → Juin" styleClass="section-subtitle"/>
+
+    <VBox spacing="10" styleClass="chart-card">
+        <BarChart fx:id="barChart" prefHeight="360.0" prefWidth="980.0">
+            <xAxis>
+                <CategoryAxis fx:id="xAxis"/>
+            </xAxis>
+            <yAxis>
+                <NumberAxis fx:id="yAxis"/>
+            </yAxis>
+        </BarChart>
+    </VBox>
+
+</VBox>

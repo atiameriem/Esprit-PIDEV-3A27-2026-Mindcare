@@ -1,0 +1,107 @@
+.page {
+    -fx-background-color: #f4f6f9;
+    -fx-padding: 15;   /* avant 25 → on réduit */
+    -fx-font-family: "Segoe UI";
+}
+
+/* KPI card : comme ton screenshot */
+.kpi-card {
+    -fx-padding: 18;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-width: 2;
+
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 12, 0.25, 0, 4);
+}
+
+/* Couleurs + bordures */
+.kpi-green { -fx-background-color: #e9f9ee; -fx-border-color: #6fe59a; }
+.kpi-amber { -fx-background-color: #fff7df; -fx-border-color: #f5c84c; }
+.kpi-red   { -fx-background-color: #fdeaea; -fx-border-color: #ff8c8c; }
+.kpi-blue  { -fx-background-color: #eaf3ff; -fx-border-color: #7db3ff; }
+
+/* Texte */
+.kpi-label { -fx-font-size: 13px; -fx-text-fill: #2b2b2b; }
+.kpi-value { -fx-font-size: 32px; -fx-font-weight: 800; -fx-text-fill: #2b2b2b; }
+.kpi-icon  { -fx-font-size: 14px; -fx-opacity: 0.85; }
+.kpi-pct   { -fx-font-size: 12px; -fx-text-fill: #2b2b2b; -fx-opacity: 0.9; }
+
+/* ProgressBar style proche screenshot */
+.kpi-progress {
+    -fx-accent: #0a84a8;
+}
+.kpi-progress .track {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(0,0,0,0.12);
+    -fx-border-radius: 8;
+}
+.kpi-progress .bar {
+    -fx-background-radius: 8;
+}
+/* =========================
+   KPI BOXES (comme screenshot)
+========================= */
+
+.kpi-green-card,
+.kpi-amber-card,
+.kpi-red-card,
+.kpi-blue-card {
+    -fx-padding: 14;              /* moins d’espace */
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0.2, 0, 3);
+}
+
+/* Couleurs */
+.kpi-green-card { -fx-background-color: #e9f9ee; -fx-border-color: #6fe59a; }
+.kpi-amber-card { -fx-background-color: #fff7df; -fx-border-color: #f5c84c; }
+.kpi-red-card   { -fx-background-color: #fdeaea; -fx-border-color: #ff8c8c; }
+.kpi-blue-card  { -fx-background-color: #eaf3ff; -fx-border-color: #7db3ff; }
+
+/* Texte */
+.kpi-label { -fx-font-size: 13px; -fx-text-fill: #2b2b2b; }
+.kpi-value { -fx-font-size: 32px; -fx-font-weight: 800; -fx-text-fill: #2b2b2b; }
+.kpi-icon  { -fx-font-size: 14px; -fx-opacity: 0.85; }
+.kpi-pct   { -fx-font-size: 12px; -fx-text-fill: #2b2b2b; -fx-opacity: 0.9; }
+
+/* ProgressBar style */
+.kpi-progress { -fx-accent: #0a84a8; }
+.kpi-progress .track {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(0,0,0,0.12);
+    -fx-border-radius: 8;
+}
+.kpi-progress .bar {
+    -fx-background-radius: 8;
+}
+/* TITRE PRINCIPAL (comme Mes Rendez-vous) */
+.section-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #2b2b2b;
+}
+
+/* Sous-titre */
+.section-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #6c757d;
+}
+/* Bouton style moderne (comme Déconnexion) */
+.btn-back {
+    -fx-background-color: #5e9cab;
+    -fx-text-fill: white;
+    -fx-font-weight: 700;
+    -fx-background-radius: 20;
+    -fx-padding: 12 28;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+.btn-back:hover {
+    -fx-background-color: #4c8897;}

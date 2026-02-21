@@ -1,5 +1,5 @@
 package controllers;
-
+import java.net.URL;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
@@ -22,7 +22,13 @@ import java.util.List;
 import javafx.scene.control.ComboBox;
 import java.util.Comparator;
 
-
+//pour stat
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import java.io.IOException;
+import javafx.scene.control.Alert;
 /**
  * Psychologue : lecture seule de SES rendez-vous.
  */
@@ -495,5 +501,40 @@ public class RendezVousController {
         a.setHeaderText(title);
         a.setContentText(e.getMessage());
         a.showAndWait();
+    }
+
+
+
+    @FXML
+    private void openStats() {
+        try {
+            // Charger le fichier FXML des stats
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RendezVousStats.fxml"));
+            Parent root = loader.load();
+
+            // Récupérer la scène actuelle (page RendezVous)
+            Scene currentScene = searchField.getScene();
+
+            // Passer la scène précédente au controller stats
+            RendezVousStatsController controller = loader.getController();
+            controller.setPreviousScene(currentScene);
+
+            // Créer nouvelle scène
+            Scene statsScene = new Scene(root);
+
+            // Charger le CSS (TON fichier est dans resources/)
+            URL css = getClass().getResource("/views/stats.css");
+            if (css != null) {
+                statsScene.getStylesheets().add(css.toExternalForm());
+            }
+
+            // Afficher dans le même Stage
+            Stage stage = (Stage) currentScene.getWindow();
+            stage.setScene(statsScene);
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

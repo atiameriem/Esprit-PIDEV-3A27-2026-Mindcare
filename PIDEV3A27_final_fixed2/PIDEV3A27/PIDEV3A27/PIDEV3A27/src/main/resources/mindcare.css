@@ -253,7 +253,19 @@
 .postAuthor{ -fx-font-weight: 800; -fx-text-fill: -text; }
 .postTitle{ -fx-font-size: 16px; -fx-font-weight: 800; -fx-text-fill: -text; }
 .postContent{ -fx-text-fill: rgba(31,42,51,0.75); }
-
+/* Statistiques = même style que Déconnexion */
+.statBtn{
+    -fx-max-width: 9999;
+    -fx-background-color: -accent;
+    -fx-text-fill: white;
+    -fx-background-radius: 12;
+    -fx-padding: 10 16;
+    -fx-font-weight: 700;
+    -fx-cursor: hand;
+}
+.statBtn:hover{
+    -fx-background-color: -accent2;
+}
 /* Help */
 .helpBtn{
     -fx-background-color: rgba(255,255,255,0.75);

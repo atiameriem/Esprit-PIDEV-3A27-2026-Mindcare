@@ -23,6 +23,9 @@
                    style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
         </VBox>
         <Pane HBox.hgrow="ALWAYS"/>
+
+        <!-- ✅ NOUVEAU BOUTON STATISTIQUES -->
+        <Button text="📊  Statistiques" styleClass="statBtn" onAction="#openStats"/>
     </HBox>
 
     <Separator/>
