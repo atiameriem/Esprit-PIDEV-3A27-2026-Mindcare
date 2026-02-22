@@ -3,6 +3,10 @@ package controllers;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
@@ -119,6 +123,9 @@ public class CompteRenduReadController {
 
         Label badge = buildProgressBadge(cr.getProgresCr());
 
+        // Rating (patient)
+        HBox ratingRow = buildRatingRow(cr);
+
         VBox resumeBox = buildSection("RÉSUMÉ DE SÉANCE", cr.getResumeSeanceCr());
         VBox actionsBox = buildSection("PROCHAINES ACTIONS", cr.getProchainesActionCr());
 //buildCard() : Il n’y a pas :
@@ -127,8 +134,96 @@ public class CompteRenduReadController {
 //bouton Supprimer
 //popup showCompteRenduDialog(...)
 //handler handleDelete(...)
-        card.getChildren().addAll(dateRow, title, psyRow, badge, resumeBox, actionsBox);
+        card.getChildren().addAll(dateRow, title, psyRow, badge, ratingRow, resumeBox, actionsBox);
         return card;
+    }
+
+    private HBox buildRatingRow(CompteRenduView cr) {
+        HBox row = new HBox(10);
+        row.setAlignment(Pos.CENTER_LEFT);
+
+        Label label = new Label("Votre note :");
+        label.setStyle("-fx-font-size: 12px; -fx-text-fill:#334155; -fx-font-weight: 700;");
+
+        Label stars = new Label(renderStars(cr.getRating()));
+        stars.setStyle("-fx-font-size: 16px; -fx-text-fill:#F59E0B; -fx-font-weight: 800;");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button rateBtn = new Button(cr.getRating() == null ? "⭐ Noter" : "⭐ Modifier");
+        rateBtn.setStyle("-fx-background-color: rgba(245,158,11,0.12); -fx-text-fill:#B45309; -fx-font-weight: 800; -fx-background-radius: 10; -fx-padding: 6 10;");
+
+        rateBtn.setOnAction(e -> {
+            Integer newRating = showRatingDialog(cr.getRating());
+            if (newRating == null) return;
+            try {
+                crService.updateRatingForPatient(cr.getIdCompteRendu(), Session.getUserId(), newRating);
+                // refresh
+                loadCompteRendus();
+            } catch (Exception ex) {
+                showError("Erreur rating", ex);
+            }
+        });
+
+        row.getChildren().addAll(label, stars, spacer, rateBtn);
+        return row;
+    }
+
+    private String renderStars(Integer rating) {
+        int r = (rating == null) ? 0 : Math.max(0, Math.min(5, rating));
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i <= 5; i++) sb.append(i <= r ? '★' : '☆');
+        return sb.toString();
+    }
+
+    /**
+     * Popup de rating 1..5 avec étoiles cliquables.
+     * @return rating choisi, ou null si annuler.
+     */
+    private Integer showRatingDialog(Integer currentRating) {
+        Dialog<Integer> dialog = new Dialog<>();
+        dialog.setTitle("Noter la séance");
+        dialog.setHeaderText("Donnez une note de 1 à 5 étoiles");
+
+        ButtonType saveBtn = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveBtn, ButtonType.CANCEL);
+
+        HBox starsBox = new HBox(8);
+        starsBox.setAlignment(Pos.CENTER_LEFT);
+        starsBox.setStyle("-fx-padding: 10 0 0 0;");
+
+        final int[] selected = { (currentRating == null) ? 0 : currentRating };
+
+        Label[] stars = new Label[5];
+        for (int i = 0; i < 5; i++) {
+            Label star = new Label("☆");
+            star.setStyle("-fx-font-size: 28px; -fx-text-fill:#F59E0B; -fx-cursor: hand;");
+            final int val = i + 1;
+            star.setOnMouseClicked(ev -> {
+                selected[0] = val;
+                for (int k = 0; k < 5; k++) stars[k].setText(k < selected[0] ? "★" : "☆");
+            });
+            stars[i] = star;
+            starsBox.getChildren().add(star);
+        }
+        // init state
+        for (int k = 0; k < 5; k++) stars[k].setText(k < selected[0] ? "★" : "☆");
+
+        VBox content = new VBox(8);
+        Label hint = new Label("Cliquez sur les étoiles pour choisir la note.");
+        hint.setStyle("-fx-text-fill:#475569; -fx-font-size: 12px;");
+        content.getChildren().addAll(hint, starsBox);
+        dialog.getDialogPane().setContent(content);
+
+        // disable save if nothing selected
+        Button saveButton = (Button) dialog.getDialogPane().lookupButton(saveBtn);
+        saveButton.setDisable(selected[0] == 0);
+        // update disable state on click
+        starsBox.setOnMouseClicked(ev -> saveButton.setDisable(selected[0] == 0));
+
+        dialog.setResultConverter(btn -> btn == saveBtn ? (selected[0] == 0 ? null : selected[0]) : null);
+        return dialog.showAndWait().orElse(null);
     }
 
     private Label buildProgressBadge(CompteRenduSeance.ProgresCR progrescr) {

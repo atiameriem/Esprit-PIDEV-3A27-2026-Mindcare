@@ -201,6 +201,9 @@ public class CompteRenduController {
         // Badge progrès
         Label badge = buildProgressBadge(cr.getProgresCr());
 
+        // Rating (lecture seule)
+        HBox ratingRow = buildRatingRow(cr);
+
         // Sections
         VBox resumeBox = buildSection("RÉSUMÉ DE SÉANCE", cr.getResumeSeanceCr(), "#111");
         VBox actionsBox = buildSection("PROCHAINES ACTIONS", cr.getProchainesActionCr(), "#111");
@@ -217,8 +220,33 @@ public class CompteRenduController {
 
         btns.getChildren().addAll(editBtn, delBtn);
 
-        card.getChildren().addAll(dateRow, title, patientRow, badge, resumeBox, actionsBox, btns);
+        card.getChildren().addAll(dateRow, title, patientRow, badge, ratingRow, resumeBox, actionsBox, btns);
         return card;
+    }
+
+    private HBox buildRatingRow(CompteRenduView cr) {
+        HBox row = new HBox(10);
+        row.setAlignment(Pos.CENTER_LEFT);
+
+        Label label = new Label("Note patient :");
+        label.setStyle("-fx-font-size: 12px; -fx-text-fill:#334155; -fx-font-weight: 700;");
+
+        Integer rating = cr.getRating();
+        Label stars = new Label(renderStars(rating));
+        stars.setStyle("-fx-font-size: 16px; -fx-text-fill:#F59E0B; -fx-font-weight: 800;");
+
+        Label txt = new Label(rating == null ? "Non noté" : (rating + "/5"));
+        txt.setStyle("-fx-font-size: 12px; -fx-text-fill:#475569; -fx-font-weight: 700;");
+
+        row.getChildren().addAll(label, stars, txt);
+        return row;
+    }
+
+    private String renderStars(Integer rating) {
+        int r = (rating == null) ? 0 : Math.max(0, Math.min(5, rating));
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i <= 5; i++) sb.append(i <= r ? '★' : '☆');
+        return sb.toString();
     }
     //popup confirmation et puis supp
     private void handleDelete(CompteRenduView cr) {

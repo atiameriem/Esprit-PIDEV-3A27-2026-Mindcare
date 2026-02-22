@@ -9,6 +9,9 @@ public class CompteRenduSeance {
     private ProgresCR progresCr;
     private String resumeSeanceCr;
     private String prochainesActionCr;
+
+    // rating saisi par le patient (1..5), null si pas encore noté
+    private Integer rating;
     //pour le crud ce class
     public CompteRenduSeance() {
     }
@@ -78,6 +81,14 @@ public class CompteRenduSeance {
 
     public void setProchainesActionCr(String prochainesActionCr) {
         this.prochainesActionCr = prochainesActionCr;
+    }
+
+    public Integer getRating() {
+        return rating;
+    }
+
+    public void setRating(Integer rating) {
+        this.rating = rating;
     }
 
     public String toString() {

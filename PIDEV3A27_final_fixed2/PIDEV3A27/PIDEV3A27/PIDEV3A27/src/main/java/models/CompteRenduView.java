@@ -37,6 +37,10 @@ public class CompteRenduView {
     private String patientFullName;
     private String psychologistFullName;
 
+    // rating (patient -> psychologue)
+    // null si pas encore noté
+    private Integer rating;
+
     public int getIdCompteRendu() { return idCompteRendu; }
     public void setIdCompteRendu(int idCompteRendu) { this.idCompteRendu = idCompteRendu; }
 
@@ -72,6 +76,9 @@ public class CompteRenduView {
 
     public String getPsychologistFullName() { return psychologistFullName; }
     public void setPsychologistFullName(String psychologistFullName) { this.psychologistFullName = psychologistFullName; }
+
+    public Integer getRating() { return rating; }
+    public void setRating(Integer rating) { this.rating = rating; }
 
 }
 

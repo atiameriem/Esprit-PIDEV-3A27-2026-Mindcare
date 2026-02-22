@@ -135,6 +135,32 @@ public class ServiceCompteRenduSeance {
         }
     }
 
+    // ===================== RATING (PATIENT) =====================
+
+    /**
+     * Patient : noter une séance (1..5). Sécurisé : le CR doit appartenir au patient.
+     */
+    public void updateRatingForPatient(int idCompteRendu, int idPatient, int rating) throws SQLException {
+        if (rating < 1 || rating > 5) {
+            throw new IllegalArgumentException("Le rating doit être entre 1 et 5");
+        }
+
+        String sql = """
+            UPDATE compte_rendu_seance cr
+            JOIN rendez_vous rv ON rv.id_rv = cr.id_appointment
+            SET cr.rating = ?, cr.rating_date = NOW()
+            WHERE cr.id_compterendu = ?
+              AND rv.id_patient = ?
+        """;
+
+        try (PreparedStatement pst = cnx.prepareStatement(sql)) {
+            pst.setInt(1, rating);
+            pst.setInt(2, idCompteRendu);
+            pst.setInt(3, idPatient);
+            pst.executeUpdate();
+        }
+    }
+
     // ===================== VIEWS (JOIN users) =====================
 //Ici tu veux afficher :
 //le compte rendu
@@ -263,6 +289,14 @@ public class ServiceCompteRenduSeance {
 
         v.setPatientFullName(safeFullName(rs.getString("patient_prenom"), rs.getString("patient_nom")));
         v.setPsychologistFullName(safeFullName(rs.getString("psy_prenom"), rs.getString("psy_nom")));
+
+        // rating peut être null
+        try {
+            Object r = rs.getObject("rating");
+            if (r != null) v.setRating(((Number) r).intValue());
+        } catch (SQLException ignored) {
+            // si la colonne n'existe pas encore dans la DB
+        }
         return v;
     }
 
