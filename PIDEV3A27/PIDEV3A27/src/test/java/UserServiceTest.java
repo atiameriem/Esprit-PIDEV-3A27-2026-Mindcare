@@ -1,123 +1,113 @@
-/*package test;
+/*package services;
 
-import models.User;
-import org.junit.jupiter.api.*;
-import services.UserService;
+import models.Reclamation;
+import models.TypeReclamation;
+import utils.MyDatabase;
 
-import java.sql.SQLException;
-import java.time.LocalDate;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+public class ReclamationService {
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class UserServiceTest {
+    private final Connection connection;
 
-    static UserService us;
-    private static int idUser = -1;
-
-    @BeforeAll
-    public static void setup() {
-        us = new UserService();
+    public ReclamationService() {
+        connection = MyDatabase.getInstance().getCnx();
     }
 
-    @AfterAll
-    public static void cleanUp() {
-        try {
-            if (idUser != -1) {
-                us.delete(idUser);
-                System.out.println("[DEBUG_LOG] Cleanup: Deleted User with ID: " + idUser);
-                idUser = -1;
+    // ================= CREATE =================
+    public void create(Reclamation r) throws SQLException {
+
+        String sql = "INSERT INTO reclamation (id_users, type, description, statut, date) VALUES (?, ?, ?, ?, NOW())";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setInt(1, r.getIdUser());
+            stmt.setString(2, r.getType().name());
+            stmt.setString(3, r.getDescription());
+            stmt.setString(4, r.getStatut() != null ? r.getStatut() : "EN_ATTENTE");
+
+            stmt.executeUpdate();
+
+            ResultSet rs = stmt.getGeneratedKeys();
+            if (rs.next()) {
+                r.setId(rs.getInt(1));
             }
-        } catch (SQLException e) {
-            System.err.println("[ERROR_LOG] Cleanup failed: " + e.getMessage());
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    int id = generatedKeys.getInt(1);
+                    r.setId(id);  // mettre à jour l'objet Reclamation si nécessaire
+                    return id;
+                } else {
+                    throw new SQLException("Échec de la création de la réclamation, aucun ID généré.");
+                }
+            }
         }
     }
 
-    @Test
-    @Order(1)
-    public void testCreateUser() {
+    // ================= GET ALL =================
+    public List<Reclamation> getAll() throws SQLException {
 
-        User u = new User(
-                25,
-                "Foulen",
-                "Ben Foulen",
-                "foulen@test.com",
-                "12345678",
-                LocalDate.of(2024, 1, 1),
-                "password123",
-                User.Role.Patient
-        );
+        List<Reclamation> list = new ArrayList<>();
+        String sql = "SELECT * FROM reclamation";
 
-        try {
-            int id = us.create(u);
-            idUser = id;
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
 
-            System.out.println("[DEBUG_LOG] Created User with ID: " + id);
-            assertTrue(id > 0, "User ID should be greater than 0");
+            while (rs.next()) {
 
-            List<User> users = us.getAll();
-            assertFalse(users.isEmpty(), "User list should not be empty");
+                Reclamation r = new Reclamation();
 
-            boolean found = users.stream()
-                    .anyMatch(p -> p.getId() == id && p.getNom().equals("Foulen"));
+                r.setId(rs.getInt("id_reclamation"));
+                r.setIdUser(rs.getInt("id_users"));
 
-            assertTrue(found, "User with the generated ID and name 'Foulen' should exist");
-            System.out.println("[DEBUG_LOG] Verified: User exists with ID " + id);
+                String typeStr = rs.getString("type");
+                TypeReclamation type = TypeReclamation.Autre;
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            Assertions.fail("Exception occurred during testCreateUser: " + e.getMessage());
+                if (typeStr != null) {
+                    try {
+                        type = TypeReclamation.valueOf(typeStr);
+                    } catch (IllegalArgumentException ignored) {}
+                }
+
+                r.setType(type);
+                r.setDescription(rs.getString("description"));
+                r.setStatut(rs.getString("statut"));
+                r.setDate(rs.getDate("date"));
+
+                list.add(r);
+            }
+        }
+
+        return list;
+    }
+
+    // ================= UPDATE =================
+    public void update(Reclamation r) throws SQLException {
+
+        String sql = "UPDATE reclamation SET id_users = ?, type = ?, description = ?, statut = ? WHERE id_reclamation = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+
+            stmt.setInt(1, r.getIdUser());
+            stmt.setString(2, r.getType().name());
+            stmt.setString(3, r.getDescription());
+            stmt.setString(4, r.getStatut());
+            stmt.setInt(5, r.getId());
+
+            stmt.executeUpdate();
         }
     }
 
-    @Test
-    @Order(2)
-    public void testUpdate() {
+    // ================= DELETE =================
+    public void delete(int id) throws SQLException {
 
-        try {
-            if (idUser == -1) {
-                User u = new User(
-                        30,
-                        "ToUpdate",
-                        "User",
-                        "update@test.com",
-                        "00000000",
-                        LocalDate.of(2024, 1, 1),
-                        "pass",
-                        User.Role.Patient
-                );
-                idUser = us.create(u);
-            }
+        String sql = "DELETE FROM reclamation WHERE id_reclamation = ?";
 
-            User updateInfo = new User();
-            updateInfo.setId(idUser);
-            updateInfo.setAge(26);
-            updateInfo.setNom("UpdatedName");
-            updateInfo.setPrenom("Ben Foulen");
-            updateInfo.setEmail("updated@test.com");
-            updateInfo.setTelephone("87654321");
-            updateInfo.setDateInscription(LocalDate.of(2024, 1, 2));
-            updateInfo.setMotDePasse("newpass");
-            updateInfo.setRole(User.Role.Patient);
-
-            us.update(updateInfo);
-
-            System.out.println("[DEBUG_LOG] Updated User ID " + idUser);
-
-            List<User> users = us.getAll();
-            assertFalse(users.isEmpty(), "User list should not be empty after update");
-
-            boolean found = users.stream()
-                    .anyMatch(p -> p.getId() == idUser && p.getNom().equals("UpdatedName"));
-
-            assertTrue(found, "User with ID " + idUser + " should have updated name 'UpdatedName'");
-            System.out.println("[DEBUG_LOG] Verified: User ID " + idUser + " updated successfully");
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            Assertions.fail("Exception occurred during testUpdate: " + e.getMessage());
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
         }
     }
 }

@@ -1,7 +1,6 @@
 package services;
 
 import models.Reclamation;
-import models.TypeReclamation;
 import utils.MyDatabase;
 
 import java.sql.*;
@@ -19,14 +18,15 @@ public class ReclamationService {
     // ================= CREATE =================
     public void create(Reclamation r) throws SQLException {
 
-        String sql = "INSERT INTO reclamation (id_users, type, description, statut, date) VALUES (?, ?, ?, ?, NOW())";
+        String sql = "INSERT INTO reclamation (id_users, objet, urgence, description, statut, date) VALUES (?, ?, ?, ?, ?, NOW())";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, r.getIdUser());
-            stmt.setString(2, r.getType().name());
-            stmt.setString(3, r.getDescription());
-            stmt.setString(4, r.getStatut() != null ? r.getStatut() : "EN_ATTENTE");
+            stmt.setString(2, r.getObjet());
+            stmt.setString(3, r.getUrgence());
+            stmt.setString(4, r.getDescription());
+            stmt.setString(5, r.getStatut() != null ? r.getStatut() : "EN_ATTENTE");
 
             stmt.executeUpdate();
 
@@ -44,7 +44,7 @@ public class ReclamationService {
         String sql = "SELECT * FROM reclamation";
 
         try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+                ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
 
@@ -53,16 +53,8 @@ public class ReclamationService {
                 r.setId(rs.getInt("id_reclamation"));
                 r.setIdUser(rs.getInt("id_users"));
 
-                String typeStr = rs.getString("type");
-                TypeReclamation type = TypeReclamation.Autre;
-
-                if (typeStr != null) {
-                    try {
-                        type = TypeReclamation.valueOf(typeStr);
-                    } catch (IllegalArgumentException ignored) {}
-                }
-
-                r.setType(type);
+                r.setObjet(rs.getString("objet"));
+                r.setUrgence(rs.getString("urgence"));
                 r.setDescription(rs.getString("description"));
                 r.setStatut(rs.getString("statut"));
                 r.setDate(rs.getDate("date"));
@@ -77,15 +69,16 @@ public class ReclamationService {
     // ================= UPDATE =================
     public void update(Reclamation r) throws SQLException {
 
-        String sql = "UPDATE reclamation SET id_users = ?, type = ?, description = ?, statut = ? WHERE id_reclamation = ?";
+        String sql = "UPDATE reclamation SET id_users = ?, objet = ?, urgence = ?, description = ?, statut = ? WHERE id_reclamation = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setInt(1, r.getIdUser());
-            stmt.setString(2, r.getType().name());
-            stmt.setString(3, r.getDescription());
-            stmt.setString(4, r.getStatut());
-            stmt.setInt(5, r.getId());
+            stmt.setString(2, r.getObjet());
+            stmt.setString(3, r.getUrgence());
+            stmt.setString(4, r.getDescription());
+            stmt.setString(5, r.getStatut());
+            stmt.setInt(6, r.getId());
 
             stmt.executeUpdate();
         }

@@ -1,40 +1,63 @@
 package controllers;
 
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
 import models.Reclamation;
-import models.TypeReclamation;
 
 public class ReclamationDialogController {
 
-    @FXML private ComboBox<TypeReclamation> typeComboBox;
-    @FXML private TextArea descriptionArea;
+    @FXML
+    private TextField objetField;
+    @FXML
+    private RadioButton highRadio;
+    @FXML
+    private RadioButton mediumRadio;
+    @FXML
+    private RadioButton lowRadio;
+    @FXML
+    private TextArea descriptionArea;
 
+    private ToggleGroup urgenceGroup;
     private Reclamation reclamation;
     private boolean saveClicked = false;
 
     @FXML
     public void initialize() {
-        typeComboBox.setItems(FXCollections.observableArrayList(TypeReclamation.values()));
+        urgenceGroup = new ToggleGroup();
+        highRadio.setToggleGroup(urgenceGroup);
+        mediumRadio.setToggleGroup(urgenceGroup);
+        lowRadio.setToggleGroup(urgenceGroup);
     }
 
     public void setReclamation(Reclamation reclamation) {
         this.reclamation = reclamation;
 
         if (reclamation != null) {
-            typeComboBox.setValue(reclamation.getType());
+            objetField.setText(reclamation.getObjet());
             descriptionArea.setText(reclamation.getDescription());
+
+            String urgence = reclamation.getUrgence();
+            if ("HIGH".equalsIgnoreCase(urgence) || "HIGHT".equalsIgnoreCase(urgence))
+                highRadio.setSelected(true);
+            else if ("LOW".equalsIgnoreCase(urgence))
+                lowRadio.setSelected(true);
+            else
+                mediumRadio.setSelected(true);
         }
     }
 
     @FXML
     private void handleSave() {
+        if (reclamation != null) {
+            reclamation.setObjet(objetField.getText());
+            reclamation.setDescription(descriptionArea.getText());
 
-        reclamation.setType(typeComboBox.getValue());
-        reclamation.setDescription(descriptionArea.getText());
+            RadioButton selected = (RadioButton) urgenceGroup.getSelectedToggle();
+            if (selected != null) {
+                reclamation.setUrgence(selected.getText());
+            }
+        }
 
         saveClicked = true;
         close();
@@ -46,7 +69,7 @@ public class ReclamationDialogController {
     }
 
     private void close() {
-        Stage stage = (Stage) typeComboBox.getScene().getWindow();
+        Stage stage = (Stage) objetField.getScene().getWindow();
         stage.close();
     }
 

@@ -105,19 +105,13 @@
                                     style="-fx-background-color: #2E7D32; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"/>
                         </HBox>
 
-                        <TableView fx:id="usersTable" prefHeight="400" VBox.vgrow="ALWAYS">
-
-                            <columns>
-                                <TableColumn fx:id="colNom" text="Nom" prefWidth="120"/>
-                                <TableColumn fx:id="colPrenom" text="Prénom" prefWidth="120"/>
-                                <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
-                                <TableColumn fx:id="colTelephone" text="Téléphone" prefWidth="150"/>
-                                <TableColumn fx:id="colRole" text="Rôle" prefWidth="120"/>
-                                <TableColumn fx:id="colDate" text="Date d'inscription" prefWidth="140"/>
-                                <TableColumn fx:id="colAction" text="Actions" prefWidth="150"/>
-                            </columns>
-
-                        </TableView>
+                        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+                            <FlowPane fx:id="usersGrid" hgap="20" vgap="20" alignment="TOP_LEFT">
+                                <padding>
+                                    <Insets top="10" right="10" bottom="10" left="10"/>
+                                </padding>
+                            </FlowPane>
+                        </ScrollPane>
 
                     </VBox>
                 </content>

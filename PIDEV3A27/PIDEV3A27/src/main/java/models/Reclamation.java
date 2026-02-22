@@ -6,7 +6,8 @@ public class Reclamation {
 
     private int id;
     private int idUser;
-    private TypeReclamation type;
+    private String objet;
+    private String urgence;
     private String description;
     private String statut;
     private Date date;
@@ -14,11 +15,12 @@ public class Reclamation {
     public Reclamation() {
     }
 
-    public Reclamation(int id, int idUser, TypeReclamation type,
+    public Reclamation(int id, int idUser, String objet, String urgence,
             String description, String statut, Date date) {
         this.id = id;
         this.idUser = idUser;
-        this.type = type;
+        this.objet = objet;
+        this.urgence = urgence;
         this.description = description;
         this.statut = statut;
         this.date = date;
@@ -42,12 +44,20 @@ public class Reclamation {
         this.idUser = idUser;
     }
 
-    public TypeReclamation getType() {
-        return type;
+    public String getObjet() {
+        return objet;
     }
 
-    public void setType(TypeReclamation type) {
-        this.type = type;
+    public void setObjet(String objet) {
+        this.objet = objet;
+    }
+
+    public String getUrgence() {
+        return urgence;
+    }
+
+    public void setUrgence(String urgence) {
+        this.urgence = urgence;
     }
 
     public String getDescription() {
@@ -77,8 +87,8 @@ public class Reclamation {
     @Override
     public String toString() {
         return "Reclamation{id=" + id + ", idUser=" + idUser +
-                ", type=" + (type != null ? type.name() : "null") +
-                ", statut='" + statut + "', date=" + date +
+                ", objet='" + objet + "', urgence='" + urgence +
+                "', statut='" + statut + "', date=" + date +
                 ", description='" + description + "'}";
     }
 }

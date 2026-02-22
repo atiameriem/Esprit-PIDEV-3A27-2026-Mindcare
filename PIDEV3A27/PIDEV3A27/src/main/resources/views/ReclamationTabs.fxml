@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.ReclamationTabsController"
+      style="-fx-background-color: transparent;">
+
+    <TabPane fx:id="reclamationTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" 
+             style="-fx-background-color: transparent;">
+        <tabs>
+            <Tab fx:id="addTab" text="Ajouter">
+                <content>
+                    <fx:include source="Reclamation.fxml"/>
+                </content>
+            </Tab>
+            <Tab fx:id="myReclamationsTab" text="Mes Réclamations">
+                <content>
+                    <fx:include fx:id="mesReclamations" source="MesReclamations.fxml"/>
+                </content>
+            </Tab>
+            <Tab fx:id="adminTab" text="Gestion (Admin)">
+                <content>
+                    <fx:include source="AdminReclamations.fxml"/>
+                </content>
+            </Tab>
+        </tabs>
+    </TabPane>
+
+</VBox>
