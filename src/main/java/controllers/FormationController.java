@@ -680,49 +680,27 @@ public class FormationController {
 
             if (isEditMode) {
                 formationService.update(f);
-
+                // On met à jour les modules (logique simplifiée)
                 for (Module m : modulesToAdd) {
-                    m.setFormationId(f.getId());
-
                     if (m.getId() == 0) {
+                        m.setFormationId(f.getId());
                         moduleService.create(m);
                     } else {
                         moduleService.update(m);
                     }
-
-                    // === Sauvegarde des contenus liés ===
-                    for (Contenu c : m.getContenus()) {
-                        c.setModuleId(m.getId());
-                        if (c.getId() == 0) {
-                            contenuService.create(c);
-                        } else {
-                            contenuService.update(c);
-                        }
-                    }
                 }
-
             } else {
                 int id = formationService.create(f);
-
                 for (Module m : modulesToAdd) {
                     m.setFormationId(id);
                     moduleService.create(m);
-
-                    // === Sauvegarde des contenus liés ===
-                    for (Contenu c : m.getContenus()) {
-                        c.setModuleId(m.getId());
-                        contenuService.create(c);
-                    }
                 }
             }
-
             ((Stage) titreField.getScene().getWindow()).close();
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
 
     private void setImageSafe(ImageView iv, String path) {
         try {
