@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1"
+      xmlns="http://javafx.com/javafx/21"
+      fx:controller="controllers.ChatController"
+      spacing="0"
+      prefHeight="620"
+      style="-fx-background-color:#F0F9FF;">
+
+    <!-- ═══ HEADER ═══ -->
+    <HBox alignment="CENTER_LEFT" spacing="12"
+          style="-fx-background-color:white; -fx-padding:16 20;
+                 -fx-effect:dropshadow(gaussian,rgba(0,0,0,0.06),8,0,0,2);">
+        <Label text="🧠" style="-fx-font-size:22px;"/>
+        <VBox spacing="2" HBox.hgrow="ALWAYS">
+            <Label text="Assistant MindCare IA"
+                   style="-fx-font-size:15px; -fx-font-weight:900; -fx-text-fill:#1F2937;"/>
+            <Label text="● En ligne"
+                   style="-fx-font-size:11px; -fx-text-fill:#10B981; -fx-font-weight:700;"/>
+        </VBox>
+        <Button text="← Retour" onAction="#retourSuivie"
+                style="-fx-background-color:rgba(167,139,250,0.12); -fx-text-fill:#7C3AED;
+                       -fx-font-size:11px; -fx-font-weight:700; -fx-padding:8 14;
+                       -fx-background-radius:12; -fx-border-color:rgba(167,139,250,0.25);
+                       -fx-border-radius:12; -fx-cursor:hand;"/>
+    </HBox>
+
+    <!-- ═══ ZONE CHAT ═══ -->
+    <ScrollPane fx:id="scrollPane" VBox.vgrow="ALWAYS"
+                fitToWidth="true"
+                style="-fx-background:transparent; -fx-background-color:#F0F9FF;
+                       -fx-border-color:transparent;">
+        <VBox fx:id="chatBox" spacing="8">
+            <padding><Insets top="16" right="12" bottom="16" left="12"/></padding>
+        </VBox>
+    </ScrollPane>
+
+    <!-- ═══ ZONE SAISIE ═══ -->
+    <HBox spacing="10" alignment="CENTER"
+          style="-fx-background-color:white; -fx-padding:12 16;
+                 -fx-effect:dropshadow(gaussian,rgba(0,0,0,0.06),8,0,0,-2);">
+        <TextField fx:id="champMessage"
+                   promptText="Écris ton message..."
+                   HBox.hgrow="ALWAYS"
+                   onAction="#envoyerMessage"
+                   style="-fx-background-color:#F3F4F6; -fx-background-radius:20;
+                          -fx-border-color:transparent; -fx-padding:10 16;
+                          -fx-font-size:13px;"/>
+        <Button text="➤" onAction="#envoyerMessage"
+                style="-fx-background-color:#7C3AED; -fx-text-fill:white;
+                       -fx-font-size:14px; -fx-font-weight:900;
+                       -fx-background-radius:50; -fx-padding:10 16;
+                       -fx-cursor:hand;"/>
+    </HBox>
+</VBox>

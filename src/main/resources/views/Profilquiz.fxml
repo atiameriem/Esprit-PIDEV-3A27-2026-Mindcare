@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.shape.*?>
+
+<ScrollPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.ProfilControllerQuiz"
+            fitToWidth="true"
+            prefWidth="500" prefHeight="600"
+            style="-fx-background: #F0F9FF;
+                   -fx-background-color: #F0F9FF;
+                   -fx-border-color: transparent;">
+
+    <VBox spacing="16">
+        <padding><Insets top="20" right="24" bottom="24" left="24"/></padding>
+
+        <!-- ═══ HEADER ══════════════════════════════════════════ -->
+        <HBox alignment="CENTER_LEFT" spacing="16">
+            <Button fx:id="btnRetour" text="← Retour" onAction="#handleRetour"
+                    style="-fx-background-color: rgba(59,130,246,0.12);
+                           -fx-text-fill: #3B82F6;
+                           -fx-font-size: 12px; -fx-font-weight: 800;
+                           -fx-padding: 10 18 10 18;
+                           -fx-background-radius: 14;
+                           -fx-border-color: rgba(59,130,246,0.25);
+                           -fx-border-radius: 14;
+                           -fx-cursor: hand;"/>
+            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                <Label fx:id="lblTitrePatient" text="Résultats du patient 📋"
+                       style="-fx-font-size: 20px; -fx-font-weight: 900;
+                              -fx-text-fill: #1F2937;"/>
+                <Label text="Détail des scores par quiz"
+                       style="-fx-font-size: 12px; -fx-text-fill: #6B7280;
+                              -fx-font-weight: 600;"/>
+            </VBox>
+        </HBox>
+
+        <!-- ═══ CONTENU DYNAMIQUE ════════════════════════════════ -->
+        <!-- Rempli par ProfilControllerQuiz.afficherResultats()   -->
+        <VBox fx:id="containerReponses" spacing="12">
+            <Label text="Chargement des résultats..."
+                   style="-fx-font-size: 12px; -fx-text-fill: #9CA3AF;"/>
+        </VBox>
+
+        <Pane prefHeight="12"/>
+    </VBox>
+</ScrollPane>
