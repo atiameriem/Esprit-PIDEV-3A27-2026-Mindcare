@@ -22,7 +22,7 @@ public class ServiceGemini {
             System.err.println("❌ Erreur Groq : " + e.getMessage());
             return conseilParDefaut(scoreStress);
         }
-    }/////
+    }
 
     private String construirePrompt(int be, int st, int hu, int sessions) {
         String niveauBE = be >= 70 ? "bon"            : be >= 40 ? "moyen"   : "faible";
