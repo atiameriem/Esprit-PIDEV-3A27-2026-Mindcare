@@ -11,6 +11,10 @@ public class Commentaire {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // joined from users
+    private String authorNom;
+    private String authorPrenom;
+
     // computed
     private int likesCount;
 
@@ -36,6 +40,19 @@ public class Commentaire {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getAuthorNom() { return authorNom; }
+    public void setAuthorNom(String authorNom) { this.authorNom = authorNom; }
+
+    public String getAuthorPrenom() { return authorPrenom; }
+    public void setAuthorPrenom(String authorPrenom) { this.authorPrenom = authorPrenom; }
+
+    public String getAuthorFullName() {
+        String n = authorNom == null ? "" : authorNom.trim();
+        String p = authorPrenom == null ? "" : authorPrenom.trim();
+        String full = (n + " " + p).trim();
+        return full.isEmpty() ? ("User #" + idUsers) : full;
+    }
 
     public int getLikesCount() { return likesCount; }
     public void setLikesCount(int likesCount) { this.likesCount = likesCount; }

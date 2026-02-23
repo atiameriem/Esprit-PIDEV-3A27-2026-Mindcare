@@ -60,11 +60,13 @@ public class PostService {
     public List<Post> findPosts(boolean onlyMine, int idUsers, String search, String sort) throws SQLException {
         Connection cnx = cnx();
         StringBuilder sb = new StringBuilder();
-        sb.append("SELECT p.id, p.id_users, p.title, p.content, p.created_at, p.updated_at, ")
+        sb.append("SELECT p.id, p.id_users, u.nom AS authorNom, u.prenom AS authorPrenom, ")
+                .append("p.title, p.content, p.created_at, p.updated_at, ")
                 .append("(SELECT pi.path FROM post_images pi WHERE pi.id_post=p.id ORDER BY pi.sort_order, pi.id LIMIT 1) AS img, ")
                 .append("(SELECT COUNT(*) FROM post_likes pl WHERE pl.id_post=p.id) AS likesCount, ")
                 .append("(SELECT COUNT(*) FROM comments c WHERE c.id_post=p.id AND c.status='PUBLISHED') AS commentsCount ")
                 .append("FROM post p ")
+                .append("JOIN users u ON u.id_users = p.id_users ")
                 .append("WHERE p.status='PUBLISHED' ");
 
         List<Object> params = new ArrayList<>();
@@ -92,19 +94,7 @@ public class PostService {
             try (ResultSet rs = ps.executeQuery()) {
                 List<Post> out = new ArrayList<>();
                 while (rs.next()) {
-                    Post p = new Post();
-                    p.setId(rs.getLong("id"));
-                    p.setIdUsers(rs.getInt("id_users"));
-                    p.setTitle(rs.getString("title"));
-                    p.setContent(rs.getString("content"));
-                    Timestamp created = rs.getTimestamp("created_at");
-                    Timestamp updated = rs.getTimestamp("updated_at");
-                    if (created != null) p.setCreatedAt(created.toLocalDateTime());
-                    if (updated != null) p.setUpdatedAt(updated.toLocalDateTime());
-                    p.setFirstImagePath(rs.getString("img"));
-                    p.setLikesCount(rs.getInt("likesCount"));
-                    p.setCommentsCount(rs.getInt("commentsCount"));
-                    out.add(p);
+                    out.add(mapPost(rs));
                 }
                 return out;
             }
@@ -134,30 +124,39 @@ public class PostService {
     public Post getPostById(long postId) throws SQLException {
         Connection cnx = cnx();
         String sql =
-                "SELECT p.id, p.id_users, p.title, p.content, p.created_at, p.updated_at, " +
+                "SELECT p.id, p.id_users, u.nom AS authorNom, u.prenom AS authorPrenom, " +
+                        "p.title, p.content, p.created_at, p.updated_at, " +
                         "(SELECT pi.path FROM post_images pi WHERE pi.id_post=p.id ORDER BY pi.sort_order, pi.id LIMIT 1) AS img, " +
                         "(SELECT COUNT(*) FROM post_likes pl WHERE pl.id_post=p.id) AS likesCount, " +
                         "(SELECT COUNT(*) FROM comments c WHERE c.id_post=p.id AND c.status='PUBLISHED') AS commentsCount " +
-                        "FROM post p WHERE p.id=?";
+                        "FROM post p JOIN users u ON u.id_users = p.id_users WHERE p.id=?";
 
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
             ps.setLong(1, postId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) return null;
-                Post p = new Post();
-                p.setId(rs.getLong("id"));
-                p.setIdUsers(rs.getInt("id_users"));
-                p.setTitle(rs.getString("title"));
-                p.setContent(rs.getString("content"));
-                Timestamp created = rs.getTimestamp("created_at");
-                Timestamp updated = rs.getTimestamp("updated_at");
-                if (created != null) p.setCreatedAt(created.toLocalDateTime());
-                if (updated != null) p.setUpdatedAt(updated.toLocalDateTime());
-                p.setFirstImagePath(rs.getString("img"));
-                p.setLikesCount(rs.getInt("likesCount"));
-                p.setCommentsCount(rs.getInt("commentsCount"));
-                return p;
+                return mapPost(rs);
             }
         }
+    }
+
+    private Post mapPost(ResultSet rs) throws SQLException {
+        Post p = new Post();
+        p.setId(rs.getLong("id"));
+        p.setIdUsers(rs.getInt("id_users"));
+        p.setAuthorNom(rs.getString("authorNom"));
+        p.setAuthorPrenom(rs.getString("authorPrenom"));
+        p.setTitle(rs.getString("title"));
+        p.setContent(rs.getString("content"));
+
+        Timestamp created = rs.getTimestamp("created_at");
+        Timestamp updated = rs.getTimestamp("updated_at");
+        if (created != null) p.setCreatedAt(created.toLocalDateTime());
+        if (updated != null) p.setUpdatedAt(updated.toLocalDateTime());
+
+        p.setFirstImagePath(rs.getString("img"));
+        p.setLikesCount(rs.getInt("likesCount"));
+        p.setCommentsCount(rs.getInt("commentsCount"));
+        return p;
     }
 }

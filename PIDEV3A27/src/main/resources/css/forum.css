@@ -260,3 +260,15 @@
 .context-menu .custom-menu-item {
     -fx-padding: 0;
 }
+
+/* Validation champs (erreurs) */
+.field-error {
+    -fx-border-color: #e74c3c;
+    -fx-border-width: 1.5;
+    -fx-background-color: #fff6f6;
+}
+
+.error-text {
+    -fx-text-fill: #e74c3c;
+    -fx-font-size: 12px;
+}

@@ -14,9 +14,12 @@ public class CommentService {
 
     public List<Commentaire> getCommentsByPost(long postId) throws SQLException {
         Connection cnx = cnx();
-        String sql = "SELECT c.id, c.id_post, c.id_users, c.content, c.created_at, c.updated_at, " +
+        String sql = "SELECT c.id, c.id_post, c.id_users, u.nom AS authorNom, u.prenom AS authorPrenom, " +
+                "c.content, c.created_at, c.updated_at, " +
                 "(SELECT COUNT(*) FROM comment_likes cl WHERE cl.id_comment=c.id) AS likesCount " +
-                "FROM comments c WHERE c.id_post=? AND c.status='PUBLISHED' ORDER BY c.created_at ASC";
+                "FROM comments c " +
+                "JOIN users u ON u.id_users = c.id_users " +
+                "WHERE c.id_post=? AND c.status='PUBLISHED' ORDER BY c.created_at ASC";
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
             ps.setLong(1, postId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -26,6 +29,8 @@ public class CommentService {
                     c.setId(rs.getLong("id"));
                     c.setIdPost(rs.getLong("id_post"));
                     c.setIdUsers(rs.getInt("id_users"));
+                    c.setAuthorNom(rs.getString("authorNom"));
+                    c.setAuthorPrenom(rs.getString("authorPrenom"));
                     c.setContent(rs.getString("content"));
                     Timestamp created = rs.getTimestamp("created_at");
                     Timestamp updated = rs.getTimestamp("updated_at");

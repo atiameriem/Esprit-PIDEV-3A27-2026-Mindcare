@@ -1,6 +1,7 @@
 package controllers;
 
 import javafx.fxml.FXML;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -57,10 +58,40 @@ public class ForumController {
     private String formatDate(LocalDateTime dt) {
         return dt == null ? "" : DT.format(dt);
     }
+    // -------------------------
+    // Validation UI (pas de SQL ici)
+    // -------------------------
+    private boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
+    private void showFieldError(Control field, Label errorLabel, String message) {
+        if (field != null && !field.getStyleClass().contains("field-error")) {
+            field.getStyleClass().add("field-error");
+        }
+        if (errorLabel != null) {
+            errorLabel.setText(message);
+            errorLabel.setVisible(true);
+            errorLabel.setManaged(true);
+        }
+    }
+
+    private void clearFieldError(Control field, Label errorLabel) {
+        if (field != null) {
+            field.getStyleClass().remove("field-error");
+        }
+        if (errorLabel != null) {
+            errorLabel.setText("");
+            errorLabel.setVisible(false);
+            errorLabel.setManaged(false);
+        }
+    }
+
+
 
     private boolean isMyTab() {
         return tabMyPosts != null && tabMyPosts.isSelected();
-    }
+}
 
     @FXML
     public void initialize() {
@@ -152,7 +183,7 @@ public class ForumController {
         avatar.getChildren().add(av);
 
         VBox info = new VBox(2);
-        Label name = new Label("User #" + p.getIdUsers());
+        Label name = new Label(p.getAuthorFullName());
         name.getStyleClass().add("name");
 
         Label created = new Label("Publié le " + formatDate(p.getCreatedAt()));
@@ -243,8 +274,11 @@ public class ForumController {
 
         VBox list = new VBox(8);
 
+        VBox addBox = new VBox(4);
+
         HBox addRow = new HBox(10);
         addRow.setAlignment(Pos.CENTER_LEFT);
+
         TextField tf = new TextField();
         tf.setPromptText("Ajouter un commentaire...");
         tf.getStyleClass().add("commentField");
@@ -253,11 +287,28 @@ public class ForumController {
         Button publish = new Button("Publier");
         publish.getStyleClass().add("primaryBtnSmall");
 
+        Label lblCommentError = new Label();
+        lblCommentError.getStyleClass().add("error-text");
+        lblCommentError.setVisible(false);
+        lblCommentError.setManaged(false);
+
+        tf.textProperty().addListener((obs, o, n) -> clearFieldError(tf, lblCommentError));
+
         publish.setOnAction(ev -> {
             String txt = tf.getText();
-            if (txt == null || txt.isBlank()) return;
+            clearFieldError(tf, lblCommentError);
+
+            if (isBlank(txt)) {
+                showFieldError(tf, lblCommentError, "Le commentaire est obligatoire.");
+                return;
+            }
+            if (txt.trim().length() < 2) {
+                showFieldError(tf, lblCommentError, "Le commentaire doit contenir au moins 2 caractères.");
+                return;
+            }
+
             try {
-                commentService.addComment(p.getId(), Session.idUsers, txt);
+                commentService.addComment(p.getId(), Session.idUsers, txt.trim());
                 tf.clear();
                 loadCommentsInto(list, p.getId());
                 refreshPosts();
@@ -268,7 +319,9 @@ public class ForumController {
         });
 
         addRow.getChildren().addAll(tf, publish);
-        commentsBox.getChildren().addAll(list, addRow);
+        addBox.getChildren().addAll(addRow, lblCommentError);
+
+        commentsBox.getChildren().addAll(list, addBox);
 
         commentBtn.setOnAction(e -> {
             boolean show = !commentsBox.isVisible();
@@ -305,26 +358,65 @@ public class ForumController {
         dialog.getDialogPane().getButtonTypes().addAll(saveType, ButtonType.CANCEL);
 
         TextField tfTitle = new TextField(p.getTitle());
+        tfTitle.setPromptText("Titre");
+
+        Label lblTitleError = new Label();
+        lblTitleError.getStyleClass().add("error-text");
+        lblTitleError.setVisible(false);
+        lblTitleError.setManaged(false);
+
         TextArea taContent = new TextArea(p.getContent());
+        taContent.setPromptText("Contenu");
         taContent.setPrefRowCount(6);
 
-        VBox box = new VBox(10,
-                new Label("Titre"), tfTitle,
-                new Label("Contenu"), taContent
+        Label lblContentError = new Label();
+        lblContentError.getStyleClass().add("error-text");
+        lblContentError.setVisible(false);
+        lblContentError.setManaged(false);
+
+        tfTitle.textProperty().addListener((obs, o, n) -> clearFieldError(tfTitle, lblTitleError));
+        taContent.textProperty().addListener((obs, o, n) -> clearFieldError(taContent, lblContentError));
+
+        VBox box = new VBox(6,
+                new Label("Titre"), tfTitle, lblTitleError,
+                new Label("Contenu"), taContent, lblContentError
         );
         box.setPadding(new Insets(10));
         dialog.getDialogPane().setContent(box);
 
+        Button btnSave = (Button) dialog.getDialogPane().lookupButton(saveType);
+        btnSave.addEventFilter(ActionEvent.ACTION, ev -> {
+            boolean ok = true;
+
+            clearFieldError(tfTitle, lblTitleError);
+            clearFieldError(taContent, lblContentError);
+
+            String title = tfTitle.getText();
+            String content = taContent.getText();
+
+            if (isBlank(title)) {
+                showFieldError(tfTitle, lblTitleError, "Le titre est obligatoire.");
+                ok = false;
+            } else if (title.trim().length() < 3) {
+                showFieldError(tfTitle, lblTitleError, "Le titre doit contenir au moins 3 caractères.");
+                ok = false;
+            }
+
+            if (isBlank(content)) {
+                showFieldError(taContent, lblContentError, "Le contenu est obligatoire.");
+                ok = false;
+            } else if (content.trim().length() < 10) {
+                showFieldError(taContent, lblContentError, "Le contenu doit contenir au moins 10 caractères.");
+                ok = false;
+            }
+
+            if (!ok) ev.consume(); // empêche la fermeture du dialog
+        });
+
         dialog.setResultConverter(bt -> {
             if (bt == saveType) {
-                String title = tfTitle.getText();
-                String content = taContent.getText();
-                if (title == null || title.isBlank() || content == null || content.isBlank()) {
-                    showAlert(Alert.AlertType.WARNING, "Champs obligatoires", "Titre et contenu sont obligatoires.");
-                    return null;
-                }
                 try {
-                    postService.updatePost(p.getId(), title, content);
+                    postService.updatePost(p.getId(), tfTitle.getText().trim(), taContent.getText().trim());
                     refreshPosts();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
@@ -398,7 +490,7 @@ public class ForumController {
 
                 VBox textBox = new VBox(2);
                 HBox.setHgrow(textBox, Priority.ALWAYS);
-                Label who = new Label("User #" + c.getIdUsers());
+                Label who = new Label(c.getAuthorFullName());
                 who.getStyleClass().add("name");
 
                 Label cCreated = new Label("Publié le " + formatDate(c.getCreatedAt()));
@@ -469,6 +561,7 @@ public class ForumController {
         }
     }
 
+    
     private void openAddPostDialog() {
         Dialog<Void> dialog = new Dialog<>();
         dialog.setTitle("Ajouter un Post");
@@ -480,9 +573,22 @@ public class ForumController {
         TextField tfTitle = new TextField();
         tfTitle.setPromptText("Titre");
 
+        Label lblTitleError = new Label();
+        lblTitleError.getStyleClass().add("error-text");
+        lblTitleError.setVisible(false);
+        lblTitleError.setManaged(false);
+
         TextArea taContent = new TextArea();
         taContent.setPromptText("Contenu");
         taContent.setPrefRowCount(6);
+
+        Label lblContentError = new Label();
+        lblContentError.getStyleClass().add("error-text");
+        lblContentError.setVisible(false);
+        lblContentError.setManaged(false);
+
+        tfTitle.textProperty().addListener((obs, o, n) -> clearFieldError(tfTitle, lblTitleError));
+        taContent.textProperty().addListener((obs, o, n) -> clearFieldError(taContent, lblContentError));
 
         Label imgLabel = new Label("Aucune image");
         Button chooseImg = new Button("Choisir une image...");
@@ -502,23 +608,45 @@ public class ForumController {
             }
         });
 
-        VBox box = new VBox(10,
-                new Label("Titre"), tfTitle,
-                new Label("Contenu"), taContent,
+        VBox box = new VBox(6,
+                new Label("Titre"), tfTitle, lblTitleError,
+                new Label("Contenu"), taContent, lblContentError,
                 new HBox(10, chooseImg, imgLabel)
         );
         box.setPadding(new Insets(10));
         dialog.getDialogPane().setContent(box);
 
+        Button btnAdd = (Button) dialog.getDialogPane().lookupButton(addType);
+        btnAdd.addEventFilter(ActionEvent.ACTION, ev -> {
+            boolean ok = true;
+
+            clearFieldError(tfTitle, lblTitleError);
+            clearFieldError(taContent, lblContentError);
+
+            String title = tfTitle.getText();
+            String content = taContent.getText();
+
+            if (isBlank(title)) {
+                showFieldError(tfTitle, lblTitleError, "Le titre est obligatoire.");
+                ok = false;
+            } else if (title.trim().length() < 3) {
+                showFieldError(tfTitle, lblTitleError, "Le titre doit contenir au moins 3 caractères.");
+                ok = false;
+            }
+
+            if (isBlank(content)) {
+                showFieldError(taContent, lblContentError, "Le contenu est obligatoire.");
+                ok = false;
+            } else if (content.trim().length() < 10) {
+                showFieldError(taContent, lblContentError, "Le contenu doit contenir au moins 10 caractères.");
+                ok = false;
+            }
+
+            if (!ok) ev.consume(); // empêche la fermeture du dialog
+        });
+
         dialog.setResultConverter(bt -> {
             if (bt == addType) {
-                String title = tfTitle.getText();
-                String content = taContent.getText();
-                if (title == null || title.isBlank() || content == null || content.isBlank()) {
-                    showAlert(Alert.AlertType.WARNING, "Champs obligatoires", "Titre et contenu sont obligatoires.");
-                    return null;
-                }
-
                 try {
                     String storedPath = null;
                     if (chosen[0] != null) {
@@ -527,8 +655,8 @@ public class ForumController {
 
                     Post p = new Post();
                     p.setIdUsers(Session.idUsers);
-                    p.setTitle(title);
-                    p.setContent(content);
+                    p.setTitle(tfTitle.getText().trim());
+                    p.setContent(taContent.getText().trim());
                     p.setStatus("PUBLISHED");
                     p.setLanguage("fr");
 
@@ -547,6 +675,7 @@ public class ForumController {
 
         dialog.showAndWait();
     }
+
 
     private void openReportDialogPost(long postId) {
         // admin ne peut pas signaler
@@ -685,7 +814,7 @@ public class ForumController {
         Label t = new Label(p.getTitle());
         t.getStyleClass().add("postTitle");
 
-        Label meta = new Label("User #" + p.getIdUsers() + " • Publié le " + formatDate(p.getCreatedAt()));
+        Label meta = new Label(p.getAuthorFullName() + " • Publié le " + formatDate(p.getCreatedAt()));
         meta.getStyleClass().add("meta");
 
         if (p.getUpdatedAt() != null) {
