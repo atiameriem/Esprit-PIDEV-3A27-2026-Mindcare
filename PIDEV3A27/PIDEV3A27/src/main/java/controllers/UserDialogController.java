@@ -26,7 +26,13 @@ public class UserDialogController {
     @FXML
     private PasswordField passwordField;
     @FXML
-    private ComboBox<User.Role> roleComboBox;
+    private RadioButton patientRadio;
+    @FXML
+    private RadioButton psychologueRadio;
+    @FXML
+    private RadioButton adminRadio;
+    @FXML
+    private ToggleGroup roleToggleGroup;
     @FXML
     private Button saveButton;
     @FXML
@@ -37,8 +43,6 @@ public class UserDialogController {
 
     @FXML
     public void initialize() {
-        // Initialise la ComboBox avec toutes les valeurs de User.Role
-        roleComboBox.setItems(FXCollections.observableArrayList(User.Role.values()));
     }
 
     public void setUser(User user) {
@@ -51,7 +55,20 @@ public class UserDialogController {
             telephoneField.setText(user.getTelephone());
             dobPicker.setValue(user.getDateNaissance());
             passwordField.setText(user.getMotDePasse());
-            roleComboBox.getItems().setAll(User.Role.values());
+
+            if (user.getRole() != null) {
+                switch (user.getRole()) {
+                    case Patient:
+                        patientRadio.setSelected(true);
+                        break;
+                    case Psychologue:
+                        psychologueRadio.setSelected(true);
+                        break;
+                    case Admin:
+                        adminRadio.setSelected(true);
+                        break;
+                }
+            }
             // ✅ fonctionne maintenant
         }
     }
@@ -83,7 +100,13 @@ public class UserDialogController {
             LocalDate dob = dobPicker.getValue();
             user.setDateNaissance(dob);
             user.setMotDePasse(passwordField.getText()); // hash si besoin
-            user.setRole(roleComboBox.getValue());
+
+            User.Role selectedRole = User.Role.Patient;
+            if (psychologueRadio.isSelected())
+                selectedRole = User.Role.Psychologue;
+            else if (adminRadio.isSelected())
+                selectedRole = User.Role.Admin;
+            user.setRole(selectedRole);
 
             saveClicked = true;
             closeDialog();
@@ -111,9 +134,23 @@ public class UserDialogController {
         }
         if (emailField.getText() == null || emailField.getText().isEmpty()) {
             errorMessage += "Email invalide!\n";
+        } else {
+            String email = emailField.getText().toLowerCase();
+            if (!email.endsWith("@gmail.com") && !email.endsWith("@yahoo.com") && !email.endsWith("@outlook.com")) {
+                errorMessage += "L'email doit se terminer par @gmail.com, @yahoo.com ou @outlook.com!\n";
+            }
         }
-        if (roleComboBox.getValue() == null) {
+
+        if (roleToggleGroup.getSelectedToggle() == null) {
             errorMessage += "Rôle invalide!\n";
+        }
+
+        String phone = telephoneField.getText();
+        if (phone == null || phone.length() != 8 || !phone.matches("\\d+")) {
+            errorMessage += "Le numéro de téléphone doit contenir exactement 8 chiffres!\n";
+        }
+        if (passwordField.getText() == null || passwordField.getText().length() < 8) {
+            errorMessage += "Le mot de passe doit contenir au moins 8 caractères!\n";
         }
 
         // Email Uniqueness Check

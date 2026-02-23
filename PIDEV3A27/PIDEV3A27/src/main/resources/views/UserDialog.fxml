@@ -32,7 +32,14 @@
         <PasswordField fx:id="passwordField" promptText="........" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
         <Label text="Rôle:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="roleComboBox" promptText="Sélectionnez votre rôle" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.columnSpan="3" maxWidth="Infinity"/>
+        <HBox spacing="10" alignment="CENTER_LEFT" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.columnSpan="3">
+            <fx:define>
+                <ToggleGroup fx:id="roleToggleGroup"/>
+            </fx:define>
+            <RadioButton fx:id="patientRadio" text="Patient" toggleGroup="$roleToggleGroup" selected="true"/>
+            <RadioButton fx:id="psychologueRadio" text="Psychologue" toggleGroup="$roleToggleGroup"/>
+            <RadioButton fx:id="adminRadio" text="Admin" toggleGroup="$roleToggleGroup"/>
+        </HBox>
     </GridPane>
 
     <HBox spacing="15" alignment="CENTER_RIGHT">

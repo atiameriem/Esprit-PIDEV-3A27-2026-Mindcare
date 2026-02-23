@@ -53,7 +53,7 @@
                     </VBox>
                     <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="2">
                         <Label text="Date de Naissance" style="-fx-font-weight: bold; -fx-text-fill: #424242;"/>
-                        <DatePicker fx:id="signupDobPicker" promptText="JJ/MM/AAAA" maxWidth="Infinity" style="-fx-padding: 5; -fx-background-radius: 5; -fx-border-color: #E0E0E0;"/>
+                        <DatePicker fx:id="signupDobPicker" promptText="JJ/MM/AAAA" maxWidth="Infinity" style="-fx-background-radius: 5; -fx-border-color: #E0E0E0;"/>
                     </VBox>
 
                     <!-- Mot de passe -->
@@ -65,8 +65,13 @@
                     <!-- Role -->
                     <VBox spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2">
                         <Label text="Rôle" style="-fx-font-weight: bold; -fx-text-fill: #424242;"/>
-                        <ComboBox fx:id="signupRoleComboBox" promptText="Sélectionnez votre rôle" maxWidth="Infinity" style="-fx-padding: 5; -fx-background-radius: 5; -fx-border-color: #E0E0E0;"
-                                  onAction="#handleRoleSelection"/>
+                        <HBox spacing="20" alignment="CENTER_LEFT">
+                            <fx:define>
+                                <ToggleGroup fx:id="roleToggleGroup"/>
+                            </fx:define>
+                            <RadioButton fx:id="patientRadio" text="Patient" toggleGroup="$roleToggleGroup" selected="true" onAction="#handleRoleSelection"/>
+                            <RadioButton fx:id="psychologueRadio" text="Psychologue" toggleGroup="$roleToggleGroup" onAction="#handleRoleSelection"/>
+                        </HBox>
                     </VBox>
 
                     <!-- Badge Upload (Psychologue Only) -->

@@ -118,6 +118,22 @@ public class ProfilController {
             return;
         }
 
+        // Email Domain Validation
+        String emailLower = email.toLowerCase();
+        if (!emailLower.endsWith("@gmail.com") && !emailLower.endsWith("@yahoo.com")
+                && !emailLower.endsWith("@outlook.com")) {
+            profileMessageLabel.setText("L'email doit se terminer par @gmail.com, @yahoo.com ou @outlook.com.");
+            profileMessageLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        // Phone Validation
+        if (phone != null && !phone.isEmpty() && (phone.length() != 8 || !phone.matches("\\d+"))) {
+            profileMessageLabel.setText("Le numéro de téléphone doit contenir exactement 8 chiffres.");
+            profileMessageLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
         try {
             currentUser.setNom(nom);
             currentUser.setEmail(email);
@@ -157,6 +173,12 @@ public class ProfilController {
 
         if (!newPass.equals(confirmPass)) {
             passwordMessageLabel.setText("Les mots de passe ne correspondent pas.");
+            passwordMessageLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        if (newPass.length() < 8) {
+            passwordMessageLabel.setText("Le nouveau mot de passe doit contenir au moins 8 caractères.");
             passwordMessageLabel.setStyle("-fx-text-fill: red;");
             return;
         }

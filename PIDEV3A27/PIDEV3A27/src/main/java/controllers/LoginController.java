@@ -41,7 +41,11 @@ public class LoginController {
     @FXML
     private PasswordField signupPasswordField;
     @FXML
-    private ComboBox<User.Role> signupRoleComboBox;
+    private RadioButton patientRadio;
+    @FXML
+    private RadioButton psychologueRadio;
+    @FXML
+    private ToggleGroup roleToggleGroup;
     @FXML
     private Label signupMessageLabel;
     @FXML
@@ -53,9 +57,6 @@ public class LoginController {
 
     @FXML
     public void initialize() {
-        if (signupRoleComboBox != null) {
-            signupRoleComboBox.getItems().setAll(User.Role.values());
-        }
     }
 
     // ================= LOGIN =================
@@ -113,7 +114,9 @@ public class LoginController {
         newUser.setEmail(signupEmailField.getText());
         newUser.setTelephone(signupPhoneField.getText());
         newUser.setMotDePasse(signupPasswordField.getText());
-        newUser.setRole(signupRoleComboBox.getValue());
+
+        User.Role selectedRole = patientRadio.isSelected() ? User.Role.Patient : User.Role.Psychologue;
+        newUser.setRole(selectedRole);
         newUser.setDateInscription(LocalDate.now());
 
         UserService us = new UserService();
@@ -166,13 +169,35 @@ public class LoginController {
     }
 
     private boolean isSignupValid() {
+        String email = signupEmailField.getText();
+        String phone = signupPhoneField.getText();
+
         if (signupNomField.getText().isEmpty() ||
                 signupPrenomField.getText().isEmpty() ||
-                signupEmailField.getText().isEmpty() ||
+                email.isEmpty() ||
                 signupPasswordField.getText().isEmpty() ||
-                signupRoleComboBox.getValue() == null) {
+                roleToggleGroup.getSelectedToggle() == null) {
 
             signupMessageLabel.setText("Veuillez remplir tous les champs.");
+            return false;
+        }
+
+        // Add Email Domain Validation
+        if (!email.toLowerCase().endsWith("@gmail.com") &&
+                !email.toLowerCase().endsWith("@yahoo.com") &&
+                !email.toLowerCase().endsWith("@outlook.com")) {
+            signupMessageLabel.setText("L'email doit se terminer par @gmail.com, @yahoo.com ou @outlook.com.");
+            return false;
+        }
+
+        // Add Phone Length Validation
+        if (phone.length() != 8 || !phone.matches("\\d+")) {
+            signupMessageLabel.setText("Le numéro de téléphone doit contenir exactement 8 chiffres.");
+            return false;
+        }
+
+        if (signupPasswordField.getText().length() < 8) {
+            signupMessageLabel.setText("Le mot de passe doit contenir au moins 8 caractères.");
             return false;
         }
         return true;
@@ -180,7 +205,7 @@ public class LoginController {
 
     @FXML
     private void handleRoleSelection() {
-        if (signupRoleComboBox.getValue() == User.Role.Psychologue) {
+        if (psychologueRadio.isSelected()) {
             badgeUploadBox.setVisible(true);
             badgeUploadBox.setManaged(true);
         } else {
