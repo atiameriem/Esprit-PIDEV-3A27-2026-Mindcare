@@ -4,6 +4,7 @@ module tn.esprit.pidev3a8 {
     requires javafx.graphics;
     requires java.sql;
     requires java.desktop;
+    requires jakarta.mail;
 
     opens test to javafx.graphics;
     opens controllers to javafx.fxml;

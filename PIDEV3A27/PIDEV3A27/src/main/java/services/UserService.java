@@ -152,6 +152,29 @@ public class UserService {
         return null;
     }
 
+    public User getByEmail(String email) throws SQLException {
+        String sql = "SELECT * FROM users WHERE email=?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, email);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+    public void updatePassword(String email, String newPassword) throws SQLException {
+        String sql = "UPDATE users SET mot_de_passe=? WHERE email=?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, newPassword);
+            stmt.setString(2, email);
+            stmt.executeUpdate();
+            System.out.println("Mot de passe mis à jour pour " + email);
+        }
+    }
+
     // ================= MAPPER =================
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         User user = new User();

@@ -1,13 +1,11 @@
 package controllers;
 
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import models.User;
 
 import java.time.LocalDate;
-import java.time.Period;
 import java.sql.SQLException;
 import services.UserService;
 

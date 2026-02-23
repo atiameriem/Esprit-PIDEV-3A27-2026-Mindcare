@@ -93,12 +93,8 @@ public class LoginController {
     }
 
     @FXML
-    private void handleForgotPassword() {
-
-        System.out.println("Mot de passe oublié cliqué");
-        if (messageLabel != null) {
-            messageLabel.setText("Fonctionnalité en cours de développement.");
-        }
+    private void handleForgotPassword(ActionEvent event) {
+        loadView(event, "/views/ForgotPassword.fxml", "Mot de passe oublié");
     }
 
     // ================= SIGNUP =================
