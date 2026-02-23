@@ -3,7 +3,6 @@ package controllers;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.fxml.FXMLLoader;
@@ -40,6 +39,12 @@ public class ProfilController {
     private Label profileMessageLabel;
     @FXML
     private Label passwordMessageLabel;
+    @FXML
+    private TabPane profilTabPane;
+    @FXML
+    private Tab monProfilTab;
+    @FXML
+    private Tab gestionUsersTab;
 
     private UserService userService;
 
@@ -53,12 +58,20 @@ public class ProfilController {
             nomField.setText(currentUser.getNom());
             emailField.setText(currentUser.getEmail());
             telephoneField.setText(currentUser.getTelephone() != null ? currentUser.getTelephone() : "");
+
+            // Apply Role-Based Visibility
+            if (currentUser.getRole() == User.Role.Admin) {
+                // Admin: Only Management
+                profilTabPane.getTabs().remove(monProfilTab);
+                // -------- CHARGER UTILISATEURS DE LA DB (Admin seulement) --------
+                loadUsersFromDB();
+            } else {
+                // Patient / Psychologue: Only Personal Profile
+                profilTabPane.getTabs().remove(gestionUsersTab);
+            }
         }
 
-        // -------- CHARGER UTILISATEURS DE LA DB --------
-        loadUsersFromDB();
-
-        System.out.println("Vue Profil chargée avec vue en grille");
+        System.out.println("Vue Profil chargée");
     }
 
     // ================= LOAD USERS =================

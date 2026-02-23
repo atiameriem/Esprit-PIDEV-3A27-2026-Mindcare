@@ -27,11 +27,11 @@
     <Separator/>
 
     <!-- ================= TABS ================= -->
-    <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+    <TabPane fx:id="profilTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
         <tabs>
 
             <!-- ================= TAB 1: MON PROFIL ================= -->
-            <Tab text="Mon Profil">
+            <Tab fx:id="monProfilTab" text="Mon Profil">
                 <content>
                     <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
                         <content>
@@ -93,7 +93,7 @@
             </Tab>
 
             <!-- ================= TAB 2: GESTION USERS ================= -->
-            <Tab text="Gestion Utilisateurs">
+            <Tab fx:id="gestionUsersTab" text="Gestion Utilisateurs">
                 <content>
                     <VBox spacing="15" style="-fx-padding: 20;">
 

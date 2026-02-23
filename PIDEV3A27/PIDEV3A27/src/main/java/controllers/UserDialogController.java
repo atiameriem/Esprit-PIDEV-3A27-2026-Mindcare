@@ -7,6 +7,9 @@ import javafx.stage.Stage;
 import models.User;
 
 import java.time.LocalDate;
+import java.time.Period;
+import java.sql.SQLException;
+import services.UserService;
 
 public class UserDialogController {
 
@@ -19,7 +22,7 @@ public class UserDialogController {
     @FXML
     private TextField telephoneField;
     @FXML
-    private TextField ageField;
+    private DatePicker dobPicker;
     @FXML
     private PasswordField passwordField;
     @FXML
@@ -46,7 +49,7 @@ public class UserDialogController {
             prenomField.setText(user.getPrenom());
             emailField.setText(user.getEmail());
             telephoneField.setText(user.getTelephone());
-            ageField.setText(String.valueOf(user.getAge()));
+            dobPicker.setValue(user.getDateNaissance());
             passwordField.setText(user.getMotDePasse());
             roleComboBox.getItems().setAll(User.Role.values());
             // ✅ fonctionne maintenant
@@ -76,11 +79,9 @@ public class UserDialogController {
             user.setPrenom(prenomField.getText());
             user.setEmail(emailField.getText());
             user.setTelephone(telephoneField.getText());
-            try {
-                user.setAge(Integer.parseInt(ageField.getText()));
-            } catch (NumberFormatException e) {
-                user.setAge(0); // Valeur par défaut
-            }
+
+            LocalDate dob = dobPicker.getValue();
+            user.setDateNaissance(dob);
             user.setMotDePasse(passwordField.getText()); // hash si besoin
             user.setRole(roleComboBox.getValue());
 
@@ -115,13 +116,25 @@ public class UserDialogController {
             errorMessage += "Rôle invalide!\n";
         }
 
-        // Validation basique pour Age
+        // Email Uniqueness Check
+        UserService us = new UserService();
         try {
-            if (ageField.getText() != null && !ageField.getText().isEmpty()) {
-                Integer.parseInt(ageField.getText());
+            boolean exists;
+            if (user == null || user.getId() == 0) {
+                exists = us.existsByEmail(emailField.getText());
+            } else {
+                exists = us.existsByEmailExcludeId(emailField.getText(), user.getId());
             }
-        } catch (NumberFormatException e) {
-            errorMessage += "Age doit être un nombre!\n";
+            if (exists) {
+                errorMessage += "Cet email est déjà utilisé!\n";
+            }
+        } catch (SQLException e) {
+            errorMessage += "Erreur de validation email en base.\n";
+        }
+
+        // Validation basique pour Date de Naissance
+        if (dobPicker.getValue() == null) {
+            errorMessage += "Date de naissance invalide!\n";
         }
 
         if (!errorMessage.isEmpty()) {

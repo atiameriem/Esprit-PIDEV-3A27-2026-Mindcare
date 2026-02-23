@@ -18,20 +18,14 @@
         <Button text="Rafraîchir" onAction="#refresh" styleClass="refresh-btn"/>
     </HBox>
 
-    <TableView fx:id="adminTable" VBox.vgrow="ALWAYS" styleClass="modern-table">
-        <columns>
-            <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
-            <TableColumn fx:id="colUser" text="Utilisateur (ID)" prefWidth="100"/>
-            <TableColumn fx:id="colObjet" text="Objet" prefWidth="150"/>
-            <TableColumn fx:id="colUrgence" text="Urgence" prefWidth="100"/>
-            <TableColumn fx:id="colDate" text="Date" prefWidth="150"/>
-            <TableColumn fx:id="colStatut" text="Statut" prefWidth="100"/>
-            <TableColumn fx:id="colDescription" text="Description" prefWidth="300"/>
-            <TableColumn fx:id="colAction" text="Action" prefWidth="120"/>
-        </columns>
-        <columnResizePolicy>
-            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
-        </columnResizePolicy>
-    </TableView>
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
+        <content>
+            <FlowPane fx:id="reclamationsGrid" hgap="25" vgap="25" alignment="TOP_LEFT">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+            </FlowPane>
+        </content>
+    </ScrollPane>
 
 </VBox>

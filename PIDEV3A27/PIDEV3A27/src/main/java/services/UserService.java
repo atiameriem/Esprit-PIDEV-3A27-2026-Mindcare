@@ -17,23 +17,34 @@ public class UserService {
     }
 
     // ================= CREATE =================
-    public void create(User user) throws SQLException {
-        String sql = "INSERT INTO users (nom, prenom, email, telephone, age, date_inscription, mot_de_passe, role) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    public int create(User user) throws SQLException {
+        String sql = "INSERT INTO users (nom, prenom, email, telephone, date_inscription, mot_de_passe, role, badge_image, date_naissance) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, user.getNom());
             stmt.setString(2, user.getPrenom());
             stmt.setString(3, user.getEmail());
             stmt.setString(4, user.getTelephone());
-            stmt.setInt(5, user.getAge());
-            stmt.setDate(6, Date.valueOf(
+            stmt.setDate(5, Date.valueOf(
                     user.getDateInscription() != null ? user.getDateInscription() : LocalDate.now()));
-            stmt.setString(7, user.getMotDePasse());
-            stmt.setString(8, user.getRole().name());
+            stmt.setString(6, user.getMotDePasse());
+            stmt.setString(7, user.getRole().name());
+            stmt.setString(8, user.getBadge());
+            stmt.setDate(9, user.getDateNaissance() != null ? Date.valueOf(user.getDateNaissance()) : null);
+
             stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    int generatedId = rs.getInt(1);
+                    user.setId(generatedId);
+                    return generatedId;
+                }
+            }
             System.out.println("User ajouté !");
         }
+        return -1;
     }
 
     // ================= GET ALL =================
@@ -53,20 +64,21 @@ public class UserService {
 
     // ================= UPDATE =================
     public void update(User user) throws SQLException {
-        String sql = "UPDATE users SET nom=?, prenom=?, email=?, telephone=?, age=?, "
-                + "date_inscription=?, mot_de_passe=?, role=? WHERE id_users=?";
+        String sql = "UPDATE users SET nom=?, prenom=?, email=?, telephone=?, "
+                + "date_inscription=?, mot_de_passe=?, role=?, badge_image=?, date_naissance=? WHERE id_users=?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, user.getNom());
             stmt.setString(2, user.getPrenom());
             stmt.setString(3, user.getEmail());
             stmt.setString(4, user.getTelephone());
-            stmt.setInt(5, user.getAge());
-            stmt.setDate(6, Date.valueOf(
+            stmt.setDate(5, Date.valueOf(
                     user.getDateInscription() != null ? user.getDateInscription() : LocalDate.now()));
-            stmt.setString(7, user.getMotDePasse());
-            stmt.setString(8, user.getRole().name());
-            stmt.setInt(9, user.getId());
+            stmt.setString(6, user.getMotDePasse());
+            stmt.setString(7, user.getRole().name());
+            stmt.setString(8, user.getBadge());
+            stmt.setDate(9, user.getDateNaissance() != null ? Date.valueOf(user.getDateNaissance()) : null);
+            stmt.setInt(10, user.getId());
             stmt.executeUpdate();
             System.out.println("User mis à jour !");
         }
@@ -81,6 +93,34 @@ public class UserService {
             stmt.executeUpdate();
             System.out.println("User supprimé !");
         }
+    }
+
+    // ================= HELPERS =================
+    public boolean existsByEmail(String email) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, email);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean existsByEmailExcludeId(String email, int id) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users WHERE email = ? AND id_users != ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, email);
+            stmt.setInt(2, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
     }
 
     // ================= AUTHENTICATE =================
@@ -99,6 +139,19 @@ public class UserService {
         return null;
     }
 
+    public User getById(int id) throws SQLException {
+        String sql = "SELECT * FROM users WHERE id_users=?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+        }
+        return null;
+    }
+
     // ================= MAPPER =================
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         User user = new User();
@@ -107,8 +160,13 @@ public class UserService {
         user.setPrenom(rs.getString("prenom"));
         user.setEmail(rs.getString("email"));
         user.setTelephone(rs.getString("telephone"));
-        user.setAge(rs.getInt("age"));
         user.setMotDePasse(rs.getString("mot_de_passe"));
+        user.setBadge(rs.getString("badge_image"));
+
+        Date dob = rs.getDate("date_naissance");
+        if (dob != null) {
+            user.setDateNaissance(dob.toLocalDate());
+        }
 
         Date sqlDate = rs.getDate("date_inscription");
         user.setDateInscription(sqlDate != null ? sqlDate.toLocalDate() : LocalDate.now());

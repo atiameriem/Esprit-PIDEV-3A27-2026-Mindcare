@@ -27,16 +27,16 @@
             <!-- Profile card -->
             <VBox spacing="6" styleClass="profileCard">
                 <Label text="Bonjour," styleClass="mutedWhite"/>
-                <Label text="Dr. Marie Dubois" styleClass="whiteBold"/>
+                <Label fx:id="usernameLabel" text="Utilisateur" styleClass="whiteBold"/>
             </VBox>
 
             <!-- Menu -->
             <VBox spacing="10" styleClass="menuBox">
                 <!-- Accueil button with home icon -->
-                <Button text="🏠  Accueil" styleClass="sideBtn" onAction="#loadAccueil"/>
+                <Button fx:id="accueilBtn" text="🏠  Accueil" styleClass="sideBtn" onAction="#loadAccueil"/>
 
                 <!-- Consultation dropdown -->
-                <TitledPane text="📋  Consultation" expanded="false" styleClass="sidePane">
+                <TitledPane fx:id="consultationPane" text="📋  Consultation" expanded="false" styleClass="sidePane">
                     <content>
                         <VBox spacing="8" styleClass="submenu">
                             <Button text="📅  Rendez-vous" styleClass="subBtn" onAction="#loadRendezVous"/>
@@ -46,7 +46,7 @@
                 </TitledPane>
 
                 <!-- Forum dropdown - ACTIVE/EXPANDED -->
-                <TitledPane text="💬  Forum" expanded="false" styleClass="sidePane">
+                <TitledPane fx:id="forumPane" text="💬  Forum" expanded="false" styleClass="sidePane">
                     <content>
                         <VBox spacing="8" styleClass="submenu">
                             <Button text="📰  Fil d'actualité" styleClass="subBtn" onAction="#loadForum"/>
@@ -56,7 +56,7 @@
                 </TitledPane>
 
                 <!-- Test psychologique dropdown -->
-                <TitledPane text="📊  Test psychologique" expanded="false" styleClass="sidePane">
+                <TitledPane fx:id="testPane" text="📊  Test psychologique" expanded="false" styleClass="sidePane">
                     <content>
                         <VBox spacing="8" styleClass="submenu">
                             <Button text="✍️  Passer tests" styleClass="subBtn" onAction="#loadPasserTests"/>
@@ -66,7 +66,7 @@
                 </TitledPane>
 
                 <!-- Compte et réclamation dropdown -->
-                <TitledPane text="👤  Compte et réclamation" expanded="false" styleClass="sidePane">
+                <TitledPane fx:id="comptePane" text="👤  Compte et réclamation" expanded="false" styleClass="sidePane">
                     <content>
                         <VBox spacing="8" styleClass="submenu">
                             <Button text="👁️  Consulter profil" styleClass="subBtn" onAction="#loadProfil"/>
@@ -76,7 +76,7 @@
                 </TitledPane>
 
                 <!-- Formation dropdown -->
-                <TitledPane text="🎓  Formation" expanded="false" styleClass="sidePane">
+                <TitledPane fx:id="formationPane" text="🎓  Formation" expanded="false" styleClass="sidePane">
                     <content>
                         <VBox spacing="8" styleClass="submenu">
                             <Button text="📚  Réserver formation" styleClass="subBtn" onAction="#loadReserverFormation"/>
@@ -86,7 +86,7 @@
                 </TitledPane>
 
                 <!-- Locaux button with location icon -->
-                <Button text="📍  Locaux" styleClass="sideBtn" onAction="#loadLocaux"/>
+                <Button fx:id="locauxBtn" text="📍  Locaux" styleClass="sideBtn" onAction="#loadLocaux"/>
             </VBox>
 
             <!-- Spacer to push footer to bottom -->

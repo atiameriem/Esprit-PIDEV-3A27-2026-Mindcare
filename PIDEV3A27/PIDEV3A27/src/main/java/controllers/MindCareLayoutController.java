@@ -4,11 +4,15 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Label;
+import javafx.scene.control.Button;
+import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import models.User;
 import utils.UserSession;
 
 import java.io.IOException;
@@ -21,6 +25,22 @@ public class MindCareLayoutController {
     private TextField searchField;
     @FXML
     private VBox contentArea;
+    @FXML
+    private Label usernameLabel;
+    @FXML
+    private Button accueilBtn;
+    @FXML
+    private TitledPane consultationPane;
+    @FXML
+    private TitledPane forumPane;
+    @FXML
+    private TitledPane testPane;
+    @FXML
+    private TitledPane comptePane;
+    @FXML
+    private TitledPane formationPane;
+    @FXML
+    private Button locauxBtn;
 
     @FXML
     public void initialize() {
@@ -29,8 +49,36 @@ public class MindCareLayoutController {
             sortCombo.getSelectionModel().selectFirst();
         }
 
+        // Apply Role-Based Visibility
+        applyRoleConstraints();
+
         // Charger la page d'accueil par défaut
         loadAccueil();
+    }
+
+    private void applyRoleConstraints() {
+        User currentUser = UserSession.getInstance().getUser();
+        if (currentUser != null) {
+            String name = (currentUser.getPrenom() != null ? currentUser.getPrenom() : "") + " " +
+                    (currentUser.getNom() != null ? currentUser.getNom() : "");
+            usernameLabel.setText(name.trim().isEmpty() ? "Utilisateur" : name);
+
+            if (currentUser.getRole() == User.Role.Admin) {
+                // Admin specific view: Focus on Management
+                consultationPane.setVisible(false);
+                consultationPane.setManaged(false);
+                forumPane.setVisible(false);
+                forumPane.setManaged(false);
+                testPane.setVisible(false);
+                testPane.setManaged(false);
+                formationPane.setVisible(false);
+                formationPane.setManaged(false);
+                // Admin stays with Compte (for User Mgmt) and Reclamation (for Treatment)
+            } else {
+                // Patient / Psychologue: usage views
+                // They see everything except maybe some admin-only tabs inside views
+            }
+        }
     }
 
     /**

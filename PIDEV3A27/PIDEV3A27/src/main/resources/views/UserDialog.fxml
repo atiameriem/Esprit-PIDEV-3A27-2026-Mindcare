@@ -25,8 +25,8 @@
         <Label text="Téléphone:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
         <TextField fx:id="telephoneField" promptText="+33 6..." GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-        <Label text="Age:" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
-        <TextField fx:id="ageField" promptText="Age" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+        <Label text="Date de Naissance:" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+        <DatePicker fx:id="dobPicker" promptText="JJ/MM/AAAA" GridPane.rowIndex="2" GridPane.columnIndex="3" maxWidth="Infinity"/>
 
         <Label text="Mot de passe:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
         <PasswordField fx:id="passwordField" promptText="........" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.columnSpan="3"/>

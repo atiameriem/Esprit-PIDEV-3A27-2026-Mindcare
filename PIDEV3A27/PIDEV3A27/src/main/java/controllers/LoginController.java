@@ -12,9 +12,12 @@ import models.User;
 // Removed standalone Role import to use User.Role
 
 import services.UserService;
-
+import javafx.stage.FileChooser;
+import javafx.scene.layout.VBox;
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.sql.SQLException;
 
 public class LoginController {
 
@@ -34,13 +37,19 @@ public class LoginController {
     @FXML
     private TextField signupPhoneField;
     @FXML
-    private TextField signupAgeField;
+    private DatePicker signupDobPicker;
     @FXML
     private PasswordField signupPasswordField;
     @FXML
     private ComboBox<User.Role> signupRoleComboBox;
     @FXML
     private Label signupMessageLabel;
+    @FXML
+    private VBox badgeUploadBox;
+    @FXML
+    private Label badgeNameLabel;
+
+    private String selectedBadgePath = null;
 
     @FXML
     public void initialize() {
@@ -107,21 +116,49 @@ public class LoginController {
         newUser.setRole(signupRoleComboBox.getValue());
         newUser.setDateInscription(LocalDate.now());
 
+        UserService us = new UserService();
+
+        // Email Uniqueness Check
         try {
-            newUser.setAge(Integer.parseInt(signupAgeField.getText()));
-        } catch (NumberFormatException e) {
-            signupMessageLabel.setText("L'âge doit être un nombre.");
+            if (us.existsByEmail(newUser.getEmail())) {
+                signupMessageLabel.setText("Cet email est déjà utilisé.");
+                return;
+            }
+        } catch (SQLException e) {
+            signupMessageLabel.setText("Erreur de validation email.");
             return;
         }
 
-        newUser.setDateInscription(LocalDate.parse(LocalDate.now().toString()));
+        // Age Calculation from DatePicker
+        LocalDate dob = signupDobPicker.getValue();
+        if (dob == null) {
+            signupMessageLabel.setText("Veuillez saisir votre date de naissance.");
+            return;
+        }
+        newUser.setDateNaissance(dob);
+
+        // Approval Logic
+        if (newUser.getRole() == User.Role.Psychologue) {
+            if (selectedBadgePath == null) {
+                signupMessageLabel.setText("Le badge est obligatoire pour les psychologues.");
+                return;
+            }
+            newUser.setBadge(selectedBadgePath);
+        }
 
         try {
-            UserService us = new UserService();
             us.create(newUser);
-            signupMessageLabel.setText("Compte créé avec succès !");
-            handleBackToLogin(event);
 
+            // Automatic Login after Signup
+            utils.UserSession.getInstance().setUser(newUser);
+            System.out.println("User signed up and logged in: " + newUser.getNom());
+
+            signupMessageLabel.setTextFill(javafx.scene.paint.Color.GREEN);
+            signupMessageLabel.setText("Inscription réussie !");
+            loadMainView(event);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            signupMessageLabel.setText("Erreur lors de l'inscription.");
         } catch (Exception e) {
             e.printStackTrace();
             signupMessageLabel.setText("Erreur lors de la création.");
@@ -139,6 +176,32 @@ public class LoginController {
             return false;
         }
         return true;
+    }
+
+    @FXML
+    private void handleRoleSelection() {
+        if (signupRoleComboBox.getValue() == User.Role.Psychologue) {
+            badgeUploadBox.setVisible(true);
+            badgeUploadBox.setManaged(true);
+        } else {
+            badgeUploadBox.setVisible(false);
+            badgeUploadBox.setManaged(false);
+            selectedBadgePath = null;
+            badgeNameLabel.setText("Aucun fichier sélectionné");
+        }
+    }
+
+    @FXML
+    private void handleUploadBadge() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Sélectionner votre badge professionnel");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg"));
+        File selectedFile = fileChooser.showOpenDialog(signupMessageLabel.getScene().getWindow());
+        if (selectedFile != null) {
+            selectedBadgePath = selectedFile.getAbsolutePath();
+            badgeNameLabel.setText(selectedFile.getName());
+        }
     }
 
     private void loadMainView(ActionEvent event) {

@@ -28,13 +28,17 @@ public class ReclamationTabsController {
         User currentUser = UserSession.getInstance().getUser();
 
         if (currentUser != null) {
-            // Seul l'Admin voit l'onglet de gestion
-            if (currentUser.getRole() != User.Role.Admin) {
+            if (currentUser.getRole() == User.Role.Admin) {
+                // Admin: Only sees Management
+                reclamationTabPane.getTabs().remove(addTab);
+                reclamationTabPane.getTabs().remove(myReclamationsTab);
+            } else {
+                // Patients/Psychologues: Only see usage
                 reclamationTabPane.getTabs().remove(adminTab);
             }
         } else {
-            // Si non connecté (normalement impossible ici), on cache l'admin par sécurité
-            reclamationTabPane.getTabs().remove(adminTab);
+            // Default security
+            reclamationTabPane.getTabs().clear();
         }
 
         // Ajouter un écouteur de sélection pour rafraîchir les données quand on change

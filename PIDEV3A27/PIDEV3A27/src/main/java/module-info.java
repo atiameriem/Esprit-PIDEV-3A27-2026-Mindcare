@@ -1,7 +1,9 @@
 module tn.esprit.pidev3a8 {
     requires javafx.controls;
     requires javafx.fxml;
+    requires javafx.graphics;
     requires java.sql;
+    requires java.desktop;
 
     opens test to javafx.graphics;
     opens controllers to javafx.fxml;

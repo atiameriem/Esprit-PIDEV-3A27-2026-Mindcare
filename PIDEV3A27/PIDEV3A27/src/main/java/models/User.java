@@ -1,21 +1,20 @@
 package models;
 
 import java.time.LocalDate;
+import java.time.Period;
 
 public class User {
 
     private int id;
-    private int age;
     private String nom;
     private String prenom;
     private String email;
     private String telephone;
     private LocalDate dateInscription;
-    private String motDePasse; // ✅ correction ici
+    private String motDePasse;
     private Role role;
-
-
-
+    private String badgeImage; // badge_image in DB
+    private LocalDate dateNaissance;
 
     public enum Role {
         Admin,
@@ -27,35 +26,37 @@ public class User {
     public User() {
     }
 
-    public User(int id, int age, String nom, String prenom,
-                String email, String telephone,
-                LocalDate dateInscription,
-                String motDePasse, Role role) {
+    public User(int id, String nom, String prenom,
+            String email, String telephone,
+            LocalDate dateInscription,
+            String motDePasse, Role role, String badgeImage, LocalDate dateNaissance) {
 
         this.id = id;
-        this.age = age;
         this.nom = nom;
         this.prenom = prenom;
         this.email = email;
         this.telephone = telephone;
         this.dateInscription = dateInscription;
-        this.motDePasse = motDePasse; // ✅ correction
+        this.motDePasse = motDePasse;
         this.role = role;
+        this.badgeImage = badgeImage;
+        this.dateNaissance = dateNaissance;
     }
 
-    public User(int age, String nom, String prenom,
-                String email, String telephone,
-                LocalDate dateInscription,
-                String motDePasse, Role role) {
+    public User(String nom, String prenom,
+            String email, String telephone,
+            LocalDate dateInscription,
+            String motDePasse, Role role, String badgeImage, LocalDate dateNaissance) {
 
-        this.age = age;
         this.nom = nom;
         this.prenom = prenom;
         this.email = email;
         this.telephone = telephone;
         this.dateInscription = dateInscription;
-        this.motDePasse = motDePasse; // ✅ correction
+        this.motDePasse = motDePasse;
         this.role = role;
+        this.badgeImage = badgeImage;
+        this.dateNaissance = dateNaissance;
     }
 
     // ===== GETTERS & SETTERS =====
@@ -69,11 +70,10 @@ public class User {
     }
 
     public int getAge() {
-        return age;
-    }
-
-    public void setAge(int age) {
-        this.age = age;
+        if (dateNaissance != null) {
+            return Period.between(dateNaissance, LocalDate.now()).getYears();
+        }
+        return 0;
     }
 
     public String getNom() {
@@ -116,11 +116,11 @@ public class User {
         this.dateInscription = dateInscription;
     }
 
-    public String getMotDePasse() { // ✅ getter cohérent
+    public String getMotDePasse() {
         return motDePasse;
     }
 
-    public void setMotDePasse(String motDePasse) { // ✅ setter cohérent
+    public void setMotDePasse(String motDePasse) {
         this.motDePasse = motDePasse;
     }
 
@@ -132,6 +132,22 @@ public class User {
         this.role = role;
     }
 
+    public String getBadge() {
+        return badgeImage;
+    }
+
+    public void setBadge(String badgeImage) {
+        this.badgeImage = badgeImage;
+    }
+
+    public LocalDate getDateNaissance() {
+        return dateNaissance;
+    }
+
+    public void setDateNaissance(LocalDate dateNaissance) {
+        this.dateNaissance = dateNaissance;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -140,6 +156,7 @@ public class User {
                 ", prenom='" + prenom + '\'' +
                 ", email='" + email + '\'' +
                 ", role=" + role +
+                ", dateNaissance=" + dateNaissance +
                 ", dateInscription=" + dateInscription +
                 '}';
     }
