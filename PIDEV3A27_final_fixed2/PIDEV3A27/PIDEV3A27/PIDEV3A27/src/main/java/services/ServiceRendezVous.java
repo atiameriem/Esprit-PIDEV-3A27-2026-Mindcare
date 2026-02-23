@@ -4,6 +4,8 @@ import models.RendezVous;
 import models.RendezVousView;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 
 public class ServiceRendezVous {
@@ -158,6 +160,42 @@ public class ServiceRendezVous {
                 return rs.next();
             }
         }
+    }
+
+    // ====================== DISPONIBILITÉ (créneaux déjà réservés) ======================
+
+    /**
+     * Retourne les heures déjà prises pour un psychologue et une date.
+     * NB: on bloque les créneaux même si le RDV est en_attente, car il est déjà réservé.
+     * @param excludeRvId optionnel : permet d'exclure un rendez-vous (utile en mode édition)
+     */
+    public Set<LocalTime> getReservedTimes(int idPsychologist, LocalDate date, Integer excludeRvId) throws SQLException {
+        String sql = """
+            SELECT id_rv, appointment_timerv
+            FROM rendez_vous
+            WHERE id_psychologist = ?
+              AND DATE(appointment_date) = ?
+              AND appointment_timerv IS NOT NULL
+              AND (
+                    statutrv = 'en_cours'
+                    OR confirmation_status IN ('confirme','en_attente')
+                  )
+        """;
+
+        Set<LocalTime> out = new HashSet<>();
+        try (PreparedStatement pst = cnx.prepareStatement(sql)) {
+            pst.setInt(1, idPsychologist);
+            pst.setDate(2, java.sql.Date.valueOf(date));
+            try (ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    int idRv = rs.getInt("id_rv");
+                    if (excludeRvId != null && excludeRvId == idRv) continue;
+                    Time t = rs.getTime("appointment_timerv");
+                    if (t != null) out.add(t.toLocalTime());
+                }
+            }
+        }
+        return out;
     }
 
     // ====================== CRUD PATIENT ======================

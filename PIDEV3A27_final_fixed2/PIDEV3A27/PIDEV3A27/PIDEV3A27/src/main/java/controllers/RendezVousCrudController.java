@@ -35,6 +35,24 @@ import java.util.Comparator;
  */
 public class RendezVousCrudController {
 
+    // Créneaux autorisés pour la prise de rendez-vous (Patient)
+    // 08:00 → 17:00, pas de 15 minutes
+    private static final LocalTime SLOT_START = LocalTime.of(8, 0);
+    private static final LocalTime SLOT_END = LocalTime.of(17, 0);
+    private static final int SLOT_STEP_MIN = 15;
+    // Durée fixe d'un rendez-vous (exigence) : 30 minutes
+    private static final int APPOINTMENT_DURATION_MIN = 30;
+
+    /**
+     * Un créneau de début est invalide s'il chevauche un rendez-vous existant.
+     * Chevauchement si : [start, start+dur) intersecte [busy, busy+dur)
+     */
+    private static boolean overlaps(LocalTime start, LocalTime busyStart) {
+        LocalTime end = start.plusMinutes(APPOINTMENT_DURATION_MIN);
+        LocalTime busyEnd = busyStart.plusMinutes(APPOINTMENT_DURATION_MIN);
+        return start.isBefore(busyEnd) && end.isAfter(busyStart);
+    }
+
     @FXML private TextField searchField;
     @FXML private TilePane rendezVousContainer;
     @FXML private ComboBox<String> sortCombo;
@@ -281,13 +299,53 @@ public class RendezVousCrudController {
         // â DatePicker = calendrier (plus pratique que TextField)
         DatePicker datePicker = new DatePicker();
 
-        // â Time picker "innovant" : 2 spinners (heure + minute)
-        Spinner<Integer> hourSpinner = new Spinner<>(0, 23, 9);
-        hourSpinner.setEditable(true);
-        Spinner<Integer> minuteSpinner = new Spinner<>(0, 55, 0, 5); // pas de 5 minutes
-        minuteSpinner.setEditable(true);
-        HBox timeBox = new HBox(8, hourSpinner, new Label(":"), minuteSpinner);
+        // â Time picker : créneaux disponibles (08:00 â 17:00)
+        // Le patient ne peut pas choisir un créneau déjà réservé par un autre patient.
+
+        // ✅ Time picker PRO : créneaux disponibles via popup (chips) (08:00 → 17:00)
+        // - Pas de liste déroulante "moche"
+        // - Affichage pro : champ + bouton 🕒 qui ouvre un mini-sélecteur
+        // - Créneaux dépendants de la disponibilité du psychologue + date
+        var availableSlots = FXCollections.<LocalTime>observableArrayList();
+        var selectedTime = new javafx.beans.property.SimpleObjectProperty<LocalTime>();
+
+        TextField timeField = new TextField();
+        timeField.setPromptText("Choisir une heure");
+        timeField.setEditable(false);
+        timeField.setFocusTraversable(false);
+        timeField.setPrefWidth(180);
+        timeField.setMaxWidth(Double.MAX_VALUE);
+        timeField.getStyleClass().add("time-field");
+
+        Button timePickBtn = new Button("🕒");
+        timePickBtn.setFocusTraversable(false);
+        timePickBtn.setMinWidth(42);
+        timePickBtn.setPrefWidth(42);
+        timePickBtn.setMaxWidth(42);
+        timePickBtn.getStyleClass().add("icon-btn");
+        timePickBtn.setDisable(true);
+
+        // Synchroniser affichage champ ↔ selectedTime
+        selectedTime.addListener((obs, oldV, newV) -> {
+            timeField.setText(newV == null ? "" : String.format("%02d:%02d", newV.getHour(), newV.getMinute()));
+        });
+
+        // Ouvrir le sélecteur de créneaux (popup)
+        timePickBtn.setOnAction(evt -> {
+            if (availableSlots.isEmpty()) return;
+            LocalDate d = datePicker.getValue();
+            LocalTime current = selectedTime.get();
+            LocalTime chosen = showTimeSlotDialog(d, availableSlots, current);
+            if (chosen != null) {
+                selectedTime.set(chosen);
+            }
+        });
+
+        HBox timeBox = new HBox(10, timePickBtn, timeField);
         timeBox.setAlignment(Pos.CENTER_LEFT);
+
+
+
 
         ComboBox<RendezVous.TypeRV> typeCombo =
                 new ComboBox<>(FXCollections.observableArrayList(RendezVous.TypeRV.values()));
@@ -299,16 +357,12 @@ public class RendezVousCrudController {
             selectPsychologist(psyCombo, existing.getIdPsychologist());
             if (existing.getAppointmentDate() != null) datePicker.setValue(existing.getAppointmentDate().toLocalDate());
             if (existing.getAppointmentTimeRv() != null) {
-                LocalTime lt = existing.getAppointmentTimeRv().toLocalTime();
-                hourSpinner.getValueFactory().setValue(lt.getHour());
-                minuteSpinner.getValueFactory().setValue((lt.getMinute() / 5) * 5);
+                selectedTime.set(existing.getAppointmentTimeRv().toLocalTime());
             }
             typeCombo.setValue(existing.getTypeRendezVous());
         } else {
             datePicker.setValue(LocalDate.now());
-            LocalTime now = LocalTime.now().withSecond(0).withNano(0);
-            hourSpinner.getValueFactory().setValue(now.getHour());
-            minuteSpinner.getValueFactory().setValue((now.getMinute() / 5) * 5);
+            selectedTime.set(null);
             typeCombo.setValue(RendezVous.TypeRV.premiere_consultation);
         }
 
@@ -343,6 +397,102 @@ public class RendezVousCrudController {
         Node saveBtn = dialog.getDialogPane().lookupButton(saveType);
         saveBtn.setDisable(true);
 
+        // â Recharge les créneaux disponibles selon (psychologue + date)
+        Runnable refreshSlots = () -> {
+            PsyItem sel = psyCombo.getValue();
+            int idPsy = (sel == null) ? -1 : sel.getId();
+            LocalDate d = datePicker.getValue();
+
+            // reset (UI + data)
+            availableSlots.clear();
+            selectedTime.set(null);
+            timePickBtn.setDisable(true);
+
+            // Tant que le patient n'a pas choisi (psychologue + date), on n'affiche pas de créneaux.
+            if (idPsy <= 0 || d == null) {
+                hint.setText("Choisissez d'abord un psychologue et une date.");
+                return;
+            }
+
+            // On a bien les infos nécessaires → on peut activer le bouton 🕒
+            timePickBtn.setDisable(false);
+
+            try {
+                // Vérifier psy existe
+                if (!service.isPsychologistUser(idPsy)) {
+                    hint.setText("Psychologue invalide : vérifiez que l'utilisateur existe et a le rôle 'psychologue'.");
+                    timePickBtn.setDisable(true);
+                    return;
+                }
+
+                var reserved = service.getReservedTimes(idPsy, d, isEdit ? existing.getIdRv() : null);
+
+                // Dernier début autorisé = 17:00 - durée (ex: 16:30 si durée=30)
+                LocalTime lastStart = SLOT_END.minusMinutes(APPOINTMENT_DURATION_MIN);
+
+                LocalTime t = SLOT_START;
+                LocalTime now = LocalTime.now().withSecond(0).withNano(0);
+                while (!t.isAfter(lastStart)) {
+                    // Aujourd'hui : bloquer les créneaux passés
+                    if (!d.equals(LocalDate.now()) || !t.isBefore(now)) {
+                        // Bloquer si chevauche un RDV existant (durée fixe)
+                        boolean overlapsExisting = false;
+                        for (LocalTime busyStart : reserved) {
+                            if (overlaps(t, busyStart)) {
+                                overlapsExisting = true;
+                                break;
+                            }
+                        }
+                        if (!overlapsExisting) {
+                            availableSlots.add(t);
+                        }
+                    }
+                    t = t.plusMinutes(SLOT_STEP_MIN);
+                }
+
+                // Inclure l'heure existante (edit) si besoin
+                LocalTime old = null;
+                if (isEdit && existing.getAppointmentTimeRv() != null) {
+                    old = existing.getAppointmentTimeRv().toLocalTime();
+                    if (!availableSlots.contains(old)) {
+                        boolean overlapsExisting = false;
+                        for (LocalTime busyStart : reserved) {
+                            if (overlaps(old, busyStart)) {
+                                overlapsExisting = true;
+                                break;
+                            }
+                        }
+                        if (!overlapsExisting) {
+                            availableSlots.add(old);
+                        }
+                    }
+                }
+
+                availableSlots.sort(Comparator.naturalOrder());
+
+                if (availableSlots.isEmpty()) {
+                    hint.setText("Aucun créneau disponible (08:00 → 17:00) pour cette date.");
+                    timePickBtn.setDisable(true);
+                    return;
+                }
+
+                // Pré-sélection : garder l'ancien créneau si encore dispo, sinon le premier
+                if (old != null && availableSlots.contains(old)) {
+                    selectedTime.set(old);
+                }
+                if (selectedTime.get() == null) {
+                    selectedTime.set(availableSlots.get(0));
+                }
+
+                hint.setText("");
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                hint.setText("Erreur lors du chargement des créneaux.");
+                timePickBtn.setDisable(true);
+            }
+        };
+
         Runnable validate = () -> {
             hint.setText("");
             boolean ok = true;
@@ -376,10 +526,9 @@ public class RendezVousCrudController {
                 return;
             }
 
-            // â Time : spinners (heure/minute)
-            Integer hh = hourSpinner.getValue();
-            Integer mm = minuteSpinner.getValue();
-            if (hh == null || mm == null) {
+            // â Time : créneau sélectionné
+            LocalTime selected = selectedTime.get();
+            if (selected == null) {
                 saveBtn.setDisable(true);
                 return;
             }
@@ -407,11 +556,12 @@ public class RendezVousCrudController {
             saveBtn.setDisable(false);
         };
 
-        psyCombo.valueProperty().addListener((a,b,c)-> validate.run());
-        datePicker.valueProperty().addListener((a,b,c)-> validate.run());
-        hourSpinner.valueProperty().addListener((a,b,c)-> validate.run());
-        minuteSpinner.valueProperty().addListener((a,b,c)-> validate.run());
+        psyCombo.valueProperty().addListener((a,b,c)-> { refreshSlots.run(); validate.run(); });
+        datePicker.valueProperty().addListener((a,b,c)-> { refreshSlots.run(); validate.run(); });
+        selectedTime.addListener((a,b,c)-> validate.run());
         typeCombo.valueProperty().addListener((a,b,c)-> validate.run());
+
+        refreshSlots.run();
         validate.run();
 
         dialog.setResultConverter(btn -> {
@@ -419,7 +569,7 @@ public class RendezVousCrudController {
                 PsyItem selPsy = psyCombo.getValue();
                 int psyId = (selPsy == null) ? -1 : selPsy.getId();
                 LocalDate d = datePicker.getValue();
-                LocalTime t = LocalTime.of(hourSpinner.getValue(), minuteSpinner.getValue());
+                LocalTime t = selectedTime.get();
 
                 return new RendezVous(
                         Session.getUserId(),
@@ -767,6 +917,111 @@ public class RendezVousCrudController {
         r.setTypeRendezVous(v.getTypeRendezVous());
         r.setAppointmentTimeRv(v.getAppointmentTimeRv());
         return r;
+    }
+
+
+
+    /**
+     * Mini sélecteur d'heure "pro" (chips) : remplace la ComboBox.
+     * Retourne l'heure choisie (08:00 → 17:00) parmi les créneaux disponibles.
+     */
+    private LocalTime showTimeSlotDialog(LocalDate date, List<LocalTime> slots, LocalTime current) {
+        Dialog<LocalTime> dialog = new Dialog<>();
+        dialog.setTitle("Choisir une heure");
+        dialog.setHeaderText(date == null ? null : ("Créneaux disponibles - " + date.format(DATE_FMT)));
+
+        ButtonType okType = new ButtonType("Valider", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(okType, ButtonType.CANCEL);
+
+        ToggleGroup group = new ToggleGroup();
+        FlowPane grid = new FlowPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(12));
+        grid.setPrefWrapLength(420);
+
+        // Chips (ToggleButtons)
+        for (LocalTime t : slots) {
+            ToggleButton b = new ToggleButton(String.format("%02d:%02d", t.getHour(), t.getMinute()));
+            b.setUserData(t);
+            b.setToggleGroup(group);
+            b.setFocusTraversable(false);
+
+            // style "pill"
+            b.setStyle(
+                    "-fx-background-radius: 999;" +
+                            "-fx-border-radius: 999;" +
+                            "-fx-padding: 8 14;" +
+                            "-fx-font-size: 12.5px;" +
+                            "-fx-background-color: rgba(15, 118, 110, 0.10);" +
+                            "-fx-border-color: rgba(15, 118, 110, 0.35);" +
+                            "-fx-text-fill: #0f172a;"
+            );
+
+            // hover + selected
+            b.hoverProperty().addListener((obs, was, is) -> {
+                if (!b.isSelected()) {
+                    b.setStyle(b.getStyle() + (is
+                            ? "-fx-border-color: rgba(15, 118, 110, 0.75);"
+                            : "-fx-border-color: rgba(15, 118, 110, 0.35);"));
+                }
+            });
+
+            b.selectedProperty().addListener((obs, was, is) -> {
+                if (is) {
+                    b.setStyle(
+                            "-fx-background-radius: 999;" +
+                                    "-fx-border-radius: 999;" +
+                                    "-fx-padding: 8 14;" +
+                                    "-fx-font-size: 12.5px;" +
+                                    "-fx-background-color: rgba(15, 118, 110, 0.95);" +
+                                    "-fx-border-color: rgba(15, 118, 110, 0.95);" +
+                                    "-fx-text-fill: white;"
+                    );
+                } else {
+                    b.setStyle(
+                            "-fx-background-radius: 999;" +
+                                    "-fx-border-radius: 999;" +
+                                    "-fx-padding: 8 14;" +
+                                    "-fx-font-size: 12.5px;" +
+                                    "-fx-background-color: rgba(15, 118, 110, 0.10);" +
+                                    "-fx-border-color: rgba(15, 118, 110, 0.35);" +
+                                    "-fx-text-fill: #0f172a;"
+                    );
+                }
+            });
+
+            // présélection
+            if (current != null && current.equals(t)) {
+                b.setSelected(true);
+            }
+
+            grid.getChildren().add(b);
+        }
+
+        ScrollPane sp = new ScrollPane(grid);
+        sp.setFitToWidth(true);
+        sp.setPrefViewportHeight(260);
+        sp.setStyle("-fx-background-color: transparent;");
+
+        dialog.getDialogPane().setContent(sp);
+
+        Node okBtn = dialog.getDialogPane().lookupButton(okType);
+        okBtn.setDisable(group.getSelectedToggle() == null);
+
+        group.selectedToggleProperty().addListener((obs, old, sel) -> {
+            okBtn.setDisable(sel == null);
+        });
+
+        dialog.setResultConverter(btn -> {
+            if (btn == okType) {
+                Toggle t = group.getSelectedToggle();
+                return t == null ? null : (LocalTime) t.getUserData();
+            }
+            return null;
+        });
+
+        return dialog.showAndWait().orElse(null);
     }
 
 }
