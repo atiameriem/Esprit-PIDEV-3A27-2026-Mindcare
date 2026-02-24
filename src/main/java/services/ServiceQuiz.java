@@ -180,18 +180,32 @@ public class ServiceQuiz implements IService<Quiz> {
 
     public List<String> getHistoriquePatient(int idPatient) throws SQLException {
         List<String> historique = new ArrayList<>();
-        String req = "SELECT h.score_total, h.date_passage, q.titre " +
-                "FROM historique_quiz h " +
-                "JOIN quiz q ON h.id_quiz = q.id_quiz " +
-                "WHERE h.id_users = ? " +
-                "ORDER BY h.date_passage ASC";
+        String req =
+                "SELECT h.score_total, h.date_passage, q.titre, " +
+                        // ✅ score_max = nb_questions × valeur_max par question
+                        "(SELECT COUNT(DISTINCT qst.id_question) * MAX(r.valeur) " +
+                        " FROM question qst " +
+                        " JOIN reponse r ON r.id_question = qst.id_question " +
+                        " WHERE qst.id_quiz = q.id_quiz) AS score_max " +
+                        "FROM historique_quiz h " +
+                        "JOIN quiz q ON h.id_quiz = q.id_quiz " +
+                        "WHERE h.id_users = ? " +
+                        "ORDER BY h.date_passage ASC";
+
         try (PreparedStatement pst = cnx.prepareStatement(req)) {
             pst.setInt(1, idPatient);
             try (ResultSet rs = pst.executeQuery()) {
                 while (rs.next()) {
-                    historique.add("Quiz: " + rs.getString("titre") +
-                            " | Score: " + rs.getInt("score_total") +
-                            " | Date: " + rs.getTimestamp("date_passage").toLocalDateTime());
+                    int scoreMax = rs.getInt("score_max");
+                    if (scoreMax <= 0) scoreMax = 6; // fallback sécurité
+
+                    historique.add(
+                            "Quiz: "  + rs.getString("titre") +
+                                    " | Score: " + rs.getInt("score_total") +
+                                    " | Max: "   + scoreMax +           // ✅ AJOUT
+                                    " | Date: "  + rs.getTimestamp("date_passage")
+                                    .toLocalDateTime()
+                    );
                 }
             }
         }

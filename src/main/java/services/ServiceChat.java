@@ -8,17 +8,24 @@ import java.util.List;
 
 public class ServiceChat {
 
-    private static final String API_KEY = ""; // même clé que ServiceGemini
-    private static final String API_URL = "";
+    private static final String API_KEY = ; // même clé que ServiceGemini
+    private static final String API_URL = ;
+
+
+
 
     public String envoyerMessage(List<String> historiqueMessages, String question) {
         try {
             StringBuilder messages = new StringBuilder();
 
             // Contexte système
-            messages.append("{\"role\":\"system\",\"content\":\"Tu es un assistant psychologique bienveillant "
-                    + "pour l'application MindCare. Tu reponds en français, de facon courte et encourageante. "
-                    + "Tu poses des questions pour mieux comprendre l'etat de l'utilisateur.\"}");
+            messages.append("{\"role\":\"system\",\"content\":\"Tu es un assistant psychologique expert pour MindCare. "
+                    + "Ton objectif est de mener un court bilan de bien-être en 3 ou 4 questions. "
+                    + "1. Pose une question à la fois sur l'humeur, le stress ou le sommeil. "
+                    + "2. Sois très empathique et encourageant. "
+                    + "3. Une fois que tu as assez d'infos (après 3-4 échanges), donne un 'BILAN FINAL' clair avec : "
+                    + "un score de bien-être estimé (0-100), une analyse courte et un conseil pratique. "
+                    + "Réponds toujours en français de manière chaleureuse.\"}");
 
             // Historique alternée user/assistant
             boolean isUser = true;

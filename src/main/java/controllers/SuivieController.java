@@ -6,14 +6,18 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.StrokeLineCap;
 import services.ServiceQuiz;
-import services.ServiceGemini;
+import services.ServiceGroq;
+import services.ServiceMusique;
 import services.ServiceRappel;
 import utils.Session;
 
@@ -26,26 +30,28 @@ import java.util.*;
 public class SuivieController {
 
     private MindCareLayoutController parentController;
-    private static int currentPatientId = 3;
+    private static SuivieController  instance;
+    private int currentPatientId = -1;
 
-    @FXML private Label lblBienvenue;
-    @FXML private Label lblCoinsGagnes;
-    @FXML private Label lblSessionCount;
-    @FXML private Label scoreBienEtre;
-    @FXML private Label scoreStress;
-    @FXML private Label scoreHumeur;
-    @FXML private Arc arcBienEtre;
-    @FXML private Arc arcStress;
-    @FXML private Arc arcHumeur;
-    @FXML private Label lblTrendBienEtre;
-    @FXML private Label lblTrendStress;
-    @FXML private Label lblTrendHumeur;
-    @FXML private ComboBox<String> comboPeriode;
+    @FXML private Label   lblBienvenue;
+    @FXML private Label   lblCoinsGagnes;
+    @FXML private Label   lblSessionCount;
+    @FXML private Label   scoreBienEtre;
+    @FXML private Label   scoreStress;
+    @FXML private Label   scoreHumeur;
+    @FXML private Arc     arcBienEtre;
+    @FXML private Arc     arcStress;
+    @FXML private Arc     arcHumeur;
+    @FXML private Label   lblTrendBienEtre;
+    @FXML private Label   lblTrendStress;
+    @FXML private Label   lblTrendHumeur;
+    @FXML private ComboBox<String>          comboPeriode;
     @FXML private AreaChart<String, Number> evolutionChart;
-    @FXML private Label lblConseil;
-    @FXML private VBox historyBox;
+    @FXML private Label   lblConseil;
+    @FXML private VBox    historyBox;
+    @FXML private Button  btnEspacePsy;
+    @FXML private Label   lblTestResultat;
 
-    // Labels dynamiques 3 conseils IA
     @FXML private Label lblEmoji1;
     @FXML private Label lblTitre1;
     @FXML private Label lblDesc1;
@@ -56,164 +62,365 @@ public class SuivieController {
     @FXML private Label lblTitre3;
     @FXML private Label lblDesc3;
 
-    private final ServiceQuiz     serviceQuiz     = new ServiceQuiz();
-    private final ServiceGemini   serviceGemini   = new ServiceGemini();
-    private final ServiceRappel   serviceRappel   = new ServiceRappel();
+    @FXML private Label   lblMusiqueMessage;
+    @FXML private Button  btnChargerMusique;
+    @FXML private Button  btnPlayPause;
+    @FXML private Label   lblPisteEmoji;
+    @FXML private Label   lblPisteNom;
+    @FXML private Label   lblPisteDuree;
+    @FXML private Label   lblEtatLecture;
+    @FXML private VBox    listePistesBox;
+    @FXML private Label   lblChargementPistes;
+    @FXML private Slider  sliderVolume;
+
+    private final ServiceQuiz    serviceQuiz    = new ServiceQuiz();
+    private final ServiceGroq    serviceGroq    = new ServiceGroq();
+    private final ServiceMusique serviceMusique = new ServiceMusique();
 
     private int scoreBE = 0, scoreST = 0, scoreHU = 0;
+    static boolean rappelDejaVerifie = false;
+
+    private javafx.scene.media.MediaPlayer mediaPlayer;
+    private List<ServiceMusique.Piste>     pistesChargees = new ArrayList<>();
+    private int     pisteActuelle = 0;
+    private boolean enLecture     = false;
 
     // ══════════════════════════════════════════════════════════════
-    private static boolean rappelDejaVerifie = false;
+    // Rafraîchissement statique
+    // ══════════════════════════════════════════════════════════════
+    public static void rafraichir() {
+        if (instance != null) {
+            Platform.runLater(() -> {
+                instance.updateScoresFromDB();
+                instance.chargerGraphiqueReel();
+                System.out.println("🔄 SuivieController rafraîchi !");
+            });
+        }
+    }
 
-    // ✅ Dans initialize() — vérification rôle
+    // ══════════════════════════════════════════════════════════════
+    // INITIALIZE
+    // ══════════════════════════════════════════════════════════════
     @FXML
     public void initialize() {
+        instance = this;
+
         var role = Session.getRoleConnecte();
+        currentPatientId = Session.getUserId();
+
+        System.out.println("👤 Patient connecté ID = " + currentPatientId
+                + " | Nom = " + Session.getFullName()
+                + " | Role = " + role);
+
+        if (btnEspacePsy != null) {
+            boolean peutVoir = (role == Session.Role.PSYCHOLOGUE
+                    || role == Session.Role.ADMIN);
+            btnEspacePsy.setVisible(peutVoir);
+            btnEspacePsy.setManaged(peutVoir);
+        }
+
+        if (currentPatientId <= 0) {
+            if (lblBienvenue != null)
+                lblBienvenue.setText("⛔ Aucun utilisateur connecté.");
+            return;
+        }
+
         if (role != null
-                && role != utils.Session.Role.USER
-                && role != utils.Session.Role.ADMIN) {
+                && role != Session.Role.USER
+                && role != Session.Role.ADMIN) {
             if (lblBienvenue != null)
                 lblBienvenue.setText("⛔ Accès réservé aux patients.");
             return;
         }
 
-        // ✅ currentPatientId depuis la session
-        if (Session.getUserId() > 0) currentPatientId = Session.getUserId();
+        if (sliderVolume != null) {
+            sliderVolume.valueProperty().addListener(
+                    (obs, ov, nv) -> {
+                        if (mediaPlayer != null)
+                            mediaPlayer.setVolume(nv.doubleValue());
+                    });
+        }
 
         configurerCombo();
-        loadPatientData(currentPatientId);
+        loadPatientData();
         chargerGraphiqueReel();
+        afficherRecommandationTest();
 
         if (!rappelDejaVerifie) {
             rappelDejaVerifie = true;
             new Thread(() -> {
-                try { new services.ServiceRappel().verifierEtEnvoyerRappels(); }
-                catch (Exception e) { System.err.println("❌ Erreur rappels : " + e.getMessage()); }
+                try {
+                    new ServiceRappel().verifierEtEnvoyerRappels();
+                } catch (Exception e) {
+                    System.err.println("❌ Rappels : " + e.getMessage());
+                }
             }).start();
         }
     }
-
 
     public void setParentController(MindCareLayoutController parent) {
         this.parentController = parent;
     }
 
-    public static void ouvrirSuivie(int patientId) {
-        currentPatientId = patientId;
-    }
-
     // ══════════════════════════════════════════════════════════════
-    // CHARGEMENT DONNÉES PATIENT
+    // CHARGEMENT DONNÉES
     // ══════════════════════════════════════════════════════════════
-    private void loadPatientData(int patientId) {
+    private void loadPatientData() {
         try {
-            String nom = getPatientName(patientId);
-            lblBienvenue.setText("Hello " + nom + " ! ✨");
+            String nom = (Session.getFullName() != null
+                    && !Session.getFullName().trim().isEmpty())
+                    ? Session.getFullName()
+                    : "Patient #" + currentPatientId;
+
+            if (lblBienvenue != null)
+                lblBienvenue.setText("Hello " + nom + " ! ✨");
+
             updateScoresFromDB();
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }//new
+    }
 
+    // ══════════════════════════════════════════════════════════════
+    // ✅ EXTRACTION — Score, Max, Date, Titre
+    // ══════════════════════════════════════════════════════════════
+
+    private int extraireScore(String ligne) {
+        try {
+            int s = ligne.indexOf("Score: ") + 7;
+            int e = ligne.indexOf(" |", s);
+            return Integer.parseInt(ligne.substring(s, e).trim());
+        } catch (Exception e) { return 0; }
+    }
+
+    /**
+     * ✅ Lit le score_max calculé depuis la DB et injecté dans la ligne.
+     * Format attendu : "... | Max: 18 | Date: ..."
+     * Fallback = 6 si absent (anciennes lignes sans Max).
+     */
+    private int extraireScoreMax(String ligne) {
+        try {
+            int s = ligne.indexOf("Max: ") + 5;
+            int e = ligne.indexOf(" |", s);
+            int max = Integer.parseInt(ligne.substring(s, e).trim());
+            return max > 0 ? max : 6;
+        } catch (Exception e) {
+            return 6; // fallback pour compatibilité
+        }
+    }
+
+    /**
+     * ✅ Normalise en ratio [0.0 – 1.0] avec le vrai max du quiz.
+     *    score=6 / max=6  → 1.0  (très mauvais pour stress/humeur)
+     *    score=6 / max=18 → 0.33 (modéré)
+     *    score=0 / max=6  → 0.0  (parfait pour stress/humeur)
+     */
+    private double normaliserEnRatio(String ligne) {
+        int score = extraireScore(ligne);
+        int max   = extraireScoreMax(ligne);
+        return Math.max(0.0, Math.min(1.0, (double) score / max));
+    }
+
+    private LocalDateTime extraireDateTime(String ligne) {
+        try {
+            int s = ligne.indexOf("Date: ") + 6;
+            return LocalDateTime.parse(ligne.substring(s).trim());
+        } catch (Exception e) { return LocalDateTime.now(); }
+    }
+
+    private String extraireDate(String ligne) {
+        try {
+            return extraireDateTime(ligne)
+                    .format(DateTimeFormatter.ofPattern("dd/MM"));
+        } catch (Exception e) { return "--/--"; }
+    }
+
+    private String extraireTitre(String ligne) {
+        try {
+            int s = ligne.indexOf("Quiz: ") + 6;
+            int e = ligne.indexOf(" |", s);
+            return ligne.substring(s, e).trim();
+        } catch (Exception e) { return "Quiz"; }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ✅ SCORES + CERCLES
+    // ══════════════════════════════════════════════════════════════
     private void updateScoresFromDB() {
         try {
-            List<String> historique = serviceQuiz.getHistoriquePatient(currentPatientId);
+            List<String> historique =
+                    serviceQuiz.getHistoriquePatient(currentPatientId);
+
+            System.out.println("📋 " + historique.size()
+                    + " session(s) pour patient ID=" + currentPatientId);
 
             if (historique.isEmpty()) {
-                scoreBienEtre.setText("0/100");
-                scoreStress.setText("0/100");
-                scoreHumeur.setText("0/100");
-                lblCoinsGagnes.setText("0 coins");
+                if (scoreBienEtre   != null) scoreBienEtre.setText("0/100");
+                if (scoreStress     != null) scoreStress.setText("0/100");
+                if (scoreHumeur     != null) scoreHumeur.setText("0/100");
+                if (lblCoinsGagnes  != null) lblCoinsGagnes.setText("0 coins");
                 if (lblSessionCount != null) lblSessionCount.setText("0 session");
                 animerArc(arcBienEtre, 0, "#A78BFA");
                 animerArc(arcStress,   0, "#FF6B9D");
                 animerArc(arcHumeur,   0, "#4FACFE");
+                setTrend(lblTrendBienEtre, 0, "#A78BFA");
+                setTrend(lblTrendStress,   0, "#FF6B9D");
+                setTrend(lblTrendHumeur,   0, "#4FACFE");
+                if (lblConseil != null)
+                    lblConseil.setText("Commencez votre premier test ! 🚀");
                 return;
             }
 
-            final int SCORE_MAX = 6;
-            int totalBE = 0, countBE = 0;
-            int totalST = 0, countST = 0;
-            int totalHU = 0, countHU = 0;
+            // ✅ Stocker les RATIOS (0.0–1.0) — le max vient directement de la ligne
+            List<Double> ratiosBE = new ArrayList<>();
+            List<Double> ratiosST = new ArrayList<>();
+            List<Double> ratiosHU = new ArrayList<>();
 
             for (String ligne : historique) {
-                int score = extraireScore(ligne);
                 String titre = extraireTitre(ligne).toLowerCase();
-                if      (titre.contains("stress"))  { totalST += score; countST++; }
-                else if (titre.contains("humeur"))  { totalHU += score; countHU++; }
-                else                                { totalBE += score; countBE++; }
+                double ratio = normaliserEnRatio(ligne);
+
+                System.out.println("📌 " + titre
+                        + " | score=" + extraireScore(ligne)
+                        + " | max=" + extraireScoreMax(ligne)
+                        + " | ratio=" + String.format("%.2f", ratio));
+
+                if      (titre.contains("stress"))  ratiosST.add(ratio);
+                else if (titre.contains("humeur"))  ratiosHU.add(ratio);
+                else                                ratiosBE.add(ratio);
             }
 
-            int totalGlobal = 0;
-            for (String ligne : historique) totalGlobal += extraireScore(ligne);
-            int moyenneGlobale = totalGlobal / historique.size();
+            System.out.println("📊 Sessions — BE:" + ratiosBE.size()
+                    + " ST:" + ratiosST.size()
+                    + " HU:" + ratiosHU.size());
 
-            int moyBE = countBE > 0 ? totalBE / countBE : moyenneGlobale;
-            int moyST = countST > 0 ? totalST / countST : moyenneGlobale;
-            int moyHU = countHU > 0 ? totalHU / countHU : moyenneGlobale;
+            // ✅ Ratio neutre 0.5 (50%) si aucune donnée pour la catégorie
+            double moyRatioBE = ratiosBE.isEmpty() ? 0.5
+                    : ratiosBE.stream().mapToDouble(d -> d).average().orElse(0.5);
+            double moyRatioST = ratiosST.isEmpty() ? 0.5
+                    : ratiosST.stream().mapToDouble(d -> d).average().orElse(0.5);
+            double moyRatioHU = ratiosHU.isEmpty() ? 0.5
+                    : ratiosHU.stream().mapToDouble(d -> d).average().orElse(0.5);
 
-            scoreBE = (int) Math.min(100, (moyBE * 100.0) / SCORE_MAX);
-            scoreST = (int) Math.max(0, 100 - (moyST * 100.0) / SCORE_MAX);
-            scoreHU = (int) Math.max(0, 100 - (moyHU * 100.0) / SCORE_MAX);
+            // Bien-être  : ratio élevé = bon   → score élevé
+            scoreBE = (int) Math.round(moyRatioBE * 100);
+            // Stress     : ratio élevé = mauvais → inverser
+            scoreST = (int) Math.round((1.0 - moyRatioST) * 100);
+            // Humeur     : ratio élevé = mauvais → inverser
+            scoreHU = (int) Math.round((1.0 - moyRatioHU) * 100);
 
-            scoreBienEtre.setText(scoreBE + "/100");
-            scoreStress.setText(scoreST   + "/100");
-            scoreHumeur.setText(scoreHU   + "/100");
+            // Clamp 0–100
+            scoreBE = Math.max(0, Math.min(100, scoreBE));
+            scoreST = Math.max(0, Math.min(100, scoreST));
+            scoreHU = Math.max(0, Math.min(100, scoreHU));
+
+            System.out.println("📊 Scores finaux — BE:"
+                    + scoreBE + "% ST:" + scoreST + "% HU:" + scoreHU + "%");
+
+            // Tendances
+            int trendBE = calculerTendanceRatio(ratiosBE, false);
+            int trendST = calculerTendanceRatio(ratiosST, true);
+            int trendHU = calculerTendanceRatio(ratiosHU, true);
+
+            if (scoreBienEtre != null) scoreBienEtre.setText(scoreBE + "/100");
+            if (scoreStress   != null) scoreStress.setText(scoreST + "/100");
+            if (scoreHumeur   != null) scoreHumeur.setText(scoreHU + "/100");
 
             animerArc(arcBienEtre, scoreBE, "#A78BFA");
             animerArc(arcStress,   scoreST, "#FF6B9D");
             animerArc(arcHumeur,   scoreHU, "#4FACFE");
 
-            setTrend(lblTrendBienEtre, +8,  "#A78BFA");
-            setTrend(lblTrendStress,   -5,  "#FF6B9D");
-            setTrend(lblTrendHumeur,   +12, "#4FACFE");
+            setTrend(lblTrendBienEtre, trendBE, "#A78BFA");
+            setTrend(lblTrendStress,   trendST, "#FF6B9D");
+            setTrend(lblTrendHumeur,   trendHU, "#4FACFE");
 
-            int coins = historique.size() * 150 + moyenneGlobale * 10;
-            lblCoinsGagnes.setText(coins + " coins");
+            // Coins : basé sur nb sessions + score moyen global
+            int totalGlobal    = historique.stream().mapToInt(this::extraireScore).sum();
+            int moyenneGlobale = totalGlobal / historique.size();
+            int coins          = historique.size() * 150 + moyenneGlobale * 10;
+            if (lblCoinsGagnes != null)
+                lblCoinsGagnes.setText(coins + " coins");
 
             if (lblSessionCount != null) {
-                lblSessionCount.setText(historique.size() + " session" +
-                        (historique.size() > 1 ? "s" : "") + " complétée" +
-                        (historique.size() > 1 ? "s" : ""));
+                int nb = historique.size();
+                lblSessionCount.setText(nb + " session"
+                        + (nb > 1 ? "s" : "")
+                        + " complétée" + (nb > 1 ? "s" : ""));
             }
 
             afficherConseil(scoreBE, scoreST, scoreHU, historique.size());
             afficherHistorique(historique);
 
         } catch (SQLException e) {
-            System.err.println("❌ Erreur chargement scores : " + e.getMessage());
+            System.err.println("❌ Scores : " + e.getMessage());
         }
     }
 
     // ══════════════════════════════════════════════════════════════
-    // CONSEIL PRINCIPAL + 3 CONSEILS IA
+    // ✅ TENDANCE sur ratios [0.0–1.0]
+    // ══════════════════════════════════════════════════════════════
+    private int calculerTendanceRatio(List<Double> ratios, boolean inverse) {
+        if (ratios.size() < 2) return 0;
+
+        int    milieu    = ratios.size() / 2;
+        double moyAncien = ratios.subList(0, milieu).stream()
+                .mapToDouble(d -> d).average().orElse(0.5);
+        double moyRecent = ratios.subList(milieu, ratios.size()).stream()
+                .mapToDouble(d -> d).average().orElse(0.5);
+
+        double pctAncien = moyAncien * 100.0;
+        double pctRecent = moyRecent * 100.0;
+
+        if (inverse) {
+            pctAncien = 100.0 - pctAncien;
+            pctRecent = 100.0 - pctRecent;
+        }
+
+        int delta = (int) Math.round(pctRecent - pctAncien);
+        return Math.max(-99, Math.min(99, delta));
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // RECOMMANDATION TEST
+    // ══════════════════════════════════════════════════════════════
+    private void afficherRecommandationTest() {
+        new Thread(() -> {
+            String test   = serviceGroq.recommanderProchainTest(scoreBE, scoreST, scoreHU);
+            String raison = serviceGroq.getRaisonRecommandation(scoreBE, scoreST, scoreHU);
+            Platform.runLater(() ->
+                    System.out.println("🎯 Test recommandé : " + test + " — " + raison));
+        }).start();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // CONSEILS IA
     // ══════════════════════════════════════════════════════════════
     private void afficherConseil(int be, int st, int hu, int nbSessions) {
         if (lblConseil == null) return;
-
         lblConseil.setText("🤖 Conseil personnalisé en cours...");
         if (lblTitre1 != null) lblTitre1.setText("Chargement...");
         if (lblTitre2 != null) lblTitre2.setText("Chargement...");
         if (lblTitre3 != null) lblTitre3.setText("Chargement...");
 
         new Thread(() -> {
-            String conseil = serviceGemini.genererConseil(be, st, hu, nbSessions);
-            List<String[]> trois = serviceGemini.genererTroisConseils(be, st, hu);
+            String         conseil = serviceGroq.genererConseil(be, st, hu, nbSessions);
+            List<String[]> trois   = serviceGroq.genererTroisConseils(be, st, hu);
 
             Platform.runLater(() -> {
-                if (lblConseil != null) lblConseil.setText(conseil);
+                if (lblConseil != null)
+                    lblConseil.setText(conseil != null ? conseil : "Continuez vos efforts !");
 
-                if (trois.size() > 0) {
+                if (trois != null && trois.size() > 0 && trois.get(0).length >= 3) {
                     if (lblEmoji1 != null) lblEmoji1.setText(trois.get(0)[0]);
                     if (lblTitre1 != null) lblTitre1.setText(trois.get(0)[1]);
                     if (lblDesc1  != null) lblDesc1.setText(trois.get(0)[2]);
                 }
-                if (trois.size() > 1) {
+                if (trois != null && trois.size() > 1 && trois.get(1).length >= 3) {
                     if (lblEmoji2 != null) lblEmoji2.setText(trois.get(1)[0]);
                     if (lblTitre2 != null) lblTitre2.setText(trois.get(1)[1]);
                     if (lblDesc2  != null) lblDesc2.setText(trois.get(1)[2]);
                 }
-                if (trois.size() > 2) {
+                if (trois != null && trois.size() > 2 && trois.get(2).length >= 3) {
                     if (lblEmoji3 != null) lblEmoji3.setText(trois.get(2)[0]);
                     if (lblTitre3 != null) lblTitre3.setText(trois.get(2)[1]);
                     if (lblDesc3  != null) lblDesc3.setText(trois.get(2)[2]);
@@ -223,100 +430,54 @@ public class SuivieController {
     }
 
     // ══════════════════════════════════════════════════════════════
-    // OUVRIR CHAT IA
+    // ✅ HISTORIQUE
     // ══════════════════════════════════════════════════════════════
-    @FXML
-    private void ouvrirChat() {
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/views/chatquiz.fxml")
-            );
-            Node view = loader.load();
-            VBox contentArea = (VBox) lblBienvenue.getScene().lookup("#contentArea");
-            if (contentArea != null) contentArea.getChildren().setAll(view);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // ARC ANIMÉ
-    // ══════════════════════════════════════════════════════════════
-    private void animerArc(Arc arc, int score, String couleurHex) {
-        if (arc == null) return;
-        double targetLength = -(score / 100.0) * 360.0;
-        arc.setStroke(Color.web(couleurHex));
-        arc.setStrokeLineCap(StrokeLineCap.ROUND);
-        arc.setFill(Color.TRANSPARENT);
-        final int[] frame = {0};
-        final int totalFrames = 60;
-        javafx.animation.AnimationTimer timer = new javafx.animation.AnimationTimer() {
-            @Override public void handle(long now) {
-                frame[0]++;
-                double progress = Math.min(1.0, frame[0] / (double) totalFrames);
-                double ease = 1 - Math.pow(1 - progress, 3);
-                arc.setLength(targetLength * ease);
-                if (frame[0] >= totalFrames) stop();
-            }
-        };
-        timer.start();
-    }
-
-    private void setTrend(Label lbl, int delta, String couleur) {
-        if (lbl == null) return;
-        String signe = delta >= 0 ? "↑ +" : "↓ ";
-        lbl.setText(signe + delta + "%");
-        lbl.setStyle("-fx-font-size:11px; -fx-font-weight:700; " +
-                "-fx-text-fill:" + (delta >= 0 ? "#065F46" : "#9D174D") + ";");
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // HISTORIQUE
-    // ══════════════════════════════════════════════════════════════
-    private static final int SCORE_MAX_HISTORIQUE = 6;
-
     private void afficherHistorique(List<String> historique) {
         if (historyBox == null) return;
         historyBox.getChildren().clear();
+
         int debut = Math.max(0, historique.size() - 5);
         for (int i = historique.size() - 1; i >= debut; i--) {
-            String ligne      = historique.get(i);
-            int    scoreBrut  = extraireScore(ligne);
-            String date       = extraireDate(ligne);
-            String titre      = extraireTitre(ligne);
-            String titreLow   = titre.toLowerCase();
+            String ligne    = historique.get(i);
+            String date     = extraireDate(ligne);
+            String titre    = extraireTitre(ligne);
+            String titreLow = titre.toLowerCase();
+
+            // ✅ normaliserEnRatio(ligne) lit le vrai Max depuis la ligne
+            double ratio    = normaliserEnRatio(ligne);
             int    scorePct;
 
             if (titreLow.contains("stress") || titreLow.contains("humeur")) {
-                scorePct = (int) Math.max(0,
-                        100 - (scoreBrut * 100.0) / SCORE_MAX_HISTORIQUE);
+                // ratio élevé = mauvais état → inverser pour afficher bien-être
+                scorePct = (int) Math.round((1.0 - ratio) * 100);
             } else {
-                scorePct = (int) Math.min(100,
-                        (scoreBrut * 100.0) / SCORE_MAX_HISTORIQUE);
+                // ratio élevé = bon état → garder
+                scorePct = (int) Math.round(ratio * 100);
             }
 
             String emoji = scorePct >= 70 ? "✅" : scorePct >= 40 ? "🟡" : "🔴";
             Label entry = new Label(
-                    date + "  ·  " + titre + "  →  " + scorePct + "/100  " + emoji
-            );
-            entry.setStyle("-fx-font-size:12px; -fx-text-fill:#374151;" +
-                    "-fx-font-weight:600; -fx-padding:6 0;");
+                    date + "  ·  " + titre + "  →  " + scorePct + "/100  " + emoji);
+            entry.setStyle(
+                    "-fx-font-size:12px; -fx-text-fill:#374151;"
+                            + "-fx-font-weight:600; -fx-padding:6 0;");
             historyBox.getChildren().add(entry);
-
-            javafx.scene.control.Separator sep = new javafx.scene.control.Separator();
-            sep.setStyle("-fx-background-color:#F3F4F6;");
-            historyBox.getChildren().add(sep);
+            historyBox.getChildren().add(new javafx.scene.control.Separator());
         }
     }
 
     // ══════════════════════════════════════════════════════════════
-    // GRAPHIQUE
+    // ✅ GRAPHIQUE
     // ══════════════════════════════════════════════════════════════
     private void chargerGraphiqueReel() {
+        if (evolutionChart == null) return;
         evolutionChart.getData().clear();
         evolutionChart.setAnimated(true);
+
         try {
-            List<String> historique = serviceQuiz.getHistoriquePatient(currentPatientId);
+            List<String> historique =
+                    serviceQuiz.getHistoriquePatient(currentPatientId);
+
             if (historique.isEmpty()) return;
 
             XYChart.Series<String, Number> seriesBE = new XYChart.Series<>();
@@ -326,29 +487,30 @@ public class SuivieController {
             XYChart.Series<String, Number> seriesHU = new XYChart.Series<>();
             seriesHU.setName("Humeur");
 
-            final int SCORE_MAX_GRAPH = 6;
-            LocalDateTime limite = LocalDateTime.now().minusDays(getSelectedDays());
-            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
+            LocalDateTime     limite = LocalDateTime.now().minusDays(getSelectedDays());
+            DateTimeFormatter fmt    = DateTimeFormatter.ofPattern("dd/MM");
 
             for (String ligne : historique) {
-                LocalDateTime dateTime = extraireDateTime(ligne);
-                if (dateTime.isBefore(limite)) continue;
+                LocalDateTime dt = extraireDateTime(ligne);
+                if (dt.isBefore(limite)) continue;
 
-                int    score = extraireScore(ligne);
-                String date  = dateTime.format(fmt);
+                String date  = dt.format(fmt);
                 String titre = extraireTitre(ligne).toLowerCase();
+
+                // ✅ normaliserEnRatio(ligne) — plus de heuristique score > 6
+                double ratio = normaliserEnRatio(ligne);
                 int vBE, vST, vHU;
 
                 if (titre.contains("stress")) {
-                    vST = (int) Math.max(0, 100 - (score * 100.0) / SCORE_MAX_GRAPH);
+                    vST = (int) Math.round((1.0 - ratio) * 100);
                     vBE = Math.min(100, vST + 10);
                     vHU = Math.min(100, vST + 5);
-                } else if (titre.contains("humeur") || titre.contains("bien_etre")) {
-                    vHU = (int) Math.max(0, 100 - (score * 100.0) / SCORE_MAX_GRAPH);
+                } else if (titre.contains("humeur")) {
+                    vHU = (int) Math.round((1.0 - ratio) * 100);
                     vBE = Math.min(100, vHU + 8);
                     vST = Math.max(0, 100 - vHU - 10);
                 } else {
-                    vBE = (int) Math.min(100, (score * 100.0) / SCORE_MAX_GRAPH);
+                    vBE = (int) Math.round(ratio * 100);
                     vST = Math.max(0, 100 - vBE - 5);
                     vHU = Math.min(100, vBE - 5);
                 }
@@ -362,11 +524,135 @@ public class SuivieController {
             Platform.runLater(this::applyStyling);
 
         } catch (SQLException e) {
-            System.err.println("❌ Erreur graphique : " + e.getMessage());
+            System.err.println("❌ Graphique : " + e.getMessage());
         }
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // 🧪 ZONE TEST
+    // ══════════════════════════════════════════════════════════════
+    @FXML
+    private void testerGroq() {
+        setResultat("⏳ Test Groq en cours...", "#78350F", "#FEF3C7");
+        new Thread(() -> {
+            try {
+                String conseil = serviceGroq.genererConseil(scoreBE, scoreST, scoreHU, 5);
+                String test    = serviceGroq.recommanderProchainTest(scoreBE, scoreST, scoreHU);
+                Platform.runLater(() -> {
+                    if (conseil != null && !conseil.isEmpty()) {
+                        setResultat("✅ GROQ OK !\n💬 " + conseil + "\n🎯 " + test,
+                                "#065F46", "#ECFDF5");
+                    } else {
+                        setResultat("❌ Groq — réponse vide", "#991B1B", "#FEF2F2");
+                    }
+                });
+            } catch (Exception e) {
+                Platform.runLater(() ->
+                        setResultat("❌ " + e.getMessage(), "#991B1B", "#FEF2F2"));
+            }
+        }).start();
+    }
+
+    @FXML
+    private void testerEmail() {
+        setResultat("⏳ Envoi email...", "#78350F", "#FEF3C7");
+        new Thread(() -> {
+            try {
+                new services.ServiceEmail().envoyerEmail(
+                        "mindcare.notifications@gmail.com",
+                        "🧪 Test MindCare",
+                        "<h2>✅ Email OK !</h2>");
+                Platform.runLater(() ->
+                        setResultat("✅ EMAIL OK !\n📬 Vérifie ta boîte !",
+                                "#065F46", "#ECFDF5"));
+            } catch (Exception e) {
+                Platform.runLater(() ->
+                        setResultat("❌ " + e.getMessage(), "#991B1B", "#FEF2F2"));
+            }
+        }).start();
+    }
+
+    private void setResultat(String texte, String cTexte, String cFond) {
+        if (lblTestResultat == null) return;
+        lblTestResultat.setText(texte);
+        lblTestResultat.setStyle(
+                "-fx-font-size:11px; -fx-font-weight:600;"
+                        + "-fx-text-fill:" + cTexte + ";"
+                        + "-fx-background-color:" + cFond + ";"
+                        + "-fx-background-radius:8; -fx-padding:10;");
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // NAVIGATION
+    // ══════════════════════════════════════════════════════════════
+    @FXML
+    private void ouvrirChat() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/views/chatquiz.fxml"));
+            Node view = loader.load();
+            VBox contentArea = (VBox) lblBienvenue.getScene().lookup("#contentArea");
+            if (contentArea != null) contentArea.getChildren().setAll(view);
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    @FXML
+    private void ouvrirEspacePraticien() {
+        var role = Session.getRoleConnecte();
+        if (role != Session.Role.PSYCHOLOGUE && role != Session.Role.ADMIN) return;
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/views/EspacePraticien.fxml"));
+            Node view = loader.load();
+            VBox contentArea = (VBox) lblBienvenue.getScene().lookup("#contentArea");
+            if (contentArea != null) contentArea.getChildren().setAll(view);
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    @FXML
+    public void retourSuivie() {
+        if (parentController != null) parentController.loadAccueil();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ARC ANIMÉ
+    // ══════════════════════════════════════════════════════════════
+    private void animerArc(Arc arc, int score, String couleurHex) {
+        if (arc == null) return;
+        double targetLength = -(score / 100.0) * 360.0;
+        arc.setStroke(Color.web(couleurHex));
+        arc.setStrokeLineCap(StrokeLineCap.ROUND);
+        arc.setFill(Color.TRANSPARENT);
+        final int[] frame = {0};
+        new javafx.animation.AnimationTimer() {
+            @Override public void handle(long now) {
+                frame[0]++;
+                double p = Math.min(1.0, frame[0] / 60.0);
+                arc.setLength(targetLength * (1 - Math.pow(1 - p, 3)));
+                if (frame[0] >= 60) stop();
+            }
+        }.start();
+    }
+
+    private void setTrend(Label lbl, int delta, String couleur) {
+        if (lbl == null) return;
+        String signe  = delta > 0 ? "↑ +" : delta < 0 ? "↓ " : "→ ";
+        String tFill  = delta >= 0 ? "#065F46" : "#9D174D";
+        String bgFill = delta >= 0 ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)";
+        lbl.setText(signe + delta + "%");
+        lbl.setStyle(
+                "-fx-font-size:11px; -fx-font-weight:700;"
+                        + "-fx-text-fill:" + tFill + ";"
+                        + "-fx-background-color:" + bgFill + ";"
+                        + "-fx-background-radius:20;"
+                        + "-fx-padding:3 10 3 10;");
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // GRAPHIQUE STYLING
+    // ══════════════════════════════════════════════════════════════
     private void applyStyling() {
+        if (evolutionChart == null) return;
         evolutionChart.setStyle("-fx-background-color:transparent;");
         styleArea(evolutionChart, 0, "rgba(167,139,250,0.25)", "#A78BFA");
         styleArea(evolutionChart, 1, "rgba(255,107,157,0.2)",  "#FF6B9D");
@@ -380,55 +666,25 @@ public class SuivieController {
         Node fill = chart.lookup(".default-color" + index + ".chart-series-area-fill");
         Node line = chart.lookup(".default-color" + index + ".chart-series-area-line");
         if (fill != null) fill.setStyle("-fx-fill:" + fillColor + ";");
-        if (line != null) line.setStyle("-fx-stroke:" + strokeColor +
-                "; -fx-stroke-width:2.5px;");
+        if (line != null) line.setStyle("-fx-stroke:" + strokeColor
+                + "; -fx-stroke-width:2.5px;");
         chart.lookupAll(".default-color" + index + ".chart-area-symbol")
-                .forEach(n -> n.setStyle("-fx-background-color:" + strokeColor + ",white;"));
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // EXTRACTION
-    // ══════════════════════════════════════════════════════════════
-    private int extraireScore(String ligne) {
-        try {
-            int start = ligne.indexOf("Score: ") + 7;
-            int end   = ligne.indexOf(" |", start);
-            return Integer.parseInt(ligne.substring(start, end).trim());
-        } catch (Exception e) { return 0; }
-    }
-
-    private LocalDateTime extraireDateTime(String ligne) {
-        try {
-            int start = ligne.indexOf("Date: ") + 6;
-            return LocalDateTime.parse(ligne.substring(start).trim());
-        } catch (Exception e) { return LocalDateTime.now(); }
-    }
-
-    private String extraireDate(String ligne) {
-        try {
-            return extraireDateTime(ligne)
-                    .format(DateTimeFormatter.ofPattern("dd/MM"));
-        } catch (Exception e) { return "--/--"; }
-    }
-
-    private String extraireTitre(String ligne) {
-        try {
-            int start = ligne.indexOf("Quiz: ") + 6;
-            int end   = ligne.indexOf(" |", start);
-            return ligne.substring(start, end).trim();
-        } catch (Exception e) { return "Quiz"; }
+                .forEach(n -> n.setStyle(
+                        "-fx-background-color:" + strokeColor + ",white;"));
     }
 
     // ══════════════════════════════════════════════════════════════
     // COMBO PÉRIODE
     // ══════════════════════════════════════════════════════════════
     private void configurerCombo() {
+        if (comboPeriode == null) return;
         comboPeriode.getItems().addAll("7 jours", "30 jours", "90 jours");
         comboPeriode.getSelectionModel().select("30 jours");
         comboPeriode.setOnAction(e -> chargerGraphiqueReel());
     }
 
     private int getSelectedDays() {
+        if (comboPeriode == null) return 30;
         switch (comboPeriode.getSelectionModel().getSelectedItem()) {
             case "7 jours":  return 7;
             case "90 jours": return 90;
@@ -437,34 +693,185 @@ public class SuivieController {
     }
 
     // ══════════════════════════════════════════════════════════════
-    // NAVIGATION
+    // 🎵 MUSICOTHÉRAPIE
     // ══════════════════════════════════════════════════════════════
     @FXML
-    private void ouvrirEspacePraticien() {
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/views/EspacePraticien.fxml")
-            );
-            Node view = loader.load();
-            VBox contentArea = (VBox) lblBienvenue.getScene().lookup("#contentArea");
-            if (contentArea != null) contentArea.getChildren().setAll(view);
-        } catch (IOException e) { e.printStackTrace(); }
-    }
-
-    @FXML
-    public void retourSuivie() {
-        if (parentController != null) parentController.loadAccueil();
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // HELPER NOM PATIENT
-    // ══════════════════════════════════════════════════════════════
-    private String getPatientName(int id) {
-        switch (id) {
-            case 1:  return "Mohamed";
-            case 4:  return "Meriem";
-            case 3:  return "Mariam";
-            default: return "Patient";
+    private void chargerMusique() {
+        if (btnChargerMusique != null) {
+            btnChargerMusique.setText("⏳ Chargement...");
+            btnChargerMusique.setDisable(true);
         }
+        if (lblChargementPistes != null)
+            lblChargementPistes.setText("🤖 IA analyse votre état...");
+
+        String nom = Session.getFullName() != null ? Session.getFullName() : "Patient";
+
+        new Thread(() -> {
+            ServiceMusique.MusiqueParams params =
+                    serviceMusique.calculerParams(scoreBE, scoreST, scoreHU, nom);
+            List<ServiceMusique.Piste> pistes = serviceMusique.chercherPistes(params);
+
+            pistesChargees = pistes;
+            pisteActuelle  = 0;
+
+            Platform.runLater(() -> {
+                if (lblMusiqueMessage != null)
+                    lblMusiqueMessage.setText(params.message + " • BPM: " + params.bpm);
+
+                afficherListePistes(pistes);
+
+                if (btnChargerMusique != null) {
+                    btnChargerMusique.setText("🔄 Recharger");
+                    btnChargerMusique.setDisable(false);
+                }
+                if (!pistes.isEmpty()) jouerPiste(pistes.get(0));
+            });
+        }).start();
+    }
+
+    private void afficherListePistes(List<ServiceMusique.Piste> pistes) {
+        if (listePistesBox == null) return;
+
+        listePistesBox.getChildren().removeIf(
+                n -> n.getUserData() != null && n.getUserData().equals("piste"));
+
+        if (lblChargementPistes != null) lblChargementPistes.setVisible(false);
+
+        for (int i = 0; i < pistes.size(); i++) {
+            ServiceMusique.Piste piste = pistes.get(i);
+            final int idx = i;
+
+            HBox ligne = new HBox(10);
+            ligne.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            ligne.setPadding(new javafx.geometry.Insets(8, 12, 8, 12));
+            ligne.setUserData("piste");
+            ligne.setStyle(
+                    "-fx-background-color:"
+                            + (i == pisteActuelle ? "rgba(124,58,237,0.10)" : "transparent")
+                            + "; -fx-background-radius:10; -fx-cursor:hand;");
+
+            Label emoji = new Label(piste.emoji);
+            emoji.setStyle("-fx-font-size:16px;");
+
+            VBox infos = new VBox(2);
+            HBox.setHgrow(infos, javafx.scene.layout.Priority.ALWAYS);
+            Label nomLbl = new Label(piste.nom);
+            nomLbl.setStyle("-fx-font-size:12px; -fx-font-weight:700; -fx-text-fill:#1F2937;");
+            Label dureeLbl = new Label(piste.duree);
+            dureeLbl.setStyle("-fx-font-size:10px; -fx-text-fill:#9CA3AF;");
+            infos.getChildren().addAll(nomLbl, dureeLbl);
+
+            Label playIco = new Label(i == pisteActuelle && enLecture ? "▶" : "○");
+            playIco.setStyle("-fx-font-size:14px; -fx-text-fill:#7C3AED;");
+
+            ligne.getChildren().addAll(emoji, infos, playIco);
+
+            ligne.setOnMouseClicked(e -> {
+                pisteActuelle = idx;
+                jouerPiste(piste);
+                afficherListePistes(pistesChargees);
+            });
+            ligne.setOnMouseEntered(ev -> ligne.setStyle(
+                    "-fx-background-color:rgba(124,58,237,0.08);"
+                            + "-fx-background-radius:10; -fx-cursor:hand;"));
+            ligne.setOnMouseExited(ev -> ligne.setStyle(
+                    "-fx-background-color:"
+                            + (idx == pisteActuelle ? "rgba(124,58,237,0.10)" : "transparent")
+                            + "; -fx-background-radius:10; -fx-cursor:hand;"));
+
+            listePistesBox.getChildren().add(ligne);
+        }
+    }
+
+    private void jouerPiste(ServiceMusique.Piste piste) {
+        if (lblPisteNom    != null) lblPisteNom.setText(piste.nom);
+        if (lblPisteDuree  != null) lblPisteDuree.setText(piste.duree);
+        if (lblPisteEmoji  != null) lblPisteEmoji.setText(piste.emoji);
+        if (lblEtatLecture != null) lblEtatLecture.setText("▶");
+        if (btnPlayPause   != null) btnPlayPause.setText("⏸");
+
+        if (piste.url == null) {
+            if (lblPisteNom != null)
+                lblPisteNom.setText(piste.nom + " (aperçu non disponible)");
+            enLecture = false;
+            return;
+        }
+
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.dispose();
+        }
+
+        try {
+            javafx.scene.media.Media media =
+                    new javafx.scene.media.Media(piste.url);
+            mediaPlayer = new javafx.scene.media.MediaPlayer(media);
+
+            double vol = sliderVolume != null ? sliderVolume.getValue() : 0.8;
+            mediaPlayer.setVolume(vol);
+
+            mediaPlayer.setOnEndOfMedia(() -> {
+                pisteActuelle = (pisteActuelle + 1) % pistesChargees.size();
+                Platform.runLater(() -> {
+                    jouerPiste(pistesChargees.get(pisteActuelle));
+                    afficherListePistes(pistesChargees);
+                });
+            });
+
+            mediaPlayer.play();
+            enLecture = true;
+            System.out.println("▶️ Lecture : " + piste.nom);
+
+        } catch (Exception e) {
+            System.err.println("❌ Lecture : " + e.getMessage());
+            if (lblPisteNom != null) lblPisteNom.setText(piste.nom + " ⚠️");
+            enLecture = false;
+        }
+    }
+
+    @FXML
+    private void togglePlayPause() {
+        if (mediaPlayer == null) {
+            if (!pistesChargees.isEmpty()) jouerPiste(pistesChargees.get(pisteActuelle));
+            return;
+        }
+        if (enLecture) {
+            mediaPlayer.pause();
+            enLecture = false;
+            if (btnPlayPause   != null) btnPlayPause.setText("▶");
+            if (lblEtatLecture != null) lblEtatLecture.setText("⏸");
+        } else {
+            mediaPlayer.play();
+            enLecture = true;
+            if (btnPlayPause   != null) btnPlayPause.setText("⏸");
+            if (lblEtatLecture != null) lblEtatLecture.setText("▶");
+        }
+    }
+
+    @FXML
+    private void pisteSuivante() {
+        if (pistesChargees.isEmpty()) return;
+        pisteActuelle = (pisteActuelle + 1) % pistesChargees.size();
+        jouerPiste(pistesChargees.get(pisteActuelle));
+        afficherListePistes(pistesChargees);
+    }
+
+    @FXML
+    private void pistePrecedente() {
+        if (pistesChargees.isEmpty()) return;
+        pisteActuelle = (pisteActuelle - 1 + pistesChargees.size()) % pistesChargees.size();
+        jouerPiste(pistesChargees.get(pisteActuelle));
+        afficherListePistes(pistesChargees);
+    }
+
+    @FXML
+    private void stopMusique() {
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            enLecture = false;
+        }
+        if (btnPlayPause   != null) btnPlayPause.setText("▶");
+        if (lblEtatLecture != null) lblEtatLecture.setText("⏹");
+        if (lblPisteNom    != null) lblPisteNom.setText("Aucune piste en lecture");
     }
 }

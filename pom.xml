@@ -48,6 +48,13 @@
             <version>2.0.1</version>
         </dependency>
 
+        <!-- ✅ AJOUTER dans pom.xml -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-media</artifactId>
+            <version>21</version>
+        </dependency>
+
     </dependencies>
 
     <build>

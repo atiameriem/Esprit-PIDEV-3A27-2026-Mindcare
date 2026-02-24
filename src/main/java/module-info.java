@@ -5,7 +5,9 @@ module tn.esprit.pidev3a8 {
 
     requires java.net.http;
 
-    requires jakarta.mail;         // <-- Ajoute ceci
+    requires jakarta.mail;
+    // ✅ AJOUTER dans module-info.java
+    requires javafx.media;// <-- Ajoute ceci
 
 // Replace with:
     requires jakarta.activation;
