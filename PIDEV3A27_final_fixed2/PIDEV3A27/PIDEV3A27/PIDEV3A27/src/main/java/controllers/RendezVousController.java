@@ -1,4 +1,5 @@
 package controllers;
+
 import java.net.URL;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -8,7 +9,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
-import javafx.scene.layout.TilePane;
 import javafx.scene.shape.SVGPath;
 import models.RendezVous;
 import models.RendezVousView;
@@ -22,13 +22,17 @@ import java.util.List;
 import javafx.scene.control.ComboBox;
 import java.util.Comparator;
 
-//pour stat
+// pour stat
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import java.io.IOException;
-import javafx.scene.control.Alert;
+
+// ✅ Twilio imports (comme ton exemple vidéo)
+import com.twilio.Twilio;
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
+import javafx.scene.Node;
 /**
  * Psychologue : lecture seule de SES rendez-vous.
  */
@@ -37,25 +41,42 @@ public class RendezVousController {
     @FXML private TextField searchField;
     @FXML private TilePane rendezVousContainer;
     @FXML private ComboBox<String> sortCombo;
-    // ✅ Bouton "Consultations terminées" (pour ouvrir la page Compte-rendu)
     @FXML private Button terminatedConsultationsButton;
     @FXML private ScrollPane listScroll;
 
-
     private ServiceRendezVous service;
     private final Connection cnx = MyDatabase.getInstance().getConnection();
+
+    // ===================== TWILIO (tout dans ce fichier comme la vidéo) =====================
+    // 🔴 Remplace par TES vraies valeurs (ACCOUNT SID commence par AC)
+    private static final String ACCOUNT_SID = "";
+    private static final String AUTH_TOKEN  = "";
+    // Ton numéro Twilio
+    private static final String TWILIO_FROM = "+12693903908";
+
+    private void sendSmsTwilio(String to, String body) {
+        // to doit être en format international: +216xxxxxxxx
+        Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
+
+        Message message = Message.creator(
+                new PhoneNumber(to),
+                new PhoneNumber(TWILIO_FROM),
+                body
+        ).create();
+
+        System.out.println("SMS sent! SID: " + message.getSid());
+    }
+    // =======================================================================================
 
     @FXML
     public void initialize() {
         service = new ServiceRendezVous(cnx);
         loadRendezVous();
 
-        // ✅ Demandé : la barre de recherche ne doit pas contenir du texte au chargement.
         if (searchField != null) {
             searchField.setText("");
         }
 
-        // ✅ Demandé : 2 cartes par ligne SANS scroll horizontal.
         if (listScroll != null && rendezVousContainer != null) {
             rendezVousContainer.prefTileWidthProperty()
                     .bind(listScroll.widthProperty().subtract(60).divide(2));
@@ -64,29 +85,23 @@ public class RendezVousController {
 
         if (searchField != null) {
             searchField.textProperty().addListener((obs, o, n) -> loadRendezVous());
-
         }
+
         if (sortCombo != null) {
             sortCombo.getItems().addAll(
                     "Date ↑ (croissant)",
                     "Date ↓ (décroissant)"
             );
-//par defaut decroi
             sortCombo.getSelectionModel().select("Date ↓ (décroissant)");
-
             sortCombo.valueProperty().addListener((obs, o, n) -> loadRendezVous());
         }
-
     }
 
     private void loadRendezVous() {
         try {
             int psyId = Session.getUserId();
-
-            // ✅ ICI: utiliser la méthode VIEW (avec noms)
             List<RendezVousView> list = service.findViewsByPsychologist(psyId);
 
-            // ✅ Afficher le bouton "Consultations terminées" seulement si on a au moins un RDV confirmé + terminé
             if (terminatedConsultationsButton != null) {
                 boolean hasTermine = list.stream().anyMatch(rv ->
                         rv.getConfirmationStatus() == RendezVous.ConfirmationStatus.confirme
@@ -109,35 +124,18 @@ public class RendezVousController {
                                 || (rv.getAppointmentTimeRv() != null && rv.getAppointmentTimeRv().toString().toLowerCase().contains(kw))
                 ).collect(java.util.stream.Collectors.toList());
             }
-            // ✅ TRI (date croissant / décroissant)
-            //On crée une variable sort (type String)
-            // qui contient le choix de tri.
-            //sortCombo == null → le ComboBox n’existe pas (sécurité)
-            //sortCombo.getValue() == null → l’utilisateur n’a rien sélectionné
-            //Si l’une des deux est vraie → sort = "" (chaîne vide)
+
             String sort = (sortCombo == null || sortCombo.getValue() == null) ? "" : sortCombo.getValue();
 
-            //On déclare un comparateur byDateTime
             Comparator<RendezVousView> byDateTime = Comparator
-
-                    //on trie d’abord selon la date
-                    // getAppo méthode utilisée pour prendre la date de chaque rendez-vous.
-                    //tri naturel croissant
-                    //nullsLast(...) = si la date est null,
-                    // on met cet élément à la fin (pour éviter erreur).
-                    //si deux rendez-vous ont la même date, alors compare aussi l’heure
                     .comparing(RendezVousView::getAppointmentDate, Comparator.nullsLast(Comparator.naturalOrder()))
                     .thenComparing(RendezVousView::getAppointmentTimeRv, Comparator.nullsLast(Comparator.naturalOrder()));
 
             if ("Date ↑ (croissant)".equals(sort)) {
-                //le comparateur byDateTime.
                 list.sort(byDateTime);
             } else if ("Date ↓ (décroissant)".equals(sort)) {
-                //byDateTime.reversed() crée la version inverse du comparateur.
                 list.sort(byDateTime.reversed());
             }
-// si rien choisi → on laisse l’ordre SQL par défaut
-
 
             rendezVousContainer.getChildren().clear();
 
@@ -148,7 +146,6 @@ public class RendezVousController {
                 return;
             }
 
-            // ✅ TilePane : on ajoute directement les cards (pas de HBox intermédiaire)
             for (RendezVousView rv : list) {
                 rendezVousContainer.getChildren().add(buildCard(rv));
             }
@@ -157,7 +154,6 @@ public class RendezVousController {
             showError("Erreur chargement rendez-vous", e);
         }
     }
-
 
     private VBox buildCard(RendezVousView rv) {
         VBox card = new VBox(12);
@@ -172,10 +168,8 @@ public class RendezVousController {
                 -fx-border-color: #E7E7E7;
                 """);
 
-        // ✅ Deux cartes par ligne : la largeur est gérée par le TilePane (binding sur prefTileWidth)
         card.setMaxWidth(Double.MAX_VALUE);
 
-        // Date + time row
         HBox dateRow = new HBox(8);
         dateRow.setAlignment(Pos.CENTER_LEFT);
 
@@ -188,13 +182,11 @@ public class RendezVousController {
         String timeTxt = rv.getAppointmentTimeRv() == null ? "" : rv.getAppointmentTimeRv().toString();
         Label dateLabel = new Label(dateTxt + "  ·  " + timeTxt);
         dateLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #334155; -fx-font-weight: 700;");
-
         dateRow.getChildren().addAll(calIcon, dateLabel);
 
-        // Title
         Label title = new Label("Rendez-vous");
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill:#111;");
-        // Psychologue row (afficher le nom du psy)
+
         HBox psyRow = new HBox(8);
         psyRow.setAlignment(Pos.CENTER_LEFT);
 
@@ -209,57 +201,44 @@ public class RendezVousController {
 
         Label psyLabel = new Label(psyName);
         psyLabel.setStyle("-fx-font-size: 13px; -fx-text-fill:#222;");
-
         psyRow.getChildren().addAll(psyIcon, psyLabel);
 
-
-        // Badges
         HBox badges = new HBox(10);
         badges.setAlignment(Pos.CENTER_LEFT);
 
         Label typeBadge = buildTypeBadge(rv.getTypeRendezVous());
         Label statutBadge = buildStatutBadge(rv.getStatutRv());
 
-        // ✅ Demandé : pas de doublon "Confirmé/En attente" ici (déjà affiché en haut)
         if (typeBadge != null) badges.getChildren().add(typeBadge);
         if (statutBadge != null) badges.getChildren().add(statutBadge);
 
-// Details
-        String info = "Patient : " + (rv.getPatientFullName()==null? "" : rv.getPatientFullName());
+        String info = "Patient : " + (rv.getPatientFullName() == null ? "" : rv.getPatientFullName());
         VBox details = buildSection("INFORMATIONS", info, "ℹ️");
 
-        // ✅ Actions psychologue :
-        // - si en_attente : Confirmer / Annuler
-        // - si confirmé : choisir En cours / Terminé
-        // - si annulé : rien
         HBox actions = buildPsychologistActions(rv);
 
-        card.getChildren().addAll(dateRow, buildTopStatusRow(rv.getConfirmationStatus()), title, psyRow, badges, details, actions);
+        card.getChildren().addAll(
+                dateRow,
+                buildTopStatusRow(rv.getConfirmationStatus()),
+                title,
+                psyRow,
+                badges,
+                details,
+                actions
+        );
         return card;
     }
 
     private Label buildStatutBadge(RendezVous.StatutRV statut) {
+        if (statut == null) return null;
+
         String text;
         String style;
 
-        if (statut == null) {
-            // ✅ Demandé : ne pas afficher "Statut inconnu" (on masque le badge si null)
-            return null;
-        } else {
-            switch (statut) {
-                case termine -> {
-                    text = "Terminé";
-                    style = "-fx-background-color:#DCFCE7; -fx-text-fill:#16A34A;";
-                }
-                case en_cours -> {
-                    text = "En cours";
-                    style = "-fx-background-color:#DBEAFE; -fx-text-fill:#1D4ED8;";
-                }
-                default -> {
-                    text = statut.name();
-                    style = "-fx-background-color:#F1F5F9; -fx-text-fill:#64748B;";
-                }
-            }
+        switch (statut) {
+            case termine -> { text = "Terminé"; style = "-fx-background-color:#DCFCE7; -fx-text-fill:#16A34A;"; }
+            case en_cours -> { text = "En cours"; style = "-fx-background-color:#DBEAFE; -fx-text-fill:#1D4ED8;"; }
+            default -> { text = statut.name(); style = "-fx-background-color:#F1F5F9; -fx-text-fill:#64748B;"; }
         }
 
         Label badge = new Label("📌  " + text);
@@ -276,22 +255,10 @@ public class RendezVousController {
             style = "-fx-background-color:#F1F5F9; -fx-text-fill:#64748B;";
         } else {
             switch (type) {
-                case premiere_consultation -> {
-                    text = "Première consultation";
-                    style = "-fx-background-color:#FEF9C3; -fx-text-fill:#B45309;";
-                }
-                case suivi -> {
-                    text = "Suivi";
-                    style = "-fx-background-color:#E0E7FF; -fx-text-fill:#3730A3;";
-                }
-                case urgence -> {
-                    text = "Urgence";
-                    style = "-fx-background-color:#FFEDD5; -fx-text-fill:#C2410C;";
-                }
-                default -> {
-                    text = type.name();
-                    style = "-fx-background-color:#F1F5F9; -fx-text-fill:#64748B;";
-                }
+                case premiere_consultation -> { text = "Première consultation"; style = "-fx-background-color:#FEF9C3; -fx-text-fill:#B45309;"; }
+                case suivi -> { text = "Suivi"; style = "-fx-background-color:#E0E7FF; -fx-text-fill:#3730A3;"; }
+                case urgence -> { text = "Urgence"; style = "-fx-background-color:#FFEDD5; -fx-text-fill:#C2410C;"; }
+                default -> { text = type.name(); style = "-fx-background-color:#F1F5F9; -fx-text-fill:#64748B;"; }
             }
         }
 
@@ -300,9 +267,6 @@ public class RendezVousController {
         return badge;
     }
 
-    // ✅ Badge confirmation_status
-    // ===================== NOUVEL AFFICHAGE : statut en haut =====================
-// ✅ Affiche clairement l'état de confirmation du rendez-vous tout en haut.
     private HBox buildTopStatusRow(RendezVous.ConfirmationStatus status) {
         HBox row = new HBox();
         row.setAlignment(Pos.CENTER_LEFT);
@@ -311,7 +275,6 @@ public class RendezVousController {
         String style;
 
         if (status == null || status == RendezVous.ConfirmationStatus.en_attente) {
-            // ✅ Demandé : afficher فقط "EN ATTENTE" (sans 'à traiter')
             txt = "⏳  EN ATTENTE";
             style = "-fx-background-color:#FEF3C7; -fx-text-fill:#B45309;";
         } else if (status == RendezVous.ConfirmationStatus.confirme) {
@@ -324,32 +287,11 @@ public class RendezVousController {
 
         Label pill = new Label(txt);
         pill.setStyle(style + "-fx-padding: 6 12; -fx-background-radius: 999; -fx-font-size: 12px; -fx-font-weight: 800;");
-
         row.getChildren().add(pill);
         return row;
     }
 
-    private Label buildConfirmationBadge(RendezVous.ConfirmationStatus status) {
-        String text;
-        String style;
-
-        if (status == null) {
-            text = "En attente";
-            style = "-fx-background-color:#FEF3C7; -fx-text-fill:#B45309;";
-        } else {
-            switch (status) {
-                case en_attente -> { text = "En attente"; style = "-fx-background-color:#FEF3C7; -fx-text-fill:#B45309;"; }
-                case confirme -> { text = "Confirmé"; style = "-fx-background-color:#DCFCE7; -fx-text-fill:#16A34A;"; }
-                case annule -> { text = "Annulé"; style = "-fx-background-color:#FEE2E2; -fx-text-fill:#DC2626;"; }
-                default -> { text = status.name(); style = "-fx-background-color:#F1F5F9; -fx-text-fill:#64748B;"; }
-            }
-        }
-        Label badge = new Label("⏳  " + text);
-        badge.setStyle(style + "-fx-padding: 6 12; -fx-background-radius: 15; -fx-font-size: 11px; -fx-font-weight: bold;");
-        return badge;
-    }
-
-    // ✅ UI + logique pour les actions du psychologue
+    // ✅ Actions du psychologue + ENVOI SMS sur confirmer
     private HBox buildPsychologistActions(RendezVousView rv) {
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER_LEFT);
@@ -362,12 +304,32 @@ public class RendezVousController {
             confirmBtn.setOnAction(e -> {
                 try {
                     // 1) confirmation_status = confirme
-                    service.updateConfirmationStatusForPsychologist(rv.getIdRv(), Session.getUserId(), RendezVous.ConfirmationStatus.confirme);
-                    // ✅ Demandé : ne pas mettre automatiquement "en_cours".
-                    // Le psychologue choisira ensuite "En cours" ou "Terminé".
+                    service.updateConfirmationStatusForPsychologist(
+                            rv.getIdRv(),
+                            Session.getUserId(),
+                            RendezVous.ConfirmationStatus.confirme
+                    );
+
+                    // 2) récupérer téléphone patient depuis la DB (users.telephone)
+                    String patientPhone = service.getPatientPhoneByRdvId(rv.getIdRv());
+                    if (patientPhone == null || patientPhone.isBlank()) {
+                        showError("Téléphone manquant", new Exception("Le patient n'a pas de numéro dans users.telephone"));
+                        loadRendezVous();
+                        return;
+                    }
+
+                    // 3) envoyer SMS Twilio
+                    String msg = "Bonjour, votre rendez-vous est CONFIRMÉ ✅ le "
+                            + rv.getAppointmentDate() + " à " + rv.getAppointmentTimeRv()
+                            + ". Psychologue: " + Session.getFullName();
+
+                    sendSmsTwilio(patientPhone, msg);
+
+                    // 4) refresh
                     loadRendezVous();
-                } catch (SQLException ex) {
-                    showError("Erreur confirmation", ex);
+
+                } catch (Exception ex) {
+                    showError("Erreur confirmation / SMS", ex);
                 }
             });
 
@@ -375,7 +337,11 @@ public class RendezVousController {
             cancelBtn.setStyle("-fx-background-color:#DC2626; -fx-text-fill:white; -fx-background-radius:8; -fx-cursor:hand;");
             cancelBtn.setOnAction(e -> {
                 try {
-                    service.updateConfirmationStatusForPsychologist(rv.getIdRv(), Session.getUserId(), RendezVous.ConfirmationStatus.annule);
+                    service.updateConfirmationStatusForPsychologist(
+                            rv.getIdRv(),
+                            Session.getUserId(),
+                            RendezVous.ConfirmationStatus.annule
+                    );
                     loadRendezVous();
                 } catch (SQLException ex) {
                     showError("Erreur annulation", ex);
@@ -387,10 +353,6 @@ public class RendezVousController {
         }
 
         if (cs == RendezVous.ConfirmationStatus.confirme) {
-            // ✅ Nouvelle règle demandée :
-            // - Si statut = null      => le psy peut choisir En cours OU Terminé
-            // - Si statut = en_cours  => le psy peut encore passer à Terminé plus tard
-            // - Si statut = termine   => plus aucun bouton (verrouillé)
             RendezVous.StatutRV st = rv.getStatutRv();
             if (st == RendezVous.StatutRV.termine) {
                 return box;
@@ -407,7 +369,6 @@ public class RendezVousController {
                 }
             });
 
-            // ✅ Petit hint : le compte-rendu sera disponible uniquement quand c'est "Terminé"
             Label hint = new Label("(Compte-rendu possible quand Terminé)");
             hint.setStyle("-fx-text-fill:#64748B; -fx-font-size: 11px;");
 
@@ -427,24 +388,21 @@ public class RendezVousController {
                 return box;
             }
 
-            // st == en_cours => on affiche seulement "Terminé" (modifiable plus tard)
             box.getChildren().addAll(doneBtn, hint);
             return box;
         }
 
-        // annule : pas d'action
         return box;
     }
 
-    // ✅ Ouverture de la page Compte-rendu depuis l'écran rendez-vous (sans sidebar)
     @FXML
     private void openCompteRenduFromRendezVous() {
         try {
             VBox contentArea = (VBox) rendezVousContainer.getScene().lookup("#contentArea");
             if (contentArea == null) return;
 
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/views/CompteRendu.fxml"));
-            javafx.scene.Node view = loader.load();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/CompteRendu.fxml"));
+            Node view = loader.load();
             contentArea.getChildren().clear();
             contentArea.getChildren().add(view);
         } catch (Exception e) {
@@ -464,21 +422,6 @@ public class RendezVousController {
 
         box.getChildren().addAll(title, body);
         return box;
-    }
-
-
-    // ✅ Petit bouton icône (plus lisible que texte, demandé)
-    private Button iconButton(Region icon, String tooltipText, String bgColor) {
-        Button b = new Button();
-        b.setGraphic(icon);
-        b.setMinSize(36, 36);
-        b.setPrefSize(36, 36);
-        b.setMaxSize(36, 36);
-        b.setStyle("-fx-background-color: " + bgColor + "; -fx-background-radius: 10; -fx-cursor: hand;");
-        if (tooltipText != null && !tooltipText.isBlank()) {
-            javafx.scene.control.Tooltip.install(b, new javafx.scene.control.Tooltip(tooltipText));
-        }
-        return b;
     }
 
     private Region svgIcon(String path, String colorHex, double w, double h) {
@@ -503,32 +446,24 @@ public class RendezVousController {
         a.showAndWait();
     }
 
-
-
     @FXML
     private void openStats() {
         try {
-            // Charger le fichier FXML des stats
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RendezVousStats.fxml"));
             Parent root = loader.load();
 
-            // Récupérer la scène actuelle (page RendezVous)
             Scene currentScene = searchField.getScene();
 
-            // Passer la scène précédente au controller stats
             RendezVousStatsController controller = loader.getController();
             controller.setPreviousScene(currentScene);
 
-            // Créer nouvelle scène
             Scene statsScene = new Scene(root);
 
-            // Charger le CSS (TON fichier est dans resources/)
             URL css = getClass().getResource("/views/stats.css");
             if (css != null) {
                 statsScene.getStylesheets().add(css.toExternalForm());
             }
 
-            // Afficher dans le même Stage
             Stage stage = (Stage) currentScene.getWindow();
             stage.setScene(statsScene);
             stage.show();

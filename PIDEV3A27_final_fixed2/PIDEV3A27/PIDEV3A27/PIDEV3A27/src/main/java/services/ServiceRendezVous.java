@@ -2,7 +2,8 @@ package services;
 
 import models.RendezVous;
 import models.RendezVousView;
-
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -491,5 +492,21 @@ public class ServiceRendezVous {
         }
 
         return result;
+    }
+
+    public String getPatientPhoneByRdvId(int idRv) throws SQLException {
+        String sql = """
+        SELECT u.telephone
+        FROM rendez_vous r
+        JOIN users u ON u.id_users = r.id_patient
+        WHERE r.id_rv = ?
+    """;
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, idRv);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("telephone");
+                return null;
+            }
+        }
     }
 }
