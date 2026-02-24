@@ -7,15 +7,19 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.shape.SVGPath;
+import javafx.stage.FileChooser;
 import models.CompteRenduSeance;
 import models.CompteRenduView;
 import models.RendezVousView;
+import services.PdfCompteRenduService;
 import services.ServiceCompteRenduSeance;
 import services.ServiceRendezVous;
 import utils.MyDatabase;
 import utils.Session;
 import utils.ValidationUtils;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -30,27 +34,21 @@ import java.util.Optional;
  */
 public class CompteRenduController {
 
-    //@FXML signifie : “ce champ existe dans le fichier FXML et JavaFX va l’injecter ici”.
-    //Les champs @FXML (liés au FXML)
-    @FXML private TextField searchField; //searchField : champ où l’utilisateur tape un mot clé
-    @FXML private VBox compteRenduContainer; //compteRenduContainer : conteneur principal où tu ajoutes les cards
-    @FXML private Button newCompteRenduButton; //bouton “Nouveau Compte-rendu”
+    @FXML private TextField searchField;
+    @FXML private VBox compteRenduContainer;
+    @FXML private Button newCompteRenduButton;
 
-    private final Connection cnx = MyDatabase.getInstance().getConnection(); //une connexion SQL récupérée depuis MyDatabase (Singleton)
-    //singleton pour assurer une seule instance pour la connexion a ala base de donnee
-    private ServiceCompteRenduSeance crService; //service qui gère les comptes-rendus
-    private ServiceRendezVous rvService; //service qui gère les rendez-vous
+    private final Connection cnx = MyDatabase.getInstance().getConnection();
+    private ServiceCompteRenduSeance crService;
+    private ServiceRendezVous rvService;
 
-    //Une seule fois au début se faite  ,,lance le premier chargement ,,JavaFX l’appelle automatiquement
     @FXML
     public void initialize() {
-        crService = new ServiceCompteRenduSeance(cnx); //tu crées le service CR avec la connexion DB.
+        crService = new ServiceCompteRenduSeance(cnx);
         rvService = new ServiceRendezVous(cnx);
 
-        loadCompteRendus(); //tu charges et affiches tout de suite la liste.
+        loadCompteRendus();
 
-        //écoute la saisie clavier
-        //à chaque changement du texte, tu rappelles loadCompteRendus()
         if (searchField != null) {
             searchField.textProperty().addListener((obs, o, n) -> loadCompteRendus());
         }
@@ -60,9 +58,7 @@ public class CompteRenduController {
     @FXML
     private void handleNewCompteRendu() {
         try {
-            //tu récupères l’id du psy connecté depuis la Session pour affiche ses rendez vous li tebaainuu
             int idPsy = Session.getUserId();
-            //tu récupères les rendez-vous du psy
             List<RendezVousView> rdvs = rvService.findViewsByPsychologist(idPsy);
 
             // ✅ Règle métier : compte-rendu seulement si RDV = confirmé + terminé
@@ -71,23 +67,19 @@ public class CompteRenduController {
                             && rv.getStatutRv() == models.RendezVous.StatutRV.termine
             ).toList();
 
-            //Si aucun rendez-vous terminé :
             if (rdvs.isEmpty()) {
                 info("Aucune consultation terminée", "Le compte-rendu est disponible uniquement pour les rendez-vous confirmés et terminés.");
                 return;
             }
-            //choisir un rendez
+
             RendezVousView selected = chooseRendezVous(rdvs);
-            //Si l’utilisateur annule → null → on sort.
             if (selected == null) return;
 
-            // sécurité (le rdv appartient au psy)
             if (!crService.appointmentBelongsToPsychologist(selected.getIdRv(), idPsy)) {
                 error("Accès refusé", "Ce rendez-vous ne vous appartient pas.");
                 return;
             }
-            //Ouvrir le popup en mode ajout :
-            //toEdit = null → donc c’est un ajout
+
             showCompteRenduDialog("Nouveau Compte-rendu", null, selected);
 
         } catch (SQLException e) {
@@ -105,20 +97,12 @@ public class CompteRenduController {
         return res.orElse(null);
     }
 
-
     // ── Chargement / filtre ───────────────────────────────────────────────
-    //fonction de recherche du compte rendu
     private void loadCompteRendus() {
-
         try {
-            //Ici tu récupères les CR du psy
             List<CompteRenduView> list = crService.findViewsByPsychologist(Session.getUserId());
-            //si pas de searchField → kw = ""(pas de recherche)
+
             String kw = (searchField == null) ? "" : searchField.getText().toLowerCase().trim();
-            //Tu gardes un compte-rendu si au moins un champ contient le mot clé :
-            //nom patient
-            //résumé
-            //prochaines actions
             if (!kw.isEmpty()) {
                 list = list.stream().filter(cr ->
                         (cr.getPatientFullName() != null && cr.getPatientFullName().toLowerCase().contains(kw))
@@ -128,7 +112,7 @@ public class CompteRenduController {
                                 || String.valueOf(cr.getIdAppointment()).contains(kw)
                 ).collect(java.util.stream.Collectors.toList());
             }
-            //On efface toutes les cards, puis on reconstruit.
+
             compteRenduContainer.getChildren().clear();
 
             if (list.isEmpty()) {
@@ -138,7 +122,6 @@ public class CompteRenduController {
                 return;
             }
 
-            //Affichage en grille de 3 colonnes
             HBox row = null;
             for (int i = 0; i < list.size(); i++) {
                 if (i % 3 == 0) {
@@ -208,17 +191,32 @@ public class CompteRenduController {
         VBox resumeBox = buildSection("RÉSUMÉ DE SÉANCE", cr.getResumeSeanceCr(), "#111");
         VBox actionsBox = buildSection("PROCHAINES ACTIONS", cr.getProchainesActionCr(), "#111");
 
-        // Buttons (edit/delete)
+        // Buttons (edit/delete/pdf)
         HBox btns = new HBox(10);
         btns.setAlignment(Pos.CENTER_LEFT);
 
-        Button editBtn = iconButton("M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z", "#2563EB");
+        Button editBtn = iconButton(
+                "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z",
+                "#2563EB"
+        );
+        editBtn.setTooltip(new Tooltip("Modifier"));
         editBtn.setOnAction(e -> showCompteRenduDialog("Modifier Compte-rendu", cr, null));
 
-        Button delBtn = iconButton("M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm3.46-7.12 1.41-1.41L12 11.59l1.12-1.12 1.41 1.41L13.41 13l1.12 1.12-1.41 1.41L12 14.41l-1.12 1.12-1.41-1.41L10.59 13 9.46 11.88zM15.5 4l-1-1h-5l-1 1H5v2h14V4z", "#DC2626");
+        Button delBtn = iconButton(
+                "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm3.46-7.12 1.41-1.41L12 11.59l1.12-1.12 1.41 1.41L13.41 13l1.12 1.12-1.41 1.41L12 14.41l-1.12 1.12-1.41-1.41L10.59 13 9.46 11.88zM15.5 4l-1-1h-5l-1 1H5v2h14V4z",
+                "#DC2626"
+        );
+        delBtn.setTooltip(new Tooltip("Supprimer"));
         delBtn.setOnAction(e -> handleDelete(cr));
 
-        btns.getChildren().addAll(editBtn, delBtn);
+        Button pdfBtn = iconButton(
+                "M6 2h7l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1.5V8h4.5",
+                "#0F766E"
+        );
+        pdfBtn.setTooltip(new Tooltip("Exporter PDF"));
+        pdfBtn.setOnAction(e -> handleExportPdf(cr));
+
+        btns.getChildren().addAll(editBtn, delBtn, pdfBtn);
 
         card.getChildren().addAll(dateRow, title, patientRow, badge, ratingRow, resumeBox, actionsBox, btns);
         return card;
@@ -248,7 +246,7 @@ public class CompteRenduController {
         for (int i = 1; i <= 5; i++) sb.append(i <= r ? '★' : '☆');
         return sb.toString();
     }
-    //popup confirmation et puis supp
+
     private void handleDelete(CompteRenduView cr) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirmation");
@@ -265,6 +263,34 @@ public class CompteRenduController {
         });
     }
 
+    // ✅ EXPORT PDF
+    private void handleExportPdf(CompteRenduView cr) {
+        try {
+            FileChooser fc = new FileChooser();
+            fc.setTitle("Exporter le compte-rendu en PDF");
+            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF (*.pdf)", "*.pdf"));
+
+            String patientName = (cr.getPatientFullName() == null) ? "patient" : cr.getPatientFullName();
+            patientName = patientName.replaceAll("[^a-zA-Z0-9-_ ]", "").trim().replace(" ", "_");
+
+            String fileName = "CompteRendu_" + patientName + "_" +
+                    (cr.getRvDate() == null ? "" : cr.getRvDate().toString()) + ".pdf";
+            fc.setInitialFileName(fileName);
+
+            File file = fc.showSaveDialog(compteRenduContainer.getScene().getWindow());
+            if (file == null) return;
+
+            Path out = file.toPath();
+            PdfCompteRenduService.exportCompteRendu(cr, out, "Psychologue");
+
+            info("Export PDF", "PDF exporté avec succès ✅\n" + file.getAbsolutePath());
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            error("Export PDF", "Erreur lors de l'export PDF : " + ex.getMessage());
+        }
+    }
+
     // ══════════════════════════════════════════════════════════════════════
     // POPUP Add/Edit
     // ══════════════════════════════════════════════════════════════════════
@@ -278,7 +304,6 @@ public class CompteRenduController {
         ButtonType saveBtnType = new ButtonType(isEdit ? "Mettre à jour" : "Ajouter", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveBtnType, ButtonType.CANCEL);
 
-        // Form
         GridPane grid = new GridPane();
         grid.setHgap(12);
         grid.setVgap(10);
@@ -337,7 +362,6 @@ public class CompteRenduController {
 
         dialog.getDialogPane().setContent(grid);
 
-        // Validation on save
         Button saveBtn = (Button) dialog.getDialogPane().lookupButton(saveBtnType);
         saveBtn.addEventFilter(javafx.event.ActionEvent.ACTION, ev -> {
             String err;
@@ -389,7 +413,6 @@ public class CompteRenduController {
     // ══════════════════════════════════════════════════════════════════════
     // UI helpers
     // ══════════════════════════════════════════════════════════════════════
-
     private Label buildProgressBadge(CompteRenduSeance.ProgresCR progrescr) {
         String text, style;
         if (progrescr == null) {

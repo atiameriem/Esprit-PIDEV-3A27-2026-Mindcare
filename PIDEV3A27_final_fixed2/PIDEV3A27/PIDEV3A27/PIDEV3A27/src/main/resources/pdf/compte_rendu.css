@@ -1,0 +1,170 @@
+@page { margin: 30px; }
+
+body{
+    font-family: "DejaVu Sans", Arial, sans-serif;
+    color:#0f172a;
+    background:#ffffff;
+    margin:0;
+}
+
+/* ================= PAGE ================= */
+
+.page{
+    border: 2px solid #dbe3ec;
+    border-radius: 26px;
+    padding: 28px;
+    position: relative;
+    background: #f8fafc;
+}
+
+/* Bande colorée top */
+.page:before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0;
+    height: 14px;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    background: linear-gradient(90deg,#5C98A8,#0F766E,#2563eb);
+}
+
+/* ================= DATE BOX ================= */
+
+.date-top{
+    position:absolute;
+    top:18px;
+    left:22px;
+    font-size:12px;
+    font-weight:800;
+    color:#0f172a;
+    background:#ffffff;
+    border:2px solid #dbe3ec;
+    padding:10px 14px;
+    border-radius:16px;
+}
+
+/* ================= HEADER ================= */
+
+.header{
+    text-align:center;
+    margin-top:40px;
+}
+
+h1{
+    font-size:28px;
+    margin:0;
+    font-weight:900;
+    color:#0F766E;
+}
+
+.header p{
+    margin-top:6px;
+    font-size:14px;
+    font-weight:700;
+    color:#475569;
+}
+
+/* Ligne séparatrice */
+.sep{
+    border:none;
+    height:2px;
+    background:#dbe3ec;
+    margin:22px 0;
+}
+
+/* ================= CARDS ================= */
+
+.card{
+    border:2px solid #dbe3ec;
+    border-radius:22px;
+    padding:20px;
+    margin-bottom:20px;
+    background:#ffffff;
+}
+
+/* TITRES SECTIONS (bleu comme ton image) */
+.card h2{
+    margin:0 0 14px 0;
+    font-size:15px;
+    font-weight:900;
+    color:#2563eb;
+    text-transform:uppercase;
+}
+
+/* ================= TABLE DETAILS ================= */
+
+.kv{
+    width:100%;
+    border-collapse: collapse;
+}
+
+.kv td{
+    padding:6px 0;
+    vertical-align: top;
+    font-size:14px;
+}
+
+.kv .k{
+    width:150px;
+    font-weight:900;
+    color:#0f172a;
+}
+
+.kv .v{
+    font-weight:900;
+    color:#0f172a;
+}
+
+.dark{
+    color:#0f172a;
+    font-weight:900;
+}
+
+/* ================= NOTE PATIENT ================= */
+
+.stars-wrap{
+    text-align:left;
+}
+
+/* étoiles style comme ton image */
+.starbox{
+    width:16px;
+    height:16px;
+    border-radius:6px;
+    border:2px solid #cbd5e1;
+    display:inline-block;
+    margin-right:6px;
+}
+
+.starbox.on{
+    background:#f59e0b;
+    border-color:#f59e0b;
+}
+
+.starbox.off{
+    background:#e2e8f0;
+    border-color:#cbd5e1;
+}
+
+/* ================= SECTIONS TEXTE ================= */
+
+.section{
+    margin-top:18px;
+}
+
+.section h3{
+    margin:0 0 10px 0;
+    font-size:15px;
+    font-weight:900;
+    color:#2563eb;
+}
+
+.box{
+    border:2px solid #dbe3ec;
+    border-radius:20px;
+    padding:16px;
+    background:#ffffff;
+    font-size:14px;
+    line-height:1.6;
+    white-space: pre-wrap;
+}
