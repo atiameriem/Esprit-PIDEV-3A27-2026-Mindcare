@@ -8,8 +8,8 @@ import java.util.Properties;
 public class EmailService {
 
     // Configurez votre email et votre clé d'application ici
-    private final String username = "eyabd81@gmail.com";
-    private final String password = "rqab gfny sevx lnim"; // Votre clé Google fournie
+    private final String username = "mindcare563@gmail.com";
+    private final String password = "key"; // Votre clé Google fournie
 
     public boolean sendEmail(String to, String subject, String body) {
         if (username.equals("votre.email@gmail.com")) {
