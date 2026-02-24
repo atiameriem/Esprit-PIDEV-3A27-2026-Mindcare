@@ -435,7 +435,7 @@ public class SuivieController {
     private void afficherHistorique(List<String> historique) {
         if (historyBox == null) return;
         historyBox.getChildren().clear();
-
+/// ///
         int debut = Math.max(0, historique.size() - 5);
         for (int i = historique.size() - 1; i >= debut; i--) {
             String ligne    = historique.get(i);
