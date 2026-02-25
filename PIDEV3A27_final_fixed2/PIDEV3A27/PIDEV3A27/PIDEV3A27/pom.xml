@@ -36,6 +36,20 @@
             <version>21.0.2</version>
         </dependency>
 
+
+        <!-- WebView for reCAPTCHA inside the app -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+            <version>21.0.2</version>
+        </dependency>
+        <!-- Media is required by WebView on some platforms -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-media</artifactId>
+            <version>21.0.2</version>
+        </dependency>
+
         <!-- PDF export (HTML + CSS -> PDF) -->
         <dependency>
             <groupId>com.openhtmltopdf</groupId>
@@ -67,6 +81,13 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>test.MainFx</mainClass>
+
+                    <options>
+                        <option>-Dprism.order=sw</option>
+                        <option>-Dprism.verbose=true</option>
+                        <option>-Dcom.sun.webkit.useMediaPlayer=false</option>
+                        <option>-Dcom.sun.webkit.useHTTP2Loader=false</option>
+                    </options>
                 </configuration>
             </plugin>
         </plugins>

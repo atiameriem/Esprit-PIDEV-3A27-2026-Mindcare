@@ -14,6 +14,7 @@ import models.RendezVous;
 import models.RendezVousView;
 import services.ServiceRendezVous;
 import services.ServiceCompteRenduSeance;
+import services.ServiceRecaptcha;
 import utils.MyDatabase;
 import utils.Session;
 
@@ -118,16 +119,43 @@ public class RendezVousCrudController {
         //showRendezVousDialog(null)
         //â popup en mode ajout (car existing = null)
         Optional<RendezVous> created = showRendezVousDialog(null);
-        created.ifPresent(rv -> {
-            try {
-                //insertion DB
-                //retourne lâID gÃ©nÃ©rÃ©
-                int id = service.addAndReturnId(rv);
-                System.out.println("Inserted rendez_vous id=" + id);
-                //refresh affichage
-                loadRendezVous();
-            } catch (SQLException e) {
-                showError("Erreur Ajout", e);
+        created.ifPresent(this::startCaptchaThenInsert);
+    }
+
+    /**
+     * Google reCAPTCHA (via navigateur externe) before inserting the appointment.
+     * - If verified: add to DB + message "Validé" + refresh list
+     * - If failed/cancel: message "Échoué" and allow retry; nothing is inserted
+     */
+    private void startCaptchaThenInsert(RendezVous rv) {
+        var owner = rendezVousContainer != null && rendezVousContainer.getScene() != null
+                ? rendezVousContainer.getScene().getWindow()
+                : null;
+
+        ServiceRecaptcha.verify(owner, ok -> {
+            if (ok) {
+                try {
+                    int id = service.addAndReturnId(rv);
+                    System.out.println("Inserted rendez_vous id=" + id);
+                    showInfo("Validé", "Vérification réussie ✅\nVotre rendez-vous a été ajouté.");
+                    // Redirection = rester sur la page liste RDV + refresh
+                    loadRendezVous();
+                } catch (SQLException e) {
+                    showError("Erreur Ajout", e);
+                }
+            } else {
+                Alert a = new Alert(Alert.AlertType.WARNING);
+                if (owner != null) a.initOwner(owner);
+                a.setTitle("Échoué");
+                a.setHeaderText("Vérification reCAPTCHA échouée");
+                a.setContentText("Le rendez-vous n'a pas été ajouté.\n\nVoulez-vous réessayer ?");
+                ButtonType retry = new ButtonType("Réessayer", ButtonBar.ButtonData.OK_DONE);
+                a.getButtonTypes().setAll(retry, ButtonType.CANCEL);
+                a.showAndWait().ifPresent(bt -> {
+                    if (bt == retry) {
+                        startCaptchaThenInsert(rv);
+                    }
+                });
             }
         });
     }
@@ -853,6 +881,14 @@ public class RendezVousCrudController {
     // â Overload simple : afficher une erreur avec un message (sans Exception)
     private void showError(String title, String message) {
         Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle(title);
+        a.setHeaderText(title);
+        a.setContentText(message);
+        a.showAndWait();
+    }
+
+    private void showInfo(String title, String message) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle(title);
         a.setHeaderText(title);
         a.setContentText(message);

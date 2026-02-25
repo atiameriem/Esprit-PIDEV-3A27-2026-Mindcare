@@ -1,6 +1,10 @@
 module tn.esprit.pidev3a8 {
     requires javafx.controls;
     requires javafx.fxml;
+    requires javafx.web;
+    requires javafx.media;
+    requires java.net.http;
+    requires java.desktop;
     requires java.sql;
     requires twilio;
     requires org.slf4j;

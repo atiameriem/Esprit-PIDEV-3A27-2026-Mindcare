@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Vérification reCAPTCHA</title>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <style>
+    body{font-family:Segoe UI, Arial, sans-serif; background:#f8fafc; margin:0; padding:0}
+    .card{max-width:520px; margin:40px auto; background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:22px; box-shadow:0 10px 25px rgba(0,0,0,.06)}
+    h2{margin:0 0 10px 0; font-size:18px}
+    p{margin:6px 0; color:#475569; line-height:1.4}
+    .status{margin-top:14px; padding:12px; border-radius:10px; display:none}
+    .ok{background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0}
+    .bad{background:#fef2f2; color:#991b1b; border:1px solid #fecaca}
+    .hint{font-size:12px; color:#64748b; margin-top:10px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Vérification</h2>
+    <p>Merci de valider que vous n'êtes pas un robot.</p>
+
+    <div id="captchaBox">
+      <div class="g-recaptcha"
+           data-sitekey=""
+           data-callback="onCaptchaSuccess"></div>
+    </div>
+
+    <div id="status" class="status"></div>
+    <div class="hint">Après validation, vous pouvez fermer cette page et revenir à l'application.</div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const state = params.get('state');
+
+    function setStatus(ok, text){
+      const el = document.getElementById('status');
+      el.style.display = 'block';
+      el.className = 'status ' + (ok ? 'ok' : 'bad');
+      el.textContent = text;
+    }
+
+    async function onCaptchaSuccess(token){
+      if(!state){
+        setStatus(false, 'Erreur: state manquant. Ouvrez cette page via l\'application.');
+        return;
+      }
+      try{
+        const resp = await fetch('/captcha/verify', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ token, state })
+        });
+        const data = await resp.json();
+        if(data.valid){
+          setStatus(true, '✅ Validé. Vous pouvez fermer cette page.');
+          // Optional: disable widget
+          document.getElementById('captchaBox').style.display = 'none';
+        } else {
+          setStatus(false, '❌ Échoué. Réessayez.');
+          if (window.grecaptcha) grecaptcha.reset();
+        }
+      }catch(e){
+        setStatus(false, 'Erreur serveur. Réessayez.');
+        if (window.grecaptcha) grecaptcha.reset();
+      }
+    }
+  </script>
+</body>
+</html>
