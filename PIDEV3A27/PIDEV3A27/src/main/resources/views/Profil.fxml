@@ -101,6 +101,8 @@
                             <Label text="📋 Gestion des utilisateurs"
                                    style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
                             <Region HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="userSearchField" promptText="Rechercher par nom, email..." prefWidth="250"/>
+                            <ComboBox fx:id="userSortComboBox" promptText="Trier par"/>
                             <Button text="➕ Ajouter un utilisateur" onAction="#handleAddUser"
                                     style="-fx-background-color: #2E7D32; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"/>
                         </HBox>

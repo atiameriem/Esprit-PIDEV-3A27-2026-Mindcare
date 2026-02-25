@@ -25,6 +25,12 @@
         <Pane HBox.hgrow="ALWAYS"/>
     </HBox>
 
+    <!-- Recherche -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Rechercher par objet ou description..." 
+                   HBox.hgrow="ALWAYS" style="-fx-padding: 10; -fx-background-radius: 8; -fx-border-color: #cbd5e0; -fx-border-radius: 8; -fx-font-size: 14px;"/>
+    </HBox>
+
     <Separator/>
 
     <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">

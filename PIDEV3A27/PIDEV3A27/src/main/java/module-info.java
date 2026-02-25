@@ -1,16 +1,16 @@
-module tn.esprit.pidev3a8 {
+module pidev3a8 {
     requires javafx.controls;
     requires javafx.fxml;
-    requires javafx.graphics;
+
     requires java.sql;
     requires java.desktop;
     requires jakarta.mail;
+    requires com.sun.jna;
+    requires vosk;
 
-    opens test to javafx.graphics;
     opens controllers to javafx.fxml;
-    opens models to javafx.base;
 
-    // exports test;
+    exports test;
     exports controllers;
     exports models;
     exports services;

@@ -14,13 +14,24 @@ import services.UserService;
 import utils.UserSession;
 
 import java.io.IOException;
+import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Comparator;
 
 public class ProfilController {
 
     // ================= GRID USERS =================
     @FXML
     private FlowPane usersGrid;
+
+    @FXML
+    private TextField userSearchField;
+
+    @FXML
+    private ComboBox<String> userSortComboBox;
+
+    private List<User> allUsers;
 
     // ================= PROFIL FIELDS =================
     @FXML
@@ -71,33 +82,64 @@ public class ProfilController {
             }
         }
 
+        if (userSortComboBox != null) {
+            userSortComboBox.getItems().addAll("Aucun", "Date d'inscription (Asc)", "Date d'inscription (Desc)");
+            userSortComboBox.setValue("Aucun");
+
+            userSearchField.textProperty().addListener((obs, oldV, newV) -> updateUsersView());
+            userSortComboBox.valueProperty().addListener((obs, oldV, newV) -> updateUsersView());
+        }
+
         System.out.println("Vue Profil chargée");
     }
 
     // ================= LOAD USERS =================
+    // ================= LOAD USERS =================
     private void loadUsersFromDB() {
         try {
-            List<User> list = userService.getAll();
-            usersGrid.getChildren().clear();
-
-            if (list != null) {
-                for (User user : list) {
-                    try {
-                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/UserCard.fxml"));
-                        Node card = loader.load();
-
-                        UserCardController controller = loader.getController();
-                        controller.setData(user, this);
-
-                        usersGrid.getChildren().add(card);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+            allUsers = userService.getAll();
+            updateUsersView();
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de charger les utilisateurs.");
+        }
+    }
+
+    private void updateUsersView() {
+        if (allUsers == null || usersGrid == null)
+            return;
+
+        String search = (userSearchField.getText() == null) ? "" : userSearchField.getText().toLowerCase();
+        String sortOption = userSortComboBox.getValue();
+
+        List<User> filtered = allUsers.stream()
+                .filter(u -> (u.getNom() != null && u.getNom().toLowerCase().contains(search)) ||
+                        (u.getPrenom() != null && u.getPrenom().toLowerCase().contains(search)) ||
+                        (u.getEmail() != null && u.getEmail().toLowerCase().contains(search)))
+                .collect(Collectors.toList());
+
+        if ("Date d'inscription (Asc)".equals(sortOption)) {
+            filtered.sort(
+                    Comparator.comparing(User::getDateInscription, Comparator.nullsLast(Comparator.naturalOrder())));
+        } else if ("Date d'inscription (Desc)".equals(sortOption)) {
+            filtered.sort(
+                    Comparator.comparing(User::getDateInscription, Comparator.nullsLast(Comparator.reverseOrder())));
+        }
+
+        usersGrid.getChildren().clear();
+
+        for (User user : filtered) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/UserCard.fxml"));
+                Node card = loader.load();
+
+                UserCardController controller = loader.getController();
+                controller.setData(user, this);
+
+                usersGrid.getChildren().add(card);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

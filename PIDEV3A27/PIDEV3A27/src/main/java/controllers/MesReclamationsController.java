@@ -22,11 +22,19 @@ public class MesReclamationsController {
     @FXML
     private FlowPane reclamationGrid;
 
+    @FXML
+    private javafx.scene.control.TextField searchField;
+
     private final ReclamationService reclamationService = new ReclamationService();
+    private List<Reclamation> allMesReclamations;
 
     @FXML
     public void initialize() {
         loadReclamations();
+
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            filterReclamations(newValue);
+        });
     }
 
     public void loadReclamations() {
@@ -36,29 +44,44 @@ public class MesReclamationsController {
 
         try {
             List<Reclamation> all = reclamationService.getAll();
-            List<Reclamation> filtered = all.stream()
+            allMesReclamations = all.stream()
                     .filter(r -> r.getIdUser() == currentUser.getId())
                     .collect(Collectors.toList());
 
-            reclamationGrid.getChildren().clear();
-
-            for (Reclamation r : filtered) {
-                try {
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/ReclamationCard.fxml"));
-                    Node card = loader.load();
-
-                    ReclamationCardController controller = loader.getController();
-                    controller.setData(r, this);
-
-                    reclamationGrid.getChildren().add(card);
-                } catch (IOException e) {
-                    System.err.println("Erreur chargement carte reclamation: " + e.getMessage());
-                    e.printStackTrace();
-                }
-            }
+            filterReclamations("");
 
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", e.getMessage());
+        }
+    }
+
+    private void filterReclamations(String searchText) {
+        if (allMesReclamations == null)
+            return;
+
+        String lowerCaseFilter = searchText.toLowerCase();
+
+        List<Reclamation> filtered = allMesReclamations.stream()
+                .filter(r -> r.getObjet().toLowerCase().contains(lowerCaseFilter)
+                        || r.getDescription().toLowerCase().contains(lowerCaseFilter)
+                        || r.getStatut().toLowerCase().contains(lowerCaseFilter))
+                .collect(Collectors.toList());
+
+        reclamationGrid.getChildren().clear();
+
+        for (Reclamation r : filtered) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/ReclamationCard.fxml"));
+                Node card = loader.load();
+
+                ReclamationCardController controller = loader.getController();
+                controller.setData(r, this);
+
+                reclamationGrid.getChildren().add(card);
+            } catch (IOException e) {
+                System.err.println("Erreur chargement carte reclamation: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 

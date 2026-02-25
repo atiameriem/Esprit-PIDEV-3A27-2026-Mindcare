@@ -9,10 +9,11 @@ import java.util.List;
 
 public class ReclamationService {
 
-    private final Connection connection;
-
     public ReclamationService() {
-        connection = MyDatabase.getInstance().getCnx();
+    }
+
+    private Connection getConnection() {
+        return MyDatabase.getInstance().getCnx();
     }
 
     // ================= CREATE =================
@@ -20,7 +21,7 @@ public class ReclamationService {
 
         String sql = "INSERT INTO reclamation (id_users, objet, urgence, description, statut, date) VALUES (?, ?, ?, ?, ?, NOW())";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, r.getIdUser());
             stmt.setString(2, r.getObjet());
@@ -43,7 +44,7 @@ public class ReclamationService {
         List<Reclamation> list = new ArrayList<>();
         String sql = "SELECT * FROM reclamation";
 
-        try (Statement stmt = connection.createStatement();
+        try (Statement stmt = getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
@@ -71,7 +72,7 @@ public class ReclamationService {
 
         String sql = "UPDATE reclamation SET id_users = ?, objet = ?, urgence = ?, description = ?, statut = ? WHERE id_reclamation = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
 
             stmt.setInt(1, r.getIdUser());
             stmt.setString(2, r.getObjet());
@@ -89,7 +90,7 @@ public class ReclamationService {
 
         String sql = "DELETE FROM reclamation WHERE id_reclamation = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
         }

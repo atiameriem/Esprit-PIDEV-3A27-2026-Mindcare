@@ -8,7 +8,7 @@ import java.util.Properties;
 public class EmailService {
 
     // Configurez votre email et votre clé d'application ici
-    private final String username = "mindcare563@gmail.com";
+    private final String username = "mindcareservicemdp@gmail.com";
     private final String password = "key"; // Votre clé Google fournie
 
     public boolean sendEmail(String to, String subject, String body) {

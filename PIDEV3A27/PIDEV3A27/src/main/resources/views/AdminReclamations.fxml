@@ -18,6 +18,12 @@
         <Button text="Rafraîchir" onAction="#refresh" styleClass="refresh-btn"/>
     </HBox>
 
+    <HBox alignment="CENTER_LEFT" spacing="15">
+        <TextField fx:id="searchField" promptText="Rechercher par utilisateur, objet ou statut..." 
+                   HBox.hgrow="ALWAYS" style="-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #cbd5e0; -fx-border-radius: 5;"/>
+        <ComboBox fx:id="sortComboBox" promptText="Trier par Priorité" style="-fx-padding: 4;"/>
+    </HBox>
+
     <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
         <content>
             <FlowPane fx:id="reclamationsGrid" hgap="25" vgap="25" alignment="TOP_LEFT">

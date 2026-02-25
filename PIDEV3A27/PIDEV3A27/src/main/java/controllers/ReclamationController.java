@@ -5,7 +5,9 @@ import javafx.scene.control.*;
 import models.Reclamation;
 import models.User;
 import services.ReclamationService;
+import services.SpeechToTextService;
 import utils.UserSession;
+import javafx.application.Platform;
 
 import java.sql.SQLException;
 
@@ -21,9 +23,14 @@ public class ReclamationController {
     private RadioButton lowRadio;
     @FXML
     private TextArea descriptionArea;
+    @FXML
+    private Button micButton;
+    @FXML
+    private Label micStatusLabel;
 
     private ToggleGroup urgenceGroup;
     private final ReclamationService reclamationService = new ReclamationService();
+    private final SpeechToTextService speechToTextService = new SpeechToTextService();
     private Reclamation selectedReclamation = null;
 
     @FXML
@@ -80,6 +87,34 @@ public class ReclamationController {
     }
 
     @FXML
+    private void handleMicrophone() {
+        if (speechToTextService.isRecording()) {
+            // Stop recording
+            speechToTextService.stopListening();
+            micButton.setText("🎤 Dictée vocale");
+            micStatusLabel.setText("");
+        } else {
+            // Start recording
+            micButton.setText("🛑 Arrêter");
+            micStatusLabel.setText("Écoute en cours...");
+
+            speechToTextService.startListening(
+                    text -> Platform.runLater(() -> {
+                        String currentText = descriptionArea.getText();
+                        if (!currentText.isEmpty() && !currentText.endsWith(" ")) {
+                            currentText += " ";
+                        }
+                        descriptionArea.setText(currentText + text);
+                    }),
+                    error -> Platform.runLater(() -> {
+                        micStatusLabel.setText(error);
+                        micButton.setText("🎤 Dictée vocale");
+                        showAlert(Alert.AlertType.ERROR, "Erreur Microphone", error);
+                    }));
+        }
+    }
+
+    @FXML
     private void handleAnnuler() {
         clearFields();
     }
@@ -89,6 +124,9 @@ public class ReclamationController {
         descriptionArea.clear();
         mediumRadio.setSelected(true);
         selectedReclamation = null;
+        if (speechToTextService.isRecording()) {
+            handleMicrophone(); // Stop recording if active
+        }
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {

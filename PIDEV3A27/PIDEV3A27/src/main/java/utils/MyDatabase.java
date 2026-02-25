@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class MyDatabase {
 
-    private final String URL = "jdbc:mysql://localhost:3306/projet_psychologie?zeroDateTimeBehavior=CONVERT_TO_NULL";
+    private final String URL = "jdbc:mysql://localhost:3306/projet_psychologie?zeroDateTimeBehavior=CONVERT_TO_NULL&autoReconnect=true";
     private final String USER = "root";
     private final String PASSWORD = "";
     private Connection cnx;
@@ -28,6 +28,14 @@ public class MyDatabase {
     }
 
     public Connection getCnx() {
+        try {
+            if (cnx == null || cnx.isClosed() || !cnx.isValid(2)) {
+                System.out.println("Connection is null, closed or invalid. Reconnecting...");
+                cnx = DriverManager.getConnection(URL, USER, PASSWORD);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error while validating or re-establishing connection: " + e.getMessage());
+        }
         return cnx;
     }
 }

@@ -10,10 +10,11 @@ import java.util.List;
 
 public class UserService {
 
-    private final Connection connection;
-
     public UserService() {
-        connection = MyDatabase.getInstance().getCnx();
+    }
+
+    private Connection getConnection() {
+        return MyDatabase.getInstance().getCnx();
     }
 
     // ================= CREATE =================
@@ -21,7 +22,7 @@ public class UserService {
         String sql = "INSERT INTO users (nom, prenom, email, telephone, date_inscription, mot_de_passe, role, badge_image, date_naissance) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, user.getNom());
             stmt.setString(2, user.getPrenom());
             stmt.setString(3, user.getEmail());
@@ -52,7 +53,7 @@ public class UserService {
         List<User> users = new ArrayList<>();
         String sql = "SELECT * FROM users";
 
-        try (Statement stmt = connection.createStatement();
+        try (Statement stmt = getConnection().createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
@@ -67,7 +68,7 @@ public class UserService {
         String sql = "UPDATE users SET nom=?, prenom=?, email=?, telephone=?, "
                 + "date_inscription=?, mot_de_passe=?, role=?, badge_image=?, date_naissance=? WHERE id_users=?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setString(1, user.getNom());
             stmt.setString(2, user.getPrenom());
             stmt.setString(3, user.getEmail());
@@ -88,7 +89,7 @@ public class UserService {
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM users WHERE id_users=?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
             System.out.println("User supprimé !");
@@ -98,7 +99,7 @@ public class UserService {
     // ================= HELPERS =================
     public boolean existsByEmail(String email) throws SQLException {
         String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setString(1, email);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -111,7 +112,7 @@ public class UserService {
 
     public boolean existsByEmailExcludeId(String email, int id) throws SQLException {
         String sql = "SELECT COUNT(*) FROM users WHERE email = ? AND id_users != ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setString(1, email);
             stmt.setInt(2, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -127,7 +128,7 @@ public class UserService {
     public User authenticate(String email, String password) throws SQLException {
         String sql = "SELECT * FROM users WHERE email=? AND mot_de_passe=?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setString(1, email);
             stmt.setString(2, password);
 
@@ -141,7 +142,7 @@ public class UserService {
 
     public User getById(int id) throws SQLException {
         String sql = "SELECT * FROM users WHERE id_users=?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setInt(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -154,7 +155,7 @@ public class UserService {
 
     public User getByEmail(String email) throws SQLException {
         String sql = "SELECT * FROM users WHERE email=?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setString(1, email);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -167,7 +168,7 @@ public class UserService {
 
     public void updatePassword(String email, String newPassword) throws SQLException {
         String sql = "UPDATE users SET mot_de_passe=? WHERE email=?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setString(1, newPassword);
             stmt.setString(2, email);
             stmt.executeUpdate();

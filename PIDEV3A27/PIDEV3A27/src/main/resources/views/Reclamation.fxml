@@ -50,7 +50,12 @@
 
         <!-- Description -->
         <VBox spacing="10">
-            <Label text="Description" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #2c3e50;"/>
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="Description" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #2c3e50;"/>
+                <Button fx:id="micButton" text="🎤 Dictée vocale" onAction="#handleMicrophone" 
+                        style="-fx-background-color: #f1f2f6; -fx-text-fill: #2c3e50; -fx-background-radius: 5; -fx-cursor: hand;"/>
+                <Label fx:id="micStatusLabel" text="" style="-fx-text-fill: red; -fx-font-size: 12px;"/>
+            </HBox>
             <TextArea fx:id="descriptionArea" promptText="Décrivez votre réclamation en détail..." 
                       prefHeight="150" wrapText="true"
                       style="-fx-background-color: white; -fx-border-color: #cbd5e0; -fx-border-radius: 8; -fx-padding: 5;"/>
