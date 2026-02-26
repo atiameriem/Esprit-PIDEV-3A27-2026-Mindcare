@@ -1,53 +1,53 @@
 package controllers;
 
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.layout.TilePane;
 import javafx.scene.shape.SVGPath;
 import models.RendezVous;
 import models.RendezVousView;
-import services.ServiceRendezVous;
 import services.ServiceCompteRenduSeance;
 import services.ServiceRecaptcha;
+import services.ServiceRendezVous;
 import utils.MyDatabase;
 import utils.Session;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.SQLException;
-import java.sql.Time;
+import java.sql.*; // ✅ IMPORTANT (PreparedStatement / ResultSet / etc.)
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
-import javafx.scene.control.ComboBox;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
-
+import java.util.List;
+import java.util.Optional;import java.util.stream.Collectors;
 
 /**
- * Patient : CRUD de ses rendez-vous avec popups + contrÃ´le de saisie.
+ * Patient : CRUD de ses rendez-vous + pagination.
  */
 public class RendezVousCrudController {
 
-    // Créneaux autorisés pour la prise de rendez-vous (Patient)
-    // 08:00 → 17:00, pas de 15 minutes
+    // ===================== PAGINATION UI =====================
+    @FXML private Button btnPrev;
+    @FXML private Button btnNext;
+    @FXML private Label pageLabel;
+    @FXML private ComboBox<Integer> pageSizeCombo;
+
+    private int currentPage = 1;
+    private int pageSize = 4;
+
+    // ===================== BUSINESS RULES =====================
     private static final LocalTime SLOT_START = LocalTime.of(8, 0);
     private static final LocalTime SLOT_END = LocalTime.of(17, 0);
     private static final int SLOT_STEP_MIN = 15;
-    // Durée fixe d'un rendez-vous (exigence) : 30 minutes
     private static final int APPOINTMENT_DURATION_MIN = 30;
 
-    /**
-     * Un créneau de début est invalide s'il chevauche un rendez-vous existant.
-     * Chevauchement si : [start, start+dur) intersecte [busy, busy+dur)
-     */
     private static boolean overlaps(LocalTime start, LocalTime busyStart) {
         LocalTime end = start.plusMinutes(APPOINTMENT_DURATION_MIN);
         LocalTime busyEnd = busyStart.plusMinutes(APPOINTMENT_DURATION_MIN);
@@ -60,73 +60,85 @@ public class RendezVousCrudController {
     @FXML private ScrollPane listScroll;
     @FXML private Button patientCompteRenduButton;
 
-
-    //objet qui fait les opÃ©rations SQL (add/update/delete/find)
     private ServiceRendezVous service;
     private final Connection cnx = MyDatabase.getInstance().getConnection();
 
-    //Tu imposes un format pour :
-    //Date : 2026-02-17
-    //Heure : 14:30
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
-
-    // â RÃ¨gles mÃ©tier date :
-    // - pas dans le passÃ©
-    // - pas trop loin (ex: max +6 mois)
-    // (comme tu as demandÃ© : 2025-02-02 impossible (passÃ©) + 2030-02-02 impossible (trop loin))
     private static final int MAX_MONTHS_AHEAD = 6;
 
-    //CrÃ©e le service
-    //Charge la liste au dÃ©but
-    //Ajoute un listener : Ã  chaque lettre tapÃ©e dans search â recharge la liste filtrÃ©e
     @FXML
     public void initialize() {
         service = new ServiceRendezVous(cnx);
-        loadRendezVous();
 
-        // â DemandÃ© : la barre de recherche ne doit pas contenir du texte au chargement.
-        if (searchField != null) {
-            searchField.setText("");
-        }
+        if (searchField != null) searchField.setText("");
 
-        // â DemandÃ© : 2 cartes par ligne SANS scroll horizontal.
-        // On force la largeur des "tiles" Ã  50% (moins les marges).
         if (listScroll != null && rendezVousContainer != null) {
             rendezVousContainer.prefTileWidthProperty()
                     .bind(listScroll.widthProperty().subtract(60).divide(2));
             rendezVousContainer.setPrefColumns(2);
         }
 
-        if (searchField != null) {
-            searchField.textProperty().addListener((obs, o, n) -> loadRendezVous());
-        }
         if (sortCombo != null) {
-            // Affichage correct (UTF-8)
             sortCombo.getItems().addAll(
                     "Date ↑ (croissant)",
                     "Date ↓ (décroissant)"
             );
-
             sortCombo.getSelectionModel().select("Date ↓ (décroissant)");
+        }
 
-            sortCombo.valueProperty().addListener((obs, o, n) -> loadRendezVous());
+        // ✅ Pagination init
+        if (pageSizeCombo != null) {
+            pageSizeCombo.setItems(FXCollections.observableArrayList(4, 6, 8, 10, 12));
+            pageSizeCombo.getSelectionModel().select(Integer.valueOf(pageSize));
+            pageSizeCombo.valueProperty().addListener((obs, oldV, newV) -> {
+                if (newV != null) {
+                    pageSize = newV;
+                    currentPage = 1;
+                    loadRendezVous();
+                }
+            });
+        }
+
+        if (searchField != null) {
+            searchField.textProperty().addListener((obs, o, n) -> {
+                currentPage = 1; // ✅ reset page
+                loadRendezVous();
+            });
+        }
+
+        if (sortCombo != null) {
+            sortCombo.valueProperty().addListener((obs, o, n) -> {
+                currentPage = 1; // ✅ reset page
+                loadRendezVous();
+            });
+        }
+
+        // First load
+        loadRendezVous();
+    }
+
+    // ===================== Pagination actions (called by FXML) =====================
+    @FXML
+    private void prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadRendezVous();
         }
     }
-    //Ajouter un RDV
+
+    @FXML
+    private void nextPage() {
+        currentPage++;
+        loadRendezVous();
+    }
+
+    // ===================== Add RendezVous =====================
     @FXML
     private void handleNewRendezVous() {
-        //showRendezVousDialog(null)
-        //â popup en mode ajout (car existing = null)
         Optional<RendezVous> created = showRendezVousDialog(null);
         created.ifPresent(this::startCaptchaThenInsert);
     }
 
-    /**
-     * Google reCAPTCHA (via navigateur externe) before inserting the appointment.
-     * - If verified: add to DB + message "Validé" + refresh list
-     * - If failed/cancel: message "Échoué" and allow retry; nothing is inserted
-     */
     private void startCaptchaThenInsert(RendezVous rv) {
         var owner = rendezVousContainer != null && rendezVousContainer.getScene() != null
                 ? rendezVousContainer.getScene().getWindow()
@@ -138,7 +150,7 @@ public class RendezVousCrudController {
                     int id = service.addAndReturnId(rv);
                     System.out.println("Inserted rendez_vous id=" + id);
                     showInfo("Validé", "Vérification réussie ✅\nVotre rendez-vous a été ajouté.");
-                    // Redirection = rester sur la page liste RDV + refresh
+                    currentPage = 1;
                     loadRendezVous();
                 } catch (SQLException e) {
                     showError("Erreur Ajout", e);
@@ -152,22 +164,18 @@ public class RendezVousCrudController {
                 ButtonType retry = new ButtonType("Réessayer", ButtonBar.ButtonData.OK_DONE);
                 a.getButtonTypes().setAll(retry, ButtonType.CANCEL);
                 a.showAndWait().ifPresent(bt -> {
-                    if (bt == retry) {
-                        startCaptchaThenInsert(rv);
-                    }
+                    if (bt == retry) startCaptchaThenInsert(rv);
                 });
             }
         });
     }
-    //Modifier un RDV
+
+    // ===================== Edit / Delete =====================
     private void handleEdit(RendezVous existing) {
         Optional<RendezVous> updated = showRendezVousDialog(existing);
-        //Si le patient valide tu fais update
         updated.ifPresent(rv -> {
             try {
-                //(jai choisis nom du psy)
                 rv.setIdRv(existing.getIdRv());
-                //le service doit vÃ©rifier id_patient = Session.getUserId()
                 service.updateForPatient(rv, Session.getUserId());
                 loadRendezVous();
             } catch (SQLException e) {
@@ -185,8 +193,8 @@ public class RendezVousCrudController {
         alert.showAndWait().ifPresent(r -> {
             if (r == ButtonType.OK) {
                 try {
-                    //â Ici aussi, âForPatientâ = sÃ©curitÃ© (ne supprimer que ses RDV).
                     service.deleteForPatient(rv.getIdRv(), Session.getUserId());
+                    // si page devient vide, on recale
                     loadRendezVous();
                 } catch (SQLException e) {
                     showError("Erreur Suppression", e);
@@ -195,8 +203,6 @@ public class RendezVousCrudController {
         });
     }
 
-    // â Overload : certains appels passent par l'entitÃ© (RendezVous) et non la vue (RendezVousView)
-    //    On garde les deux signatures pour Ã©viter de casser le reste du code.
     private void handleDelete(RendezVous rv) {
         if (rv == null) return;
 
@@ -208,7 +214,6 @@ public class RendezVousCrudController {
         alert.showAndWait().ifPresent(r -> {
             if (r == ButtonType.OK) {
                 try {
-                    //â SÃ©curitÃ© : ne supprimer que SES RDV (patient connectÃ©)
                     service.deleteForPatient(rv.getIdRv(), Session.getUserId());
                     loadRendezVous();
                 } catch (Exception ex) {
@@ -219,11 +224,12 @@ public class RendezVousCrudController {
         });
     }
 
+    // ===================== LOAD + FILTER + SORT + PAGINATION =====================
     private void loadRendezVous() {
         try {
             List<RendezVousView> list = service.findViewsByPatient(Session.getUserId());
 
-            // â Patient : afficher le bouton "Mes comptes-rendus" uniquement si le patient a au moins 1 CR.
+            // Button "Mes comptes-rendus"
             if (patientCompteRenduButton != null) {
                 try {
                     ServiceCompteRenduSeance crService = new ServiceCompteRenduSeance(cnx);
@@ -231,12 +237,12 @@ public class RendezVousCrudController {
                     patientCompteRenduButton.setVisible(hasAny);
                     patientCompteRenduButton.setManaged(hasAny);
                 } catch (SQLException ignore) {
-                    // Si erreur CR, on cache le bouton sans casser l'Ã©cran
                     patientCompteRenduButton.setVisible(false);
                     patientCompteRenduButton.setManaged(false);
                 }
             }
 
+            // Filter
             String kw = (searchField == null) ? "" : searchField.getText().toLowerCase().trim();
             if (!kw.isEmpty()) {
                 list = list.stream().filter(rv ->
@@ -247,28 +253,41 @@ public class RendezVousCrudController {
                                 || (rv.getTypeRendezVous() != null && rv.getTypeRendezVous().name().toLowerCase().contains(kw))
                                 || (rv.getAppointmentDate() != null && rv.getAppointmentDate().toString().toLowerCase().contains(kw))
                                 || (rv.getAppointmentTimeRv() != null && rv.getAppointmentTimeRv().toString().toLowerCase().contains(kw))
-                ).collect(java.util.stream.Collectors.toList());
+                                || (rv.getPsychologistFullName() != null && rv.getPsychologistFullName().toLowerCase().contains(kw))
+                ).collect(Collectors.toList());
             }
-            // â TRI (date croissant / dÃ©croissant)
+
+            // Sort
             String sort = (sortCombo == null || sortCombo.getValue() == null) ? "" : sortCombo.getValue();
 
-            //On dÃ©clare un comparateur byDateTime
             Comparator<RendezVousView> byDateTime = Comparator
-                    //on trie dâabord selon la date
-                    // getAppo mÃ©thode utilisÃ©e pour prendre la date de chaque rendez-vous.
-                    //tri naturel croissant
-                    //nullsLast(...) = si la date est null,
-                    // on met cet Ã©lÃ©ment Ã  la fin (pour Ã©viter erreur).
-                    //si deux rendez-vous ont la mÃªme date, alors compare aussi lâheure
                     .comparing(RendezVousView::getAppointmentDate, Comparator.nullsLast(Comparator.naturalOrder()))
                     .thenComparing(RendezVousView::getAppointmentTimeRv, Comparator.nullsLast(Comparator.naturalOrder()));
 
-            if ("Date ↑ (croissant)".equals(sort)) {
-                list.sort(byDateTime);
-            } else if ("Date ↓ (décroissant)".equals(sort)) {
-                list.sort(byDateTime.reversed());
-            }
-// si rien choisi â on laisse lâordre SQL par dÃ©faut
+            if ("Date ↑ (croissant)".equals(sort)) list.sort(byDateTime);
+            else if ("Date ↓ (décroissant)".equals(sort)) list.sort(byDateTime.reversed());
+
+            // ---------------- PAGINATION ----------------
+            int totalItems = list.size();
+            int totalPages = (int) Math.ceil(totalItems / (double) pageSize);
+            if (totalPages == 0) totalPages = 1;
+
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            int fromIndex = (currentPage - 1) * pageSize;
+            int toIndex = Math.min(fromIndex + pageSize, totalItems);
+
+            List<RendezVousView> pageList =
+                    totalItems == 0 ? Collections.emptyList() : list.subList(fromIndex, toIndex);
+
+            if (pageLabel != null) pageLabel.setText("Page " + currentPage + "/" + totalPages);
+            if (btnPrev != null) btnPrev.setDisable(currentPage <= 1);
+            if (btnNext != null) btnNext.setDisable(currentPage >= totalPages);
+
+            // show only pageList
+            list = pageList;
+            // --------------------------------------------
 
             rendezVousContainer.getChildren().clear();
 
@@ -279,7 +298,6 @@ public class RendezVousCrudController {
                 return;
             }
 
-            // â TilePane : on ajoute directement les cards (pas de HBox intermÃ©diaire)
             for (RendezVousView rv : list) {
                 rendezVousContainer.getChildren().add(buildCard(rv));
             }
@@ -289,7 +307,7 @@ public class RendezVousCrudController {
         }
     }
 
-    // â Patient : ouvrir la page de lecture des comptes-rendus
+    // ===================== Navigation =====================
     @FXML
     private void openCompteRenduRead() {
         try {
@@ -306,8 +324,7 @@ public class RendezVousCrudController {
         }
     }
 
-    // ===== POPUP =====
-
+    // ===================== Dialog (Add/Edit) =====================
     private Optional<RendezVous> showRendezVousDialog(RendezVous existing) {
         boolean isEdit = existing != null;
 
@@ -324,18 +341,10 @@ public class RendezVousCrudController {
         psyCombo.setMaxWidth(Double.MAX_VALUE);
         psyCombo.setItems(FXCollections.observableArrayList(loadPsychologists()));
 
-        // â DatePicker = calendrier (plus pratique que TextField)
         DatePicker datePicker = new DatePicker();
 
-        // â Time picker : créneaux disponibles (08:00 â 17:00)
-        // Le patient ne peut pas choisir un créneau déjà réservé par un autre patient.
-
-        // ✅ Time picker PRO : créneaux disponibles via popup (chips) (08:00 → 17:00)
-        // - Pas de liste déroulante "moche"
-        // - Affichage pro : champ + bouton 🕒 qui ouvre un mini-sélecteur
-        // - Créneaux dépendants de la disponibilité du psychologue + date
         var availableSlots = FXCollections.<LocalTime>observableArrayList();
-        var selectedTime = new javafx.beans.property.SimpleObjectProperty<LocalTime>();
+        var selectedTime = new SimpleObjectProperty<LocalTime>();
 
         TextField timeField = new TextField();
         timeField.setPromptText("Choisir une heure");
@@ -353,27 +362,20 @@ public class RendezVousCrudController {
         timePickBtn.getStyleClass().add("icon-btn");
         timePickBtn.setDisable(true);
 
-        // Synchroniser affichage champ ↔ selectedTime
         selectedTime.addListener((obs, oldV, newV) -> {
             timeField.setText(newV == null ? "" : String.format("%02d:%02d", newV.getHour(), newV.getMinute()));
         });
 
-        // Ouvrir le sélecteur de créneaux (popup)
         timePickBtn.setOnAction(evt -> {
             if (availableSlots.isEmpty()) return;
             LocalDate d = datePicker.getValue();
             LocalTime current = selectedTime.get();
             LocalTime chosen = showTimeSlotDialog(d, availableSlots, current);
-            if (chosen != null) {
-                selectedTime.set(chosen);
-            }
+            if (chosen != null) selectedTime.set(chosen);
         });
 
         HBox timeBox = new HBox(10, timePickBtn, timeField);
         timeBox.setAlignment(Pos.CENTER_LEFT);
-
-
-
 
         ComboBox<RendezVous.TypeRV> typeCombo =
                 new ComboBox<>(FXCollections.observableArrayList(RendezVous.TypeRV.values()));
@@ -384,9 +386,7 @@ public class RendezVousCrudController {
         if (isEdit) {
             selectPsychologist(psyCombo, existing.getIdPsychologist());
             if (existing.getAppointmentDate() != null) datePicker.setValue(existing.getAppointmentDate().toLocalDate());
-            if (existing.getAppointmentTimeRv() != null) {
-                selectedTime.set(existing.getAppointmentTimeRv().toLocalTime());
-            }
+            if (existing.getAppointmentTimeRv() != null) selectedTime.set(existing.getAppointmentTimeRv().toLocalTime());
             typeCombo.setValue(existing.getTypeRendezVous());
         } else {
             datePicker.setValue(LocalDate.now());
@@ -408,9 +408,6 @@ public class RendezVousCrudController {
         grid.add(new Label("Heure"), 0, 2);
         grid.add(timeBox, 1, 2);
 
-        // â Le statut n'est plus choisi par le patient.
-        // Il sera gÃ©rÃ© par le psychologue (termine / en_cours) aprÃ¨s confirmation.
-
         grid.add(new Label("Type"), 0, 3);
         grid.add(typeCombo, 1, 3);
 
@@ -425,45 +422,37 @@ public class RendezVousCrudController {
         Node saveBtn = dialog.getDialogPane().lookupButton(saveType);
         saveBtn.setDisable(true);
 
-        // â Recharge les créneaux disponibles selon (psychologue + date)
         Runnable refreshSlots = () -> {
             PsyItem sel = psyCombo.getValue();
             int idPsy = (sel == null) ? -1 : sel.getId();
             LocalDate d = datePicker.getValue();
 
-            // reset (UI + data)
             availableSlots.clear();
             selectedTime.set(null);
             timePickBtn.setDisable(true);
 
-            // Tant que le patient n'a pas choisi (psychologue + date), on n'affiche pas de créneaux.
             if (idPsy <= 0 || d == null) {
                 hint.setText("Choisissez d'abord un psychologue et une date.");
                 return;
             }
 
-            // On a bien les infos nécessaires → on peut activer le bouton 🕒
             timePickBtn.setDisable(false);
 
             try {
-                // Vérifier psy existe
                 if (!service.isPsychologistUser(idPsy)) {
-                    hint.setText("Psychologue invalide : vérifiez que l'utilisateur existe et a le rôle 'psychologue'.");
+                    hint.setText("Psychologue invalide : doit exister avec role='psychologue'.");
                     timePickBtn.setDisable(true);
                     return;
                 }
 
                 var reserved = service.getReservedTimes(idPsy, d, isEdit ? existing.getIdRv() : null);
 
-                // Dernier début autorisé = 17:00 - durée (ex: 16:30 si durée=30)
                 LocalTime lastStart = SLOT_END.minusMinutes(APPOINTMENT_DURATION_MIN);
 
                 LocalTime t = SLOT_START;
                 LocalTime now = LocalTime.now().withSecond(0).withNano(0);
                 while (!t.isAfter(lastStart)) {
-                    // Aujourd'hui : bloquer les créneaux passés
                     if (!d.equals(LocalDate.now()) || !t.isBefore(now)) {
-                        // Bloquer si chevauche un RDV existant (durée fixe)
                         boolean overlapsExisting = false;
                         for (LocalTime busyStart : reserved) {
                             if (overlaps(t, busyStart)) {
@@ -471,14 +460,11 @@ public class RendezVousCrudController {
                                 break;
                             }
                         }
-                        if (!overlapsExisting) {
-                            availableSlots.add(t);
-                        }
+                        if (!overlapsExisting) availableSlots.add(t);
                     }
                     t = t.plusMinutes(SLOT_STEP_MIN);
                 }
 
-                // Inclure l'heure existante (edit) si besoin
                 LocalTime old = null;
                 if (isEdit && existing.getAppointmentTimeRv() != null) {
                     old = existing.getAppointmentTimeRv().toLocalTime();
@@ -490,9 +476,7 @@ public class RendezVousCrudController {
                                 break;
                             }
                         }
-                        if (!overlapsExisting) {
-                            availableSlots.add(old);
-                        }
+                        if (!overlapsExisting) availableSlots.add(old);
                     }
                 }
 
@@ -504,13 +488,8 @@ public class RendezVousCrudController {
                     return;
                 }
 
-                // Pré-sélection : garder l'ancien créneau si encore dispo, sinon le premier
-                if (old != null && availableSlots.contains(old)) {
-                    selectedTime.set(old);
-                }
-                if (selectedTime.get() == null) {
-                    selectedTime.set(availableSlots.get(0));
-                }
+                if (old != null && availableSlots.contains(old)) selectedTime.set(old);
+                if (selectedTime.get() == null) selectedTime.set(availableSlots.get(0));
 
                 hint.setText("");
 
@@ -523,26 +502,16 @@ public class RendezVousCrudController {
 
         Runnable validate = () -> {
             hint.setText("");
-            boolean ok = true;
 
-            int idPsy;
-            try {
-                PsyItem selPsy = psyCombo.getValue();
-                idPsy = (selPsy == null) ? -1 : selPsy.getId();
-            }
-            catch (Exception e) {
-                saveBtn.setDisable(true);
-                return;
-            }
+            PsyItem selPsy = psyCombo.getValue();
+            int idPsy = (selPsy == null) ? -1 : selPsy.getId();
 
-            // â Date : obligatoire + rÃ¨gle (pas passÃ© + pas trop loin)
             LocalDate d = datePicker.getValue();
-            if (d == null) {
-                saveBtn.setDisable(true);
-                return;
-            }
+            if (d == null) { saveBtn.setDisable(true); return; }
+
             LocalDate today = LocalDate.now();
             LocalDate maxDate = today.plusMonths(MAX_MONTHS_AHEAD);
+
             if (d.isBefore(today)) {
                 hint.setText("Date invalide : vous ne pouvez pas choisir une date passée.");
                 saveBtn.setDisable(true);
@@ -554,23 +523,14 @@ public class RendezVousCrudController {
                 return;
             }
 
-            // â Time : créneau sélectionné
             LocalTime selected = selectedTime.get();
-            if (selected == null) {
-                saveBtn.setDisable(true);
-                return;
-            }
-            ok = ok && typeCombo.getValue() != null;
+            if (selected == null) { saveBtn.setDisable(true); return; }
 
-            if (!ok) {
-                saveBtn.setDisable(true);
-                return;
-            }
+            if (typeCombo.getValue() == null) { saveBtn.setDisable(true); return; }
 
-            // vÃ©rifier psy existe
             try {
                 if (!service.isPsychologistUser(idPsy)) {
-                    hint.setText("ID psychologue invalide (doit exister dans users avec role=psychologue). ");
+                    hint.setText("ID psychologue invalide (role=psychologue).");
                     saveBtn.setDisable(true);
                     return;
                 }
@@ -580,7 +540,6 @@ public class RendezVousCrudController {
                 return;
             }
 
-            // ok
             saveBtn.setDisable(false);
         };
 
@@ -602,8 +561,8 @@ public class RendezVousCrudController {
                 return new RendezVous(
                         Session.getUserId(),
                         psyId,
-                        null, // â statutrv = choisi plus tard par le psychologue
-                        RendezVous.ConfirmationStatus.en_attente, // â ajout/Ã©dition cÃ´tÃ© patient = en_attente
+                        null,
+                        RendezVous.ConfirmationStatus.en_attente,
                         Date.valueOf(d),
                         typeCombo.getValue(),
                         Time.valueOf(t)
@@ -615,13 +574,11 @@ public class RendezVousCrudController {
         return dialog.showAndWait();
     }
 
-    // ===== CARD UI =====
-
+    // ===================== Card UI =====================
     private VBox buildCard(RendezVousView rv) {
         VBox card = new VBox(12);
         HBox.setHgrow(card, Priority.ALWAYS);
 
-        // â UI : si rendez-vous confirmÃ©/annulÃ© => le patient ne peut plus modifier/supprimer.
         boolean locked = rv.getConfirmationStatus() != null
                 && rv.getConfirmationStatus() != RendezVous.ConfirmationStatus.en_attente;
 
@@ -641,9 +598,7 @@ public class RendezVousCrudController {
                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);
                 """);
 
-        // â Deux cartes par ligne : la largeur est gÃ©rÃ©e par le TilePane (binding sur prefTileWidth)
         card.setMaxWidth(Double.MAX_VALUE);
-
 
         HBox dateRow = new HBox(8);
         dateRow.setAlignment(Pos.CENTER_LEFT);
@@ -657,7 +612,6 @@ public class RendezVousCrudController {
         String timeTxt = rv.getAppointmentTimeRv() == null ? "" : rv.getAppointmentTimeRv().toString();
         Label dateLabel = new Label(dateTxt + "  ·  " + timeTxt);
         dateLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #334155; -fx-font-weight: 700;");
-
         dateRow.getChildren().addAll(calIcon, dateLabel);
 
         Label title = new Label("Rendez-vous");
@@ -666,8 +620,6 @@ public class RendezVousCrudController {
         String psyName = rv.getPsychologistFullName() == null || rv.getPsychologistFullName().isBlank()
                 ? "Psychologue"
                 : rv.getPsychologistFullName();
-        Label psyLabel = new Label(psyName);
-        psyLabel.setStyle("-fx-font-size: 13px; -fx-text-fill:#222;");
 
         HBox psyRow = new HBox(8);
         psyRow.setAlignment(Pos.CENTER_LEFT);
@@ -677,8 +629,9 @@ public class RendezVousCrudController {
                 "#2563EB", 14, 14
         );
 
+        Label psyLabel = new Label(psyName);
+        psyLabel.setStyle("-fx-font-size: 13px; -fx-text-fill:#222;");
         psyRow.getChildren().addAll(psyIcon, psyLabel);
-
 
         HBox badges = new HBox(10);
         badges.setAlignment(Pos.CENTER_LEFT);
@@ -687,27 +640,18 @@ public class RendezVousCrudController {
         if (typeBadge != null) badges.getChildren().add(typeBadge);
         if (statutBadge != null) badges.getChildren().add(statutBadge);
 
-
-        // Informations (patient connecté) — même affichage que côté psychologue
         String fullName = (Session.getFullName() == null ? "" : Session.getFullName());
-        String info = "Patient : " + fullName;
-        VBox details = buildSection("INFORMATIONS", info, "ℹ️");
+        VBox details = buildSection("INFORMATIONS", "Patient : " + fullName, "ℹ️");
 
-        // â Actions (cÃ´tÃ© patient)
-// - Tant que c'est "En attente" : le patient peut modifier / annuler (supprimer)
-// - DÃ¨s que c'est confirmÃ© ou annulÃ© : on bloque les actions
         HBox btns = new HBox(10);
         btns.setAlignment(Pos.CENTER_LEFT);
 
-// â Boutons icÃ´nes (modifier / annuler) demandÃ©s
         Button editBtn = iconButton(
                 svgIcon("M4 21h4l11-11-4-4L4 17v4z M14 6l4 4", "#FFFFFF", 16, 16),
                 "Modifier", "#2563EB"
         );
-        if (!locked) {
-            editBtn.setOnAction(e -> handleEdit(toEntity(rv)));
-        } else {
-            // â DemandÃ© : quand c'est confirmÃ©/annulÃ© => aucune action possible (pas cliquable)
+        if (!locked) editBtn.setOnAction(e -> handleEdit(toEntity(rv)));
+        else {
             editBtn.setDisable(true);
             editBtn.setMouseTransparent(true);
             editBtn.setOpacity(0.45);
@@ -717,9 +661,8 @@ public class RendezVousCrudController {
                 svgIcon("M6 7h12l-1 14H7L6 7zm3-3h6l1 2H8l1-2z", "#FFFFFF", 16, 16),
                 "Annuler", "#DC2626"
         );
-        if (!locked) {
-            delBtn.setOnAction(e -> handleDelete(toEntity(rv)));
-        } else {
+        if (!locked) delBtn.setOnAction(e -> handleDelete(toEntity(rv)));
+        else {
             delBtn.setDisable(true);
             delBtn.setMouseTransparent(true);
             delBtn.setOpacity(0.45);
@@ -727,39 +670,39 @@ public class RendezVousCrudController {
 
         btns.getChildren().addAll(editBtn, delBtn);
 
-        // â Hint visuel quand le rendez-vous est verrouillÃ© (confirmÃ©/annulÃ©)
         Label lockedHint = new Label("🔒 Rendez-vous verrouillé (déjà traité par le psychologue)");
         lockedHint.setStyle("-fx-text-fill:#64748B; -fx-font-size:12px; -fx-padding: 4 0 0 0;");
         lockedHint.setVisible(locked);
         lockedHint.setManaged(locked);
 
-
-        card.getChildren().addAll(dateRow, buildTopStatusRow(rv.getConfirmationStatus(), locked), title, psyRow, badges, details, btns, lockedHint);
+        card.getChildren().addAll(
+                dateRow,
+                buildTopStatusRow(rv.getConfirmationStatus(), locked),
+                title,
+                psyRow,
+                badges,
+                details,
+                btns,
+                lockedHint
+        );
         return card;
     }
 
     private Label buildStatutBadge(RendezVous.StatutRV statut) {
+        if (statut == null) return null;
+
         String text;
         String style;
-        if (statut == null) {
-            // â DemandÃ© : ne pas afficher "Statut inconnu" (on masque le badge si null)
-            return null;
-        } else {
-            switch (statut) {
-                case termine -> { text = "Terminé"; style = "-fx-background-color:#DCFCE7; -fx-text-fill:#16A34A;"; }
-                case en_cours -> { text = "En cours"; style = "-fx-background-color:#DBEAFE; -fx-text-fill:#1D4ED8;"; }
-                default -> { text = statut.name(); style = "-fx-background-color:#F1F5F9; -fx-text-fill:#64748B;"; }
-            }
+        switch (statut) {
+            case termine -> { text = "Terminé"; style = "-fx-background-color:#DCFCE7; -fx-text-fill:#16A34A;"; }
+            case en_cours -> { text = "En cours"; style = "-fx-background-color:#DBEAFE; -fx-text-fill:#1D4ED8;"; }
+            default -> { text = statut.name(); style = "-fx-background-color:#F1F5F9; -fx-text-fill:#64748B;"; }
         }
         Label badge = new Label("📌  " + text);
         badge.setStyle(style + "-fx-padding: 6 12; -fx-background-radius: 15; -fx-font-size: 11px; -fx-font-weight: bold;");
         return badge;
     }
 
-    // â Badge confirmation_status (visible patient + psy)
-    // ===================== NOUVEL AFFICHAGE : statut en haut =====================
-// ✅ Affiche "EN ATTENTE / CONFIRMÉ / ANNULÉ" tout en haut de la carte
-//    (plus visible que les petits badges).
     private HBox buildTopStatusRow(RendezVous.ConfirmationStatus status, boolean locked) {
         HBox row = new HBox();
         row.setAlignment(Pos.CENTER_LEFT);
@@ -780,36 +723,16 @@ public class RendezVousCrudController {
 
         Label pill = new Label(txt);
         pill.setStyle(style + "-fx-padding: 6 12; -fx-background-radius: 999; -fx-font-size: 12px; -fx-font-weight: 800;");
-
-        // ✅ Si verrouillé : on diminue un peu l'opacité pour indiquer "read-only"
         if (locked) pill.setOpacity(0.85);
 
         row.getChildren().add(pill);
         return row;
     }
 
-    private Label buildConfirmationBadge(RendezVous.ConfirmationStatus status) {
-        String text;
-        String style;
-        if (status == null) {
-            text = "En attente";
-            style = "-fx-background-color:#FEF3C7; -fx-text-fill:#B45309;";
-        } else {
-            switch (status) {
-                case en_attente -> { text = "En attente"; style = "-fx-background-color:#FEF3C7; -fx-text-fill:#B45309;"; }
-                case confirme -> { text = "Confirmé"; style = "-fx-background-color:#DCFCE7; -fx-text-fill:#16A34A;"; }
-                case annule -> { text = "Annulé"; style = "-fx-background-color:#FEE2E2; -fx-text-fill:#DC2626;"; }
-                default -> { text = status.name(); style = "-fx-background-color:#F1F5F9; -fx-text-fill:#64748B;"; }
-            }
-        }
-        Label badge = new Label("⏳  " + text);
-        badge.setStyle(style + "-fx-padding: 6 12; -fx-background-radius: 15; -fx-font-size: 11px; -fx-font-weight: bold;");
-        return badge;
-    }
-
     private Label buildTypeBadge(RendezVous.TypeRV type) {
         String text;
         String style;
+
         if (type == null) {
             text = "Type inconnu";
             style = "-fx-background-color:#F1F5F9; -fx-text-fill:#64748B;";
@@ -821,11 +744,11 @@ public class RendezVousCrudController {
                 default -> { text = type.name(); style = "-fx-background-color:#F1F5F9; -fx-text-fill:#64748B;"; }
             }
         }
+
         Label badge = new Label("🏷️  " + text);
         badge.setStyle(style + "-fx-padding: 6 12; -fx-background-radius: 15; -fx-font-size: 11px; -fx-font-weight: bold;");
         return badge;
     }
-
 
     private VBox buildSection(String titleText, String content, String emoji) {
         VBox box = new VBox(4);
@@ -841,8 +764,6 @@ public class RendezVousCrudController {
         return box;
     }
 
-
-    // â Petit bouton icÃ´ne (plus lisible que texte, demandÃ©)
     private Button iconButton(Region icon, String tooltipText, String bgColor) {
         Button b = new Button();
         b.setGraphic(icon);
@@ -851,7 +772,7 @@ public class RendezVousCrudController {
         b.setMaxSize(36, 36);
         b.setStyle("-fx-background-color: " + bgColor + "; -fx-background-radius: 10; -fx-cursor: hand;");
         if (tooltipText != null && !tooltipText.isBlank()) {
-            javafx.scene.control.Tooltip.install(b, new javafx.scene.control.Tooltip(tooltipText));
+            Tooltip.install(b, new Tooltip(tooltipText));
         }
         return b;
     }
@@ -878,7 +799,6 @@ public class RendezVousCrudController {
         a.showAndWait();
     }
 
-    // â Overload simple : afficher une erreur avec un message (sans Exception)
     private void showError(String title, String message) {
         Alert a = new Alert(Alert.AlertType.ERROR);
         a.setTitle(title);
@@ -895,9 +815,7 @@ public class RendezVousCrudController {
         a.showAndWait();
     }
 
-
-    // ===== Helpers psychologues (pour afficher le nom au lieu de l'ID) =====
-
+    // ===================== Psychologists helpers =====================
     private static class PsyItem {
         private final int id;
         private final String fullName;
@@ -917,16 +835,15 @@ public class RendezVousCrudController {
 
     private List<PsyItem> loadPsychologists() {
         String sql = "SELECT id_users, prenom, nom FROM users WHERE role = 'psychologue' ORDER BY prenom, nom";
-        List<PsyItem> out = new java.util.ArrayList<>();
-        try (java.sql.PreparedStatement pst = cnx.prepareStatement(sql);
-             java.sql.ResultSet rs = pst.executeQuery()) {
+        List<PsyItem> out = new ArrayList<>();
+        try (PreparedStatement pst = cnx.prepareStatement(sql);
+             ResultSet rs = pst.executeQuery()) {
             while (rs.next()) {
                 int id = rs.getInt("id_users");
                 String fullName = rs.getString("prenom") + " " + rs.getString("nom");
                 out.add(new PsyItem(id, fullName));
             }
         } catch (SQLException e) {
-            // si la liste ne charge pas, on laisse le combo vide mais on affiche l'erreur
             showError("Erreur chargement psychologues", e);
         }
         return out;
@@ -955,11 +872,8 @@ public class RendezVousCrudController {
         return r;
     }
 
-
-
     /**
-     * Mini sélecteur d'heure "pro" (chips) : remplace la ComboBox.
-     * Retourne l'heure choisie (08:00 → 17:00) parmi les créneaux disponibles.
+     * Sélecteur d'heure "chips"
      */
     private LocalTime showTimeSlotDialog(LocalDate date, List<LocalTime> slots, LocalTime current) {
         Dialog<LocalTime> dialog = new Dialog<>();
@@ -976,14 +890,12 @@ public class RendezVousCrudController {
         grid.setPadding(new Insets(12));
         grid.setPrefWrapLength(420);
 
-        // Chips (ToggleButtons)
         for (LocalTime t : slots) {
             ToggleButton b = new ToggleButton(String.format("%02d:%02d", t.getHour(), t.getMinute()));
             b.setUserData(t);
             b.setToggleGroup(group);
             b.setFocusTraversable(false);
 
-            // style "pill"
             b.setStyle(
                     "-fx-background-radius: 999;" +
                             "-fx-border-radius: 999;" +
@@ -993,15 +905,6 @@ public class RendezVousCrudController {
                             "-fx-border-color: rgba(15, 118, 110, 0.35);" +
                             "-fx-text-fill: #0f172a;"
             );
-
-            // hover + selected
-            b.hoverProperty().addListener((obs, was, is) -> {
-                if (!b.isSelected()) {
-                    b.setStyle(b.getStyle() + (is
-                            ? "-fx-border-color: rgba(15, 118, 110, 0.75);"
-                            : "-fx-border-color: rgba(15, 118, 110, 0.35);"));
-                }
-            });
 
             b.selectedProperty().addListener((obs, was, is) -> {
                 if (is) {
@@ -1027,10 +930,7 @@ public class RendezVousCrudController {
                 }
             });
 
-            // présélection
-            if (current != null && current.equals(t)) {
-                b.setSelected(true);
-            }
+            if (current != null && current.equals(t)) b.setSelected(true);
 
             grid.getChildren().add(b);
         }
@@ -1045,9 +945,7 @@ public class RendezVousCrudController {
         Node okBtn = dialog.getDialogPane().lookupButton(okType);
         okBtn.setDisable(group.getSelectedToggle() == null);
 
-        group.selectedToggleProperty().addListener((obs, old, sel) -> {
-            okBtn.setDisable(sel == null);
-        });
+        group.selectedToggleProperty().addListener((obs, old, sel) -> okBtn.setDisable(sel == null));
 
         dialog.setResultConverter(btn -> {
             if (btn == okType) {
@@ -1059,5 +957,4 @@ public class RendezVousCrudController {
 
         return dialog.showAndWait().orElse(null);
     }
-
 }

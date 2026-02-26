@@ -1,40 +1,32 @@
 package controllers;
 
-import java.net.URL;
+import com.twilio.Twilio;
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.shape.SVGPath;
+import javafx.stage.Stage;
 import models.RendezVous;
 import models.RendezVousView;
 import services.ServiceRendezVous;
 import utils.MyDatabase;
 import utils.Session;
 
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
-import javafx.scene.control.ComboBox;
-import java.util.Comparator;
+import java.util.*;
+import java.util.stream.Collectors;
 
-// pour stat
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-
-// ✅ Twilio imports (comme ton exemple vidéo)
-import com.twilio.Twilio;
-import com.twilio.rest.api.v2010.account.Message;
-import com.twilio.type.PhoneNumber;
-import javafx.scene.Node;
 /**
- * Psychologue : lecture seule de SES rendez-vous.
+ * Psychologue : lecture + actions + pagination.
  */
 public class RendezVousController {
 
@@ -44,47 +36,44 @@ public class RendezVousController {
     @FXML private Button terminatedConsultationsButton;
     @FXML private ScrollPane listScroll;
 
+    // Pagination UI
+    @FXML private Button btnPrev;
+    @FXML private Button btnNext;
+    @FXML private Label pageLabel;
+    @FXML private ComboBox<Integer> pageSizeCombo;
+
+    private int currentPage = 1;
+    private int pageSize = 4;
+
     private ServiceRendezVous service;
     private final Connection cnx = MyDatabase.getInstance().getConnection();
 
-    // ===================== TWILIO (tout dans ce fichier comme la vidéo) =====================
-    // 🔴 Remplace par TES vraies valeurs (ACCOUNT SID commence par AC)
-    private static final String ACCOUNT_SID = "";
-    private static final String AUTH_TOKEN  = "";
-    // Ton numéro Twilio
+    // ===================== TWILIO =====================
+    private static final String ACCOUNT_SID = ""; // TODO: fill
+    private static final String AUTH_TOKEN  = ""; // TODO: fill
     private static final String TWILIO_FROM = "+12693903908";
 
     private void sendSmsTwilio(String to, String body) {
-        // to doit être en format international: +216xxxxxxxx
         Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
-
         Message message = Message.creator(
                 new PhoneNumber(to),
                 new PhoneNumber(TWILIO_FROM),
                 body
         ).create();
-
         System.out.println("SMS sent! SID: " + message.getSid());
     }
-    // =======================================================================================
+    // ================================================
 
     @FXML
     public void initialize() {
         service = new ServiceRendezVous(cnx);
-        loadRendezVous();
 
-        if (searchField != null) {
-            searchField.setText("");
-        }
+        if (searchField != null) searchField.setText("");
 
         if (listScroll != null && rendezVousContainer != null) {
             rendezVousContainer.prefTileWidthProperty()
                     .bind(listScroll.widthProperty().subtract(60).divide(2));
             rendezVousContainer.setPrefColumns(2);
-        }
-
-        if (searchField != null) {
-            searchField.textProperty().addListener((obs, o, n) -> loadRendezVous());
         }
 
         if (sortCombo != null) {
@@ -93,8 +82,51 @@ public class RendezVousController {
                     "Date ↓ (décroissant)"
             );
             sortCombo.getSelectionModel().select("Date ↓ (décroissant)");
-            sortCombo.valueProperty().addListener((obs, o, n) -> loadRendezVous());
         }
+
+        // ✅ Pagination init
+        if (pageSizeCombo != null) {
+            pageSizeCombo.setItems(javafx.collections.FXCollections.observableArrayList(4, 6, 8, 10, 12));
+            pageSizeCombo.getSelectionModel().select(Integer.valueOf(pageSize));
+            pageSizeCombo.valueProperty().addListener((obs, oldV, newV) -> {
+                if (newV != null) {
+                    pageSize = newV;
+                    currentPage = 1;
+                    loadRendezVous();
+                }
+            });
+        }
+
+        if (searchField != null) {
+            searchField.textProperty().addListener((obs, o, n) -> {
+                currentPage = 1;
+                loadRendezVous();
+            });
+        }
+
+        if (sortCombo != null) {
+            sortCombo.valueProperty().addListener((obs, o, n) -> {
+                currentPage = 1;
+                loadRendezVous();
+            });
+        }
+
+        loadRendezVous();
+    }
+
+    // Pagination actions
+    @FXML
+    private void prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadRendezVous();
+        }
+    }
+
+    @FXML
+    private void nextPage() {
+        currentPage++;
+        loadRendezVous();
     }
 
     private void loadRendezVous() {
@@ -111,6 +143,7 @@ public class RendezVousController {
                 terminatedConsultationsButton.setManaged(hasTermine);
             }
 
+            // Filter
             String kw = (searchField == null) ? "" : searchField.getText().toLowerCase().trim();
             if (!kw.isEmpty()) {
                 list = list.stream().filter(rv ->
@@ -122,20 +155,39 @@ public class RendezVousController {
                                 || (rv.getTypeRendezVous() != null && rv.getTypeRendezVous().name().toLowerCase().contains(kw))
                                 || (rv.getAppointmentDate() != null && rv.getAppointmentDate().toString().toLowerCase().contains(kw))
                                 || (rv.getAppointmentTimeRv() != null && rv.getAppointmentTimeRv().toString().toLowerCase().contains(kw))
-                ).collect(java.util.stream.Collectors.toList());
+                ).collect(Collectors.toList());
             }
 
+            // Sort
             String sort = (sortCombo == null || sortCombo.getValue() == null) ? "" : sortCombo.getValue();
 
             Comparator<RendezVousView> byDateTime = Comparator
                     .comparing(RendezVousView::getAppointmentDate, Comparator.nullsLast(Comparator.naturalOrder()))
                     .thenComparing(RendezVousView::getAppointmentTimeRv, Comparator.nullsLast(Comparator.naturalOrder()));
 
-            if ("Date ↑ (croissant)".equals(sort)) {
-                list.sort(byDateTime);
-            } else if ("Date ↓ (décroissant)".equals(sort)) {
-                list.sort(byDateTime.reversed());
-            }
+            if ("Date ↑ (croissant)".equals(sort)) list.sort(byDateTime);
+            else if ("Date ↓ (décroissant)".equals(sort)) list.sort(byDateTime.reversed());
+
+            // ---------------- PAGINATION ----------------
+            int totalItems = list.size();
+            int totalPages = (int) Math.ceil(totalItems / (double) pageSize);
+            if (totalPages == 0) totalPages = 1;
+
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            int fromIndex = (currentPage - 1) * pageSize;
+            int toIndex = Math.min(fromIndex + pageSize, totalItems);
+
+            List<RendezVousView> pageList =
+                    totalItems == 0 ? Collections.emptyList() : list.subList(fromIndex, toIndex);
+
+            if (pageLabel != null) pageLabel.setText("Page " + currentPage + "/" + totalPages);
+            if (btnPrev != null) btnPrev.setDisable(currentPage <= 1);
+            if (btnNext != null) btnNext.setDisable(currentPage >= totalPages);
+
+            list = pageList;
+            // --------------------------------------------
 
             rendezVousContainer.getChildren().clear();
 
@@ -291,7 +343,7 @@ public class RendezVousController {
         return row;
     }
 
-    // ✅ Actions du psychologue + ENVOI SMS sur confirmer
+    // Actions Psychologue + SMS quand confirmer
     private HBox buildPsychologistActions(RendezVousView rv) {
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER_LEFT);
@@ -303,14 +355,12 @@ public class RendezVousController {
             confirmBtn.setStyle("-fx-background-color:#16A34A; -fx-text-fill:white; -fx-background-radius:8; -fx-cursor:hand;");
             confirmBtn.setOnAction(e -> {
                 try {
-                    // 1) confirmation_status = confirme
                     service.updateConfirmationStatusForPsychologist(
                             rv.getIdRv(),
                             Session.getUserId(),
                             RendezVous.ConfirmationStatus.confirme
                     );
 
-                    // 2) récupérer téléphone patient depuis la DB (users.telephone)
                     String patientPhone = service.getPatientPhoneByRdvId(rv.getIdRv());
                     if (patientPhone == null || patientPhone.isBlank()) {
                         showError("Téléphone manquant", new Exception("Le patient n'a pas de numéro dans users.telephone"));
@@ -318,14 +368,12 @@ public class RendezVousController {
                         return;
                     }
 
-                    // 3) envoyer SMS Twilio
                     String msg = "Bonjour, votre rendez-vous est CONFIRMÉ ✅ le "
                             + rv.getAppointmentDate() + " à " + rv.getAppointmentTimeRv()
                             + ". Psychologue: " + Session.getFullName();
 
                     sendSmsTwilio(patientPhone, msg);
 
-                    // 4) refresh
                     loadRendezVous();
 
                 } catch (Exception ex) {
@@ -354,9 +402,7 @@ public class RendezVousController {
 
         if (cs == RendezVous.ConfirmationStatus.confirme) {
             RendezVous.StatutRV st = rv.getStatutRv();
-            if (st == RendezVous.StatutRV.termine) {
-                return box;
-            }
+            if (st == RendezVous.StatutRV.termine) return box;
 
             Button doneBtn = new Button("🟩 Terminé");
             doneBtn.setStyle("-fx-background-color:#16A34A; -fx-text-fill:white; -fx-background-radius:8; -fx-cursor:hand;");
@@ -460,9 +506,7 @@ public class RendezVousController {
             Scene statsScene = new Scene(root);
 
             URL css = getClass().getResource("/views/stats.css");
-            if (css != null) {
-                statsScene.getStylesheets().add(css.toExternalForm());
-            }
+            if (css != null) statsScene.getStylesheets().add(css.toExternalForm());
 
             Stage stage = (Stage) currentScene.getWindow();
             stage.setScene(statsScene);

@@ -50,6 +50,12 @@
                 style="-fx-background-color: #0f766e; -fx-text-fill: white; -fx-padding: 10 14; -fx-background-radius: 8;"/>
 
     </HBox>
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <ComboBox fx:id="pageSizeCombo" prefWidth="90"/>
+        <Button fx:id="btnPrev" text="◀ Précédent" onAction="#prevPage"/>
+        <Label fx:id="pageLabel" text="Page 1/1"/>
+        <Button fx:id="btnNext" text="Suivant ▶" onAction="#nextPage"/>
+    </HBox>
 
     <!-- CARDS -->
     <!-- ✅ Demandé : pas de scroll horizontal -->
