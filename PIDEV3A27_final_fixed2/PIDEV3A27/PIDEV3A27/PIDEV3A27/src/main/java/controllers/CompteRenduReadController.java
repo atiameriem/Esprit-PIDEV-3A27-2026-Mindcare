@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -12,20 +13,31 @@ import services.PdfCompteRenduService;
 import services.ServiceCompteRenduSeance;
 import utils.MyDatabase;
 import utils.Session;
-
+import services.Paginator;
 import java.io.File;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ROLE PATIENT : lecture seulement des comptes-rendus de SES rendez-vous.
+ * ✅ Pagination avancée
  */
 public class CompteRenduReadController {
 
     @FXML private TextField searchField;
     @FXML private VBox compteRenduContainer;
+
+    // ✅ Pagination UI (à ajouter dans FXML)
+    @FXML private Button btnPrev;
+    @FXML private Button btnNext;
+    @FXML private Label pageLabel;
+    @FXML private ComboBox<Integer> pageSizeCombo;
+    @FXML private javafx.scene.control.ScrollPane listScroll;
+
+    private final Paginator paginator = new Paginator();
 
     private final Connection cnx = MyDatabase.getInstance().getConnection();
     private ServiceCompteRenduSeance crService;
@@ -33,48 +45,92 @@ public class CompteRenduReadController {
     @FXML
     public void initialize() {
         crService = new ServiceCompteRenduSeance(cnx);
-        loadCompteRendus();
+
+        if (pageSizeCombo != null) {
+            pageSizeCombo.setItems(FXCollections.observableArrayList(4, 6, 8, 10));
+            pageSizeCombo.getSelectionModel().select(Integer.valueOf(4));
+            pageSizeCombo.valueProperty().addListener((obs, o, n) -> {
+                paginator.setPageSize(n == null ? 4 : n);
+                paginator.setPage(1);
+                loadCompteRendus();
+            });
+            paginator.setPageSize(4);
+        }
 
         if (searchField != null) {
-            searchField.textProperty().addListener((obs, o, n) -> loadCompteRendus());
+            searchField.textProperty().addListener((obs, o, n) -> {
+                paginator.setPage(1);
+                loadCompteRendus();
+            });
+        }
+
+        loadCompteRendus();
+    }
+
+    @FXML
+    private void prevPage() {
+        if (paginator.getPage() > 1) {
+            paginator.setPage(paginator.getPage() - 1);
+            loadCompteRendus();
+        }
+    }
+
+    @FXML
+    private void nextPage() {
+        if (paginator.getPage() < paginator.getTotalPages()) {
+            paginator.setPage(paginator.getPage() + 1);
+            loadCompteRendus();
         }
     }
 
     private void loadCompteRendus() {
         try {
-            List<CompteRenduView> list = crService.findViewsByPatient(Session.getUserId());
+            List<CompteRenduView> all = crService.findViewsByPatient(Session.getUserId());
 
             String kw = (searchField == null) ? "" : searchField.getText().toLowerCase().trim();
             if (!kw.isEmpty()) {
-                list = list.stream().filter(cr ->
+                all = all.stream().filter(cr ->
                         (cr.getPsychologistFullName() != null && cr.getPsychologistFullName().toLowerCase().contains(kw))
                                 || (cr.getResumeSeanceCr() != null && cr.getResumeSeanceCr().toLowerCase().contains(kw))
                                 || (cr.getProchainesActionCr() != null && cr.getProchainesActionCr().toLowerCase().contains(kw))
                                 || (cr.getProgresCr() != null && cr.getProgresCr().name().toLowerCase().contains(kw))
-                ).toList();
+                ).collect(Collectors.toList());
             }
+
+            paginator.setTotalItems(all.size());
+            int start = paginator.getOffset();
+            int end = Math.min(start + paginator.getPageSize(), all.size());
+            List<CompteRenduView> pageItems = (start >= end) ? List.of() : all.subList(start, end);
+
+            updatePagerUi();
 
             compteRenduContainer.getChildren().clear();
 
-            if (list.isEmpty()) {
-                Label empty = new Label("Aucun compte-rendu trouvé.");
+            if (pageItems.isEmpty()) {
+                Label empty = new Label(all.isEmpty() ? "Aucun compte-rendu trouvé." : "Aucun résultat sur cette page.");
                 empty.setStyle("-fx-text-fill:#666; -fx-font-size: 14px; -fx-padding: 10 0 0 0;");
                 compteRenduContainer.getChildren().add(empty);
                 return;
             }
 
             HBox row = null;
-            for (int i = 0; i < list.size(); i++) {
+            for (int i = 0; i < pageItems.size(); i++) {
                 if (i % 3 == 0) {
                     row = new HBox(15);
                     compteRenduContainer.getChildren().add(row);
                 }
-                row.getChildren().add(buildCard(list.get(i)));
+                row.getChildren().add(buildCard(pageItems.get(i)));
             }
 
         } catch (SQLException e) {
             showError("Erreur chargement", e);
         }
+    }
+
+    private void updatePagerUi() {
+        if (pageLabel != null) pageLabel.setText("Page " + paginator.getPage() + "/" + paginator.getTotalPages());
+        if (btnPrev != null) btnPrev.setDisable(paginator.getPage() <= 1);
+        if (btnNext != null) btnNext.setDisable(paginator.getPage() >= paginator.getTotalPages());
     }
 
     private VBox buildCard(CompteRenduView cr) {
@@ -89,7 +145,6 @@ public class CompteRenduReadController {
                 -fx-border-color: #E7E7E7;
                 """);
 
-        // Date RDV
         HBox dateRow = new HBox(8);
         dateRow.setAlignment(Pos.CENTER_LEFT);
         Region calIcon = svgIcon(
@@ -106,7 +161,6 @@ public class CompteRenduReadController {
         Label title = new Label("Compte-rendu de séance");
         title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill:#111;");
 
-        // Psychologue
         HBox psyRow = new HBox(8);
         psyRow.setAlignment(Pos.CENTER_LEFT);
         Region userIcon = svgIcon(
@@ -126,7 +180,6 @@ public class CompteRenduReadController {
         VBox resumeBox = buildSection("RÉSUMÉ DE SÉANCE", cr.getResumeSeanceCr());
         VBox actionsBox = buildSection("PROCHAINES ACTIONS", cr.getProchainesActionCr());
 
-        // ✅ Icône export PDF (comme psy)
         HBox actionRow = new HBox(10);
         actionRow.setAlignment(Pos.CENTER_LEFT);
 
@@ -143,7 +196,6 @@ public class CompteRenduReadController {
         return card;
     }
 
-    // ✅ EXPORT PDF
     private void handleExportPdf(CompteRenduView cr) {
         try {
             FileChooser fc = new FileChooser();
@@ -155,7 +207,6 @@ public class CompteRenduReadController {
 
             String fileName = "CompteRendu_" + psyName + "_" +
                     (cr.getRvDate() == null ? "" : cr.getRvDate().toString()) + ".pdf";
-
             fc.setInitialFileName(fileName);
 
             File file = fc.showSaveDialog(compteRenduContainer.getScene().getWindow());
@@ -176,7 +227,6 @@ public class CompteRenduReadController {
         }
     }
 
-    // ─────────────── Rating (garder comme ton code) ───────────────
     private HBox buildRatingRow(CompteRenduView cr) {
         HBox row = new HBox(10);
         row.setAlignment(Pos.CENTER_LEFT);
@@ -264,26 +314,11 @@ public class CompteRenduReadController {
             style = "-fx-background-color: #F1F5F9; -fx-text-fill: #64748B;";
         } else {
             switch (progrescr) {
-                case amelioration_significative -> {
-                    text  = "Amélioration Significative";
-                    style = "-fx-background-color: #DCFCE7; -fx-text-fill: #16A34A;";
-                }
-                case amelioration_legere -> {
-                    text  = "Amélioration Légère";
-                    style = "-fx-background-color: #D1FAE5; -fx-text-fill: #059669;";
-                }
-                case amelioration_stable -> {
-                    text  = "Amélioration Stable";
-                    style = "-fx-background-color: #DBEAFE; -fx-text-fill: #1D4ED8;";
-                }
-                case stagnation -> {
-                    text  = "Stagnation";
-                    style = "-fx-background-color: #FEF9C3; -fx-text-fill: #D97706;";
-                }
-                default -> {
-                    text  = progrescr.name();
-                    style = "-fx-background-color: #F1F5F9; -fx-text-fill: #64748B;";
-                }
+                case amelioration_significative -> { text = "Amélioration Significative"; style = "-fx-background-color: #DCFCE7; -fx-text-fill: #16A34A;"; }
+                case amelioration_legere -> { text = "Amélioration Légère"; style = "-fx-background-color: #D1FAE5; -fx-text-fill: #059669;"; }
+                case amelioration_stable -> { text = "Amélioration Stable"; style = "-fx-background-color: #DBEAFE; -fx-text-fill: #1D4ED8;"; }
+                case stagnation -> { text = "Stagnation"; style = "-fx-background-color: #FEF9C3; -fx-text-fill: #D97706;"; }
+                default -> { text = progrescr.name(); style = "-fx-background-color: #F1F5F9; -fx-text-fill: #64748B;"; }
             }
         }
         Label badge = new Label("✦  " + text);

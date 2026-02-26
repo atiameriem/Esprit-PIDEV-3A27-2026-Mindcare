@@ -17,26 +17,38 @@ import services.ServiceRendezVous;
 import utils.MyDatabase;
 import utils.Session;
 import utils.ValidationUtils;
-
+import services.Paginator;
 import java.io.File;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * ROLE PSYCHOLOGUE :
  * - Affiche uniquement les comptes-rendus des RDV du psy connecté
  * - Ajout/Edit/Supp via POPUP
  * - Ajout : choisir d'abord le rendez-vous (RDV du psy), ensuite créer le compte-rendu
+ * - ✅ Pagination avancée
  */
 public class CompteRenduController {
 
     @FXML private TextField searchField;
     @FXML private VBox compteRenduContainer;
     @FXML private Button newCompteRenduButton;
+
+    // ✅ Pagination UI (à ajouter dans FXML)
+    @FXML private Button btnPrev;
+    @FXML private Button btnNext;
+    @FXML private Label pageLabel;
+    @FXML private ComboBox<Integer> pageSizeCombo;
+    @FXML private ScrollPane listScroll;
+
+    private final Paginator paginator = new Paginator();
 
     private final Connection cnx = MyDatabase.getInstance().getConnection();
     private ServiceCompteRenduSeance crService;
@@ -47,10 +59,42 @@ public class CompteRenduController {
         crService = new ServiceCompteRenduSeance(cnx);
         rvService = new ServiceRendezVous(cnx);
 
-        loadCompteRendus();
+        // ✅ page size combo
+        if (pageSizeCombo != null) {
+            pageSizeCombo.setItems(FXCollections.observableArrayList(4, 6, 8, 10));
+            pageSizeCombo.getSelectionModel().select(Integer.valueOf(4)); // par défaut
+            pageSizeCombo.valueProperty().addListener((obs, o, n) -> {
+                paginator.setPageSize(n == null ? 4 : n);
+                paginator.setPage(1);
+                loadCompteRendus();
+            });
+            paginator.setPageSize(4);
+        }
 
         if (searchField != null) {
-            searchField.textProperty().addListener((obs, o, n) -> loadCompteRendus());
+            searchField.textProperty().addListener((obs, o, n) -> {
+                paginator.setPage(1);
+                loadCompteRendus();
+            });
+        }
+
+        loadCompteRendus();
+    }
+
+    // ✅ Prev/Next handlers
+    @FXML
+    private void prevPage() {
+        if (paginator.getPage() > 1) {
+            paginator.setPage(paginator.getPage() - 1);
+            loadCompteRendus();
+        }
+    }
+
+    @FXML
+    private void nextPage() {
+        if (paginator.getPage() < paginator.getTotalPages()) {
+            paginator.setPage(paginator.getPage() + 1);
+            loadCompteRendus();
         }
     }
 
@@ -97,38 +141,50 @@ public class CompteRenduController {
         return res.orElse(null);
     }
 
-    // ── Chargement / filtre ───────────────────────────────────────────────
+    // ── Chargement / filtre / pagination ───────────────────────────────────
     private void loadCompteRendus() {
         try {
-            List<CompteRenduView> list = crService.findViewsByPsychologist(Session.getUserId());
+            List<CompteRenduView> all = crService.findViewsByPsychologist(Session.getUserId());
 
             String kw = (searchField == null) ? "" : searchField.getText().toLowerCase().trim();
             if (!kw.isEmpty()) {
-                list = list.stream().filter(cr ->
+                all = all.stream().filter(cr ->
                         (cr.getPatientFullName() != null && cr.getPatientFullName().toLowerCase().contains(kw))
                                 || (cr.getResumeSeanceCr() != null && cr.getResumeSeanceCr().toLowerCase().contains(kw))
                                 || (cr.getProchainesActionCr() != null && cr.getProchainesActionCr().toLowerCase().contains(kw))
                                 || (cr.getProgresCr() != null && cr.getProgresCr().name().toLowerCase().contains(kw))
                                 || String.valueOf(cr.getIdAppointment()).contains(kw)
-                ).collect(java.util.stream.Collectors.toList());
+                ).collect(Collectors.toList());
             }
+
+            // (optionnel) tri : plus récent d'abord si tu veux
+            all.sort(Comparator.comparing(CompteRenduView::getRvDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+
+            // ✅ Pagination calc
+            paginator.setTotalItems(all.size());
+
+            int start = paginator.getOffset();
+            int end = Math.min(start + paginator.getPageSize(), all.size());
+            List<CompteRenduView> pageItems = (start >= end) ? List.of() : all.subList(start, end);
+
+            updatePagerUi();
 
             compteRenduContainer.getChildren().clear();
 
-            if (list.isEmpty()) {
-                Label empty = new Label("Aucun compte-rendu trouvé.");
+            if (pageItems.isEmpty()) {
+                Label empty = new Label(all.isEmpty() ? "Aucun compte-rendu trouvé." : "Aucun résultat sur cette page.");
                 empty.setStyle("-fx-text-fill:#666; -fx-font-size: 14px; -fx-padding: 10 0 0 0;");
                 compteRenduContainer.getChildren().add(empty);
                 return;
             }
 
             HBox row = null;
-            for (int i = 0; i < list.size(); i++) {
+            for (int i = 0; i < pageItems.size(); i++) {
                 if (i % 3 == 0) {
                     row = new HBox(15);
                     compteRenduContainer.getChildren().add(row);
                 }
-                row.getChildren().add(buildCard(list.get(i)));
+                row.getChildren().add(buildCard(pageItems.get(i)));
             }
 
         } catch (SQLException e) {
@@ -136,8 +192,14 @@ public class CompteRenduController {
         }
     }
 
+    private void updatePagerUi() {
+        if (pageLabel != null) pageLabel.setText("Page " + paginator.getPage() + "/" + paginator.getTotalPages());
+        if (btnPrev != null) btnPrev.setDisable(paginator.getPage() <= 1);
+        if (btnNext != null) btnNext.setDisable(paginator.getPage() >= paginator.getTotalPages());
+    }
+
     // ══════════════════════════════════════════════════════════════════════
-    // Construction d’une Card
+    // Card UI (ton code inchangé)
     // ══════════════════════════════════════════════════════════════════════
     private VBox buildCard(CompteRenduView cr) {
         VBox card = new VBox(12);
@@ -165,7 +227,6 @@ public class CompteRenduController {
         dateLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #111; -fx-font-weight: 600;");
         dateRow.getChildren().addAll(calIcon, dateLabel);
 
-        // Title
         Label title = new Label("Compte-rendu de séance");
         title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill:#111;");
 
@@ -181,17 +242,12 @@ public class CompteRenduController {
         patientLabel.setStyle("-fx-font-size: 13px; -fx-text-fill:#222;");
         patientRow.getChildren().addAll(userIcon, patientLabel);
 
-        // Badge progrès
         Label badge = buildProgressBadge(cr.getProgresCr());
-
-        // Rating (lecture seule)
         HBox ratingRow = buildRatingRow(cr);
 
-        // Sections
         VBox resumeBox = buildSection("RÉSUMÉ DE SÉANCE", cr.getResumeSeanceCr(), "#111");
         VBox actionsBox = buildSection("PROCHAINES ACTIONS", cr.getProchainesActionCr(), "#111");
 
-        // Buttons (edit/delete/pdf)
         HBox btns = new HBox(10);
         btns.setAlignment(Pos.CENTER_LEFT);
 
@@ -263,7 +319,6 @@ public class CompteRenduController {
         });
     }
 
-    // ✅ EXPORT PDF
     private void handleExportPdf(CompteRenduView cr) {
         try {
             FileChooser fc = new FileChooser();
@@ -291,9 +346,7 @@ public class CompteRenduController {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    // POPUP Add/Edit
-    // ══════════════════════════════════════════════════════════════════════
+    // ── POPUP Add/Edit (ton code inchangé) ─────────────────────────────────
     private void showCompteRenduDialog(String title, CompteRenduView toEdit, RendezVousView selectedRvForAdd) {
 
         boolean isEdit = (toEdit != null);
@@ -410,9 +463,7 @@ public class CompteRenduController {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    // UI helpers
-    // ══════════════════════════════════════════════════════════════════════
+    // ── UI helpers ─────────────────────────────────────────────────────────
     private Label buildProgressBadge(CompteRenduSeance.ProgresCR progrescr) {
         String text, style;
         if (progrescr == null) {
@@ -420,26 +471,11 @@ public class CompteRenduController {
             style = "-fx-background-color: #F1F5F9; -fx-text-fill: #64748B;";
         } else {
             switch (progrescr) {
-                case amelioration_significative -> {
-                    text  = "Amélioration Significative";
-                    style = "-fx-background-color: #DCFCE7; -fx-text-fill: #16A34A;";
-                }
-                case amelioration_legere -> {
-                    text  = "Amélioration Légère";
-                    style = "-fx-background-color: #D1FAE5; -fx-text-fill: #059669;";
-                }
-                case amelioration_stable -> {
-                    text  = "Amélioration Stable";
-                    style = "-fx-background-color: #DBEAFE; -fx-text-fill: #1D4ED8;";
-                }
-                case stagnation -> {
-                    text  = "Stagnation";
-                    style = "-fx-background-color: #FEF9C3; -fx-text-fill: #D97706;";
-                }
-                default -> {
-                    text  = progrescr.name();
-                    style = "-fx-background-color: #F1F5F9; -fx-text-fill: #64748B;";
-                }
+                case amelioration_significative -> { text  = "Amélioration Significative"; style = "-fx-background-color: #DCFCE7; -fx-text-fill: #16A34A;"; }
+                case amelioration_legere -> { text  = "Amélioration Légère"; style = "-fx-background-color: #D1FAE5; -fx-text-fill: #059669;"; }
+                case amelioration_stable -> { text  = "Amélioration Stable"; style = "-fx-background-color: #DBEAFE; -fx-text-fill: #1D4ED8;"; }
+                case stagnation -> { text  = "Stagnation"; style = "-fx-background-color: #FEF9C3; -fx-text-fill: #D97706;"; }
+                default -> { text  = progrescr.name(); style = "-fx-background-color: #F1F5F9; -fx-text-fill: #64748B;"; }
             }
         }
 
