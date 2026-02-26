@@ -14,7 +14,6 @@
 
     <!-- HEADER -->
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="header">
-        <Button text="← Retour" onAction="#goBack" styleClass="btn-back"/>
 
         <VBox spacing="4">
             <Label text="Tableau de bord des rendez-vous" styleClass="section-title"/>
