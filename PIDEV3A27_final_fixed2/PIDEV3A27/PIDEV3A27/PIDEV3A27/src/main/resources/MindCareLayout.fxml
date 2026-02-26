@@ -42,7 +42,7 @@
                             <Button text="📅  Rendez-vous" styleClass="subBtn" onAction="#loadRendezVous"/>
 
                             <!-- ✅ Visible uniquement pour le psychologue -->
-                            <Button fx:id="statsButton"
+                            <Button fx:id="btnStats"
                                     text="📊  Statistiques"
                                     styleClass="subBtn"
                                     onAction="#loadRendezVousStats"

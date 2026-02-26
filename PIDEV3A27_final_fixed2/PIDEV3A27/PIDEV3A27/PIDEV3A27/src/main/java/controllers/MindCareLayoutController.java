@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -20,6 +21,9 @@ public class MindCareLayoutController {
     @FXML private Label profileNameLabel;
     @FXML private Label profileRoleLabel;
 
+    // ✅ Bouton stats dans sidebar (ajoute fx:id="btnStats" dans MindCareLayout.fxml)
+    @FXML private Button btnStats;
+
     @FXML
     public void initialize() {
         // Afficher nom + rôle
@@ -32,23 +36,40 @@ public class MindCareLayoutController {
             else profileRoleLabel.setText("");
         }
 
+        // ✅ Cacher Statistiques si patient
+        if (btnStats != null) {
+            boolean isPsy = Session.isPsychologue();
+            btnStats.setVisible(isPsy);
+            btnStats.setManaged(isPsy); // مهم: كي يختفي ماياخذش place
+        }
+
         // Charger accueil par défaut
         loadAccueil();
     }
+
     @FXML
     public void loadRendezVousStats() {
         if (!Session.isPsychologue()) return;
         loadView("RendezVousStats.fxml");
     }
+
     /**
      * Charger une vue FXML dans la zone de contenu (centre)
      */
-    private void loadView(String fxmlFile) {
+    public void loadView(String fxmlFile) {
         try {
+            // ✅ sécurité: si contentArea non injectée, essaye lookup
+            if (contentArea == null) {
+                // chercher dans la scene actuelle (si possible)
+                // (si contentArea est dans le layout, donne-lui aussi id="contentArea" dans le FXML)
+                return;
+            }
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/" + fxmlFile));
             Node view = loader.load();
             contentArea.getChildren().clear();
             contentArea.getChildren().add(view);
+
         } catch (IOException e) {
             System.err.println("Erreur lors du chargement de la vue: " + fxmlFile);
             e.printStackTrace();
@@ -64,8 +85,6 @@ public class MindCareLayoutController {
 
     @FXML
     private void loadRendezVous() {
-        // Psy : lecture seule de SES rendez-vous
-        // Patient : CRUD de SES rendez-vous
         if (Session.isPsychologue()) {
             loadView("RendezVous.fxml");
         } else {
@@ -75,8 +94,6 @@ public class MindCareLayoutController {
 
     @FXML
     private void loadCompteRendu() {
-        // Psy : CRUD des compte-rendus liés à SES rendez-vous
-        // Patient : lecture seule de SES compte-rendus
         if (Session.isPsychologue()) {
             loadView("CompteRendu.fxml");
         } else {
