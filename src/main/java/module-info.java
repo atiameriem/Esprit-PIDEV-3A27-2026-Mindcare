@@ -8,7 +8,7 @@ module tn.esprit.pidev3a8 {
     requires jakarta.mail;
     // ✅ AJOUTER dans module-info.java
     requires javafx.media;// <-- Ajoute ceci
-
+    requires java.desktop;
 // Replace with:
     requires jakarta.activation;
     opens test to javafx.fxml;

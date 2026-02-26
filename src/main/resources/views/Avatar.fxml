@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.TilePane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+
+<!--
+  ══════════════════════════════════════════════════════════════
+   AvatarPersonnalisation.fxml
+   Fenêtre modale — personnalisation avatar DiceBear
+   Controller : controllers.AvatarPersonnalisationController
+  ══════════════════════════════════════════════════════════════
+-->
+<HBox xmlns:fx="http://javafx.com/fxml/1"
+      xmlns="http://javafx.com/javafx/21"
+      fx:controller="controllers.AvatarPersonnalisationController"
+      prefWidth="700" prefHeight="580"
+      style="-fx-background-color:#f8fafc;">
+
+    <!-- ══════════════════════════════════════════════════════════
+         PANNEAU GAUCHE — Prévisualisation live
+    ══════════════════════════════════════════════════════════ -->
+    <VBox fx:id="panneauGauche"
+          alignment="CENTER" spacing="18"
+          prefWidth="260"
+          style="-fx-background-color:white;
+                 -fx-effect:dropshadow(gaussian,
+                 rgba(0,0,0,0.08),12,0,2,0);">
+        <padding><Insets top="32" right="28" bottom="32" left="28"/></padding>
+
+        <!-- Étiquette titre -->
+        <Label text="🖼️ Aperçu en direct"
+               style="-fx-font-size:12px; -fx-font-weight:900;
+                      -fx-text-fill:#64748b;
+                      -fx-background-color:#f1f5f9;
+                      -fx-background-radius:20; -fx-padding:5 14 5 14;"/>
+
+        <!-- Avatar dans un cercle avec halo -->
+        <StackPane prefWidth="220" prefHeight="220">
+            <!-- Halo externe -->
+            <Circle fx:id="circleHaloExt"
+                    centerX="110" centerY="110" radius="108"
+                    style="-fx-fill:rgba(99,102,241,0.08);"/>
+            <!-- Halo interne -->
+            <Circle fx:id="circleHaloInt"
+                    centerX="110" centerY="110" radius="94"
+                    style="-fx-fill:rgba(99,102,241,0.06);"/>
+            <!-- Cercle fond blanc -->
+            <Circle centerX="110" centerY="110" radius="86"
+                    style="-fx-fill:white;
+                           -fx-stroke:rgba(99,102,241,0.18);
+                           -fx-stroke-width:2;
+                           -fx-effect:dropshadow(gaussian,
+                           rgba(99,102,241,0.20),16,0,0,4);"/>
+            <!-- Image avatar -->
+            <ImageView fx:id="imgAvatarPreview"
+                       fitWidth="160" fitHeight="160"
+                       preserveRatio="true"/>
+            <!-- Spinner chargement -->
+            <Label fx:id="lblSpinner" text="⏳"
+                   style="-fx-font-size:36px;"/>
+        </StackPane>
+
+        <!-- Pseudo affiché -->
+        <Label fx:id="lblPreviewPseudo"
+               text="Mon Avatar"
+               style="-fx-font-size:18px; -fx-font-weight:900;
+                      -fx-text-fill:#1e293b;"/>
+
+        <!-- Badge style actuel -->
+        <Label fx:id="lblStyleBadge"
+               text="🧗 Aventurier"
+               style="-fx-font-size:11px; -fx-font-weight:bold;
+                      -fx-text-fill:#6366f1;
+                      -fx-background-color:#ede9fe;
+                      -fx-background-radius:20;
+                      -fx-padding:4 14 4 14;"/>
+
+        <!-- Bouton régénérer -->
+        <Button fx:id="btnRegenerer"
+                text="🔀 Régénérer l'avatar"
+                onAction="#regenererAvatar"
+                style="-fx-background-color:#f1f5f9;
+                       -fx-text-fill:#475569;
+                       -fx-font-size:11px; -fx-font-weight:700;
+                       -fx-background-radius:12; -fx-cursor:hand;
+                       -fx-padding:9 18 9 18;
+                       -fx-border-color:#e2e8f0;
+                       -fx-border-radius:12; -fx-border-width:1;"/>
+
+        <!-- Info API -->
+        <Label text="Propulsé par DiceBear API (gratuit)"
+               style="-fx-font-size:9px; -fx-text-fill:#cbd5e1;
+                      -fx-font-style:italic;"/>
+    </VBox>
+
+    <!-- ══════════════════════════════════════════════════════════
+         PANNEAU DROIT — Options de personnalisation
+    ══════════════════════════════════════════════════════════ -->
+    <VBox HBox.hgrow="ALWAYS" spacing="20"
+          style="-fx-background-color:#f8fafc;">
+        <padding><Insets top="28" right="28" bottom="28" left="28"/></padding>
+
+        <!-- Titre principal -->
+        <VBox spacing="4">
+            <Label text="🎨 Personnalise ton avatar"
+                   style="-fx-font-size:20px; -fx-font-weight:900;
+                          -fx-text-fill:#1e293b;"/>
+            <Label text="Crée ton identité virtuelle MindCare"
+                   style="-fx-font-size:12px; -fx-text-fill:#94a3b8;"/>
+        </VBox>
+
+        <Separator style="-fx-background-color:#e2e8f0;"/>
+
+        <!-- ── PSEUDO ──────────────────────────────────────────── -->
+        <VBox spacing="8">
+            <Label text="✏️  Ton pseudo"
+                   style="-fx-font-size:12px; -fx-font-weight:900;
+                          -fx-text-fill:#374151;"/>
+            <TextField fx:id="fieldPseudo"
+                       promptText="Entre ton pseudo..."
+                       onKeyReleased="#pseudoChange"
+                       style="-fx-background-color:white;
+                              -fx-border-color:#e2e8f0;
+                              -fx-border-radius:12;
+                              -fx-background-radius:12;
+                              -fx-padding:10 14 10 14;
+                              -fx-font-size:13px;
+                              -fx-effect:dropshadow(gaussian,
+                              rgba(0,0,0,0.04),4,0,0,1);"/>
+        </VBox>
+
+        <!-- ── STYLE D'AVATAR ──────────────────────────────────── -->
+        <VBox spacing="10">
+            <Label text="🎭  Style d'avatar"
+                   style="-fx-font-size:12px; -fx-font-weight:900;
+                          -fx-text-fill:#374151;"/>
+            <TilePane fx:id="grilleStyles"
+                      hgap="8" vgap="8" prefColumns="4"
+                      style="-fx-pref-tile-width:92;"/>
+        </VBox>
+
+        <!-- ── COULEUR DE FOND ─────────────────────────────────── -->
+        <VBox spacing="10">
+            <Label text="🎨  Couleur de fond"
+                   style="-fx-font-size:12px; -fx-font-weight:900;
+                          -fx-text-fill:#374151;"/>
+            <HBox fx:id="grilleCouleurs" spacing="10" alignment="CENTER_LEFT">
+                <!-- Cercles colorés générés par le controller -->
+                <!-- 🟣 Bleu -->
+                <StackPane fx:id="cercleBleu"
+                           prefWidth="38" prefHeight="38"
+                           onMouseClicked="#couleurSelectionnee"
+                           style="-fx-background-color:#b6e3f4;
+                                  -fx-background-radius:19;
+                                  -fx-cursor:hand;">
+                    <Tooltip text="💙 Bleu"/>
+                </StackPane>
+                <!-- 🌸 Rose -->
+                <StackPane fx:id="cerclePose"
+                           prefWidth="38" prefHeight="38"
+                           onMouseClicked="#couleurSelectionnee"
+                           style="-fx-background-color:#ffd5dc;
+                                  -fx-background-radius:19;
+                                  -fx-cursor:hand;">
+                    <Tooltip text="🌸 Rose"/>
+                </StackPane>
+                <!-- 💚 Vert -->
+                <StackPane fx:id="cercleVert"
+                           prefWidth="38" prefHeight="38"
+                           onMouseClicked="#couleurSelectionnee"
+                           style="-fx-background-color:#d1f4e0;
+                                  -fx-background-radius:19;
+                                  -fx-cursor:hand;">
+                    <Tooltip text="💚 Vert"/>
+                </StackPane>
+                <!-- 💜 Lavande -->
+                <StackPane fx:id="cercleLavande"
+                           prefWidth="38" prefHeight="38"
+                           onMouseClicked="#couleurSelectionnee"
+                           style="-fx-background-color:#e8d5f4;
+                                  -fx-background-radius:19;
+                                  -fx-cursor:hand;">
+                    <Tooltip text="💜 Lavande"/>
+                </StackPane>
+                <!-- 🍑 Pêche -->
+                <StackPane fx:id="cerclePeche"
+                           prefWidth="38" prefHeight="38"
+                           onMouseClicked="#couleurSelectionnee"
+                           style="-fx-background-color:#ffd5b8;
+                                  -fx-background-radius:19;
+                                  -fx-cursor:hand;">
+                    <Tooltip text="🍑 Pêche"/>
+                </StackPane>
+                <!-- 💛 Jaune -->
+                <StackPane fx:id="cercleJaune"
+                           prefWidth="38" prefHeight="38"
+                           onMouseClicked="#couleurSelectionnee"
+                           style="-fx-background-color:#fef3c7;
+                                  -fx-background-radius:19;
+                                  -fx-cursor:hand;">
+                    <Tooltip text="💛 Jaune"/>
+                </StackPane>
+                <!-- ⚪ Gris -->
+                <StackPane fx:id="cercleGris"
+                           prefWidth="38" prefHeight="38"
+                           onMouseClicked="#couleurSelectionnee"
+                           style="-fx-background-color:#d1d5db;
+                                  -fx-background-radius:19;
+                                  -fx-cursor:hand;">
+                    <Tooltip text="⚪ Gris"/>
+                </StackPane>
+                <!-- 🤍 Blanc -->
+                <StackPane fx:id="cercleBlanc"
+                           prefWidth="38" prefHeight="38"
+                           onMouseClicked="#couleurSelectionnee"
+                           style="-fx-background-color:#ffffff;
+                                  -fx-background-radius:19;
+                                  -fx-border-color:#e2e8f0;
+                                  -fx-border-radius:19;
+                                  -fx-border-width:1.5;
+                                  -fx-cursor:hand;">
+                    <Tooltip text="🤍 Blanc"/>
+                </StackPane>
+            </HBox>
+        </VBox>
+
+        <!-- ── TAILLE ───────────────────────────────────────────── -->
+        <VBox spacing="8">
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="📐  Taille de l'avatar"
+                       style="-fx-font-size:12px; -fx-font-weight:900;
+                              -fx-text-fill:#374151;" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblTailleVal"
+                       text="200 px"
+                       style="-fx-font-size:11px; -fx-font-weight:bold;
+                              -fx-text-fill:#6366f1;
+                              -fx-background-color:#ede9fe;
+                              -fx-background-radius:20;
+                              -fx-padding:3 10 3 10;"/>
+            </HBox>
+            <Slider fx:id="sliderTaille"
+                    min="100" max="300" value="200"
+                    majorTickUnit="50"
+                    showTickLabels="true"
+                    snapToTicks="true"
+                    onMouseDragged="#tailleChange"
+                    onMouseReleased="#tailleChange"
+                    style="-fx-accent:#6366f1;"/>
+        </VBox>
+
+        <!-- ── BOUTONS ─────────────────────────────────────────── -->
+        <Pane VBox.vgrow="ALWAYS"/>
+        <HBox alignment="CENTER_RIGHT" spacing="12">
+            <Button text="Annuler"
+                    onAction="#annuler"
+                    style="-fx-background-color:#f1f5f9;
+                           -fx-text-fill:#64748b;
+                           -fx-font-size:13px; -fx-font-weight:700;
+                           -fx-background-radius:14; -fx-cursor:hand;
+                           -fx-padding:11 22 11 22;
+                           -fx-border-color:#e2e8f0;
+                           -fx-border-radius:14; -fx-border-width:1;"/>
+            <Button fx:id="btnSauvegarder"
+                    text="💾  Sauvegarder"
+                    onAction="#sauvegarder"
+                    style="-fx-background-color:#6366f1;
+                           -fx-text-fill:white;
+                           -fx-font-size:13px; -fx-font-weight:800;
+                           -fx-background-radius:14; -fx-cursor:hand;
+                           -fx-padding:11 26 11 26;
+                           -fx-effect:dropshadow(gaussian,
+                           rgba(99,102,241,0.40),10,0,0,3);"/>
+        </HBox>
+
+    </VBox>
+
+</HBox>

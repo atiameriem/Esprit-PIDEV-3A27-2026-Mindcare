@@ -9,8 +9,11 @@ import java.util.List;
 
 public class ServiceGroq {
 
-    private static final String API_KEY = "";
-    private static final String API_URL = "";
+    // ✅ Coller ta clé ici — format : gsk_xxxxx
+    private static final String API_KEY =
+            "";
+    private static final String API_URL =
+            "https://api.groq.com/openai/v1/chat/completions";
 
     // ══════════════════════════════════════════════════════════════
     // Conseil principal
@@ -21,31 +24,39 @@ public class ServiceGroq {
             String prompt = construirePrompt(
                     scoreBienEtre, scoreStress, scoreHumeur, nbSessions);
             String reponse = appellerGroq(prompt);
-            return reponse != null ? reponse : conseilParDefaut(scoreStress);
+            return reponse != null
+                    ? reponse : conseilParDefaut(scoreStress);
         } catch (Exception e) {
             System.err.println("❌ Erreur Groq : " + e.getMessage());
             return conseilParDefaut(scoreStress);
         }
     }
 
-    private String construirePrompt(int be, int st, int hu, int sessions) {
-        String niveauBE = be >= 70 ? "bon"            : be >= 40 ? "moyen"   : "faible";
-        String niveauST = st >= 70 ? "faible (calme)" : st >= 40 ? "modere"  : "eleve";
-        String niveauHU = hu >= 70 ? "bonne"          : hu >= 40 ? "moyenne" : "mauvaise";
+    private String construirePrompt(int be, int st, int hu,
+                                    int sessions) {
+        String niveauBE = be >= 70 ? "bon"
+                : be >= 40 ? "moyen" : "faible";
+        String niveauST = st >= 70 ? "faible (calme)"
+                : st >= 40 ? "modere" : "eleve";
+        String niveauHU = hu >= 70 ? "bonne"
+                : hu >= 40 ? "moyenne" : "mauvaise";
 
-        return "Tu es un assistant psychologique bienveillant pour MindCare. "
-                + "Un utilisateur a : Bien-etre " + be + "/100 (" + niveauBE + "), "
+        return "Tu es un assistant psychologique bienveillant "
+                + "pour MindCare. "
+                + "Un utilisateur a : Bien-etre " + be
+                + "/100 (" + niveauBE + "), "
                 + "Stress " + st + "/100 (" + niveauST + "), "
                 + "Humeur " + hu + "/100 (" + niveauHU + "), "
                 + sessions + " sessions completees. "
-                + "Genere UN seul conseil personnalise en 2 phrases maximum. "
-                + "Reponds uniquement en francais. Sans titre ni liste.";
+                + "Genere UN seul conseil personnalise en 2 phrases "
+                + "maximum. Reponds uniquement en francais. "
+                + "Sans titre ni liste.";
     }
 
     // ══════════════════════════════════════════════════════════════
-    // Appel API Groq
+    // ✅ PUBLIC — utilisable depuis n'importe quel controller
     // ══════════════════════════════════════════════════════════════
-    private String appellerGroq(String prompt) throws Exception {
+    public String appellerGroq(String prompt) throws Exception {
         String promptEscape = prompt
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
@@ -54,17 +65,20 @@ public class ServiceGroq {
 
         String corps = "{"
                 + "\"model\":\"llama-3.3-70b-versatile\","
-                + "\"messages\":[{\"role\":\"user\",\"content\":\""
-                + promptEscape + "\"}],"
-                + "\"max_tokens\":150,"
-                + "\"temperature\":0.75"
+                + "\"messages\":[{\"role\":\"user\","
+                + "\"content\":\"" + promptEscape + "\"}],"
+                + "\"max_tokens\":200,"
+                + "\"temperature\":0.7"
                 + "}";
 
         URL url = new URL(API_URL);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        HttpURLConnection conn =
+                (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-        conn.setRequestProperty("Authorization", "Bearer " + API_KEY);
+        conn.setRequestProperty("Content-Type",
+                "application/json; charset=UTF-8");
+        conn.setRequestProperty("Authorization",
+                "Bearer " + API_KEY);
         conn.setDoOutput(true);
         conn.setConnectTimeout(10000);
         conn.setReadTimeout(15000);
@@ -80,7 +94,8 @@ public class ServiceGroq {
                     new InputStreamReader(conn.getInputStream(),
                             StandardCharsets.UTF_8))) {
                 String line;
-                while ((line = br.readLine()) != null) sb.append(line);
+                while ((line = br.readLine()) != null)
+                    sb.append(line);
             }
             return extraireTexte(sb.toString());
         } else {
@@ -88,12 +103,15 @@ public class ServiceGroq {
             InputStream es = conn.getErrorStream();
             if (es != null) {
                 try (BufferedReader br = new BufferedReader(
-                        new InputStreamReader(es, StandardCharsets.UTF_8))) {
+                        new InputStreamReader(es,
+                                StandardCharsets.UTF_8))) {
                     String line;
-                    while ((line = br.readLine()) != null) err.append(line);
+                    while ((line = br.readLine()) != null)
+                        err.append(line);
                 }
             }
-            System.err.println("❌ Groq HTTP " + status + " : " + err);
+            System.err.println("❌ Groq HTTP "
+                    + status + " : " + err);
             return null;
         }
     }
@@ -101,51 +119,51 @@ public class ServiceGroq {
     private String extraireTexte(String json) {
         try {
             int debut = json.indexOf("\"content\":\"") + 11;
-            int fin = debut;
+            int fin   = debut;
             while (fin < json.length()) {
                 if (json.charAt(fin) == '"'
                         && json.charAt(fin - 1) != '\\') break;
                 fin++;
             }
             return json.substring(debut, fin)
-                    .replace("\\n", " ")
+                    .replace("\\n", "\n")
                     .replace("\\t", " ")
                     .trim();
-        } catch (Exception e) {
-            return null;
-        }
+        } catch (Exception e) { return null; }
     }
 
     private String conseilParDefaut(int scoreStress) {
         if (scoreStress < 40)
             return "Ton niveau de stress est eleve. "
-                    + "Essaie la respiration 4-7-8 : inspire 4s, retiens 7s, expire 8s.";
+                    + "Essaie la respiration 4-7-8 : "
+                    + "inspire 4s, retiens 7s, expire 8s.";
         if (scoreStress < 70)
             return "Tu geres bien ton stress. "
-                    + "Continue avec de courtes pauses de pleine conscience.";
+                    + "Continue avec de courtes pauses "
+                    + "de pleine conscience.";
         return "Excellent equilibre ! "
-                + "5 minutes de coherence cardiaque chaque matin renforceront ton bien-etre.";
+                + "5 minutes de coherence cardiaque "
+                + "chaque matin renforceront ton bien-etre.";
     }
 
     // ══════════════════════════════════════════════════════════════
-    // 3 conseils structurés — format emoji|titre|description
+    // 3 conseils structurés
     // ══════════════════════════════════════════════════════════════
-    public List<String[]> genererTroisConseils(int be, int st, int hu) {
+    public List<String[]> genererTroisConseils(int be, int st,
+                                               int hu) {
         try {
             String prompt = "Tu es un assistant bien-etre pour MindCare. "
                     + "Un utilisateur a : Bien-etre " + be
                     + "/100, Stress " + st
                     + "/100, Humeur " + hu + "/100. "
-                    + "Genere exactement 3 conseils pratiques adaptes a son profil. "
-                    + "Reponds UNIQUEMENT dans ce format exact (3 lignes, rien d autre) : "
-                    + "EMOJI|Titre court|Description courte en une phrase. "
-                    + "Exemple : |Meditation|5 minutes le matin pour calmer l esprit. "
-                    + "En francais. 3 lignes uniquement. Chaque ligne doit avoir exactement 3 parties separees par |";
-
+                    + "Genere exactement 3 conseils pratiques. "
+                    + "Format exact (3 lignes) : "
+                    + "EMOJI|Titre court|Description courte. "
+                    + "En francais. 3 lignes uniquement.";
             String reponse = appellerGroq(prompt);
             return parserTroisConseils(reponse);
         } catch (Exception e) {
-            System.err.println("❌ Erreur 3 conseils : " + e.getMessage());
+            System.err.println("❌ 3 conseils : " + e.getMessage());
             return conseilsParDefaut();
         }
     }
@@ -153,75 +171,90 @@ public class ServiceGroq {
     private List<String[]> parserTroisConseils(String reponse) {
         List<String[]> liste = new ArrayList<>();
         if (reponse == null) return conseilsParDefaut();
-
-        String[] lignes = reponse.split("\n");
-        for (String ligne : lignes) {
+        for (String ligne : reponse.split("\n")) {
             ligne = ligne.trim();
             if (ligne.isEmpty()) continue;
             String[] parts = ligne.split("\\|");
-            if (parts.length >= 3) {
-                // ✅ Toujours 3 éléments : [emoji, titre, description]
+            if (parts.length >= 3)
                 liste.add(new String[]{
                         parts[0].trim(),
                         parts[1].trim(),
-                        parts[2].trim()
-                });
-            }
+                        parts[2].trim()});
             if (liste.size() == 3) break;
         }
-
-        // ✅ Compléter avec défauts si l'IA n'a pas retourné 3 conseils valides
-        List<String[]> defauts = conseilsParDefaut();
-        while (liste.size() < 3) {
-            liste.add(defauts.get(liste.size()));
-        }
+        List<String[]> def = conseilsParDefaut();
+        while (liste.size() < 3)
+            liste.add(def.get(liste.size()));
         return liste;
     }
 
-    // ✅ TOUJOURS 3 éléments par tableau : [emoji, titre, description]
     private List<String[]> conseilsParDefaut() {
-        List<String[]> liste = new ArrayList<>();
-        liste.add(new String[]{
-                "🫀",
-                "Coherence cardiaque",
-                "5 min le matin pour stabiliser ton bien-etre."
-        });
-        liste.add(new String[]{
-                "😮",
-                "Respiration 4-7-8",
-                "Reduit le stress en moins de 2 minutes."
-        });
-        liste.add(new String[]{
-                "🌙",
-                "Qualite du sommeil",
-                "Objectif : 7h avant minuit pour ameliorer l humeur."
-        });
-        return liste;
+        List<String[]> l = new ArrayList<>();
+        l.add(new String[]{"🫀", "Coherence cardiaque",
+                "5 min le matin pour stabiliser ton bien-etre."});
+        l.add(new String[]{"😮", "Respiration 4-7-8",
+                "Reduit le stress en moins de 2 minutes."});
+        l.add(new String[]{"🌙", "Qualite du sommeil",
+                "7h avant minuit pour ameliorer l humeur."});
+        return l;
     }
 
     // ══════════════════════════════════════════════════════════════
-    // ✅ Recommandation prochain test — calcul local sans appel API
+    // Recommandation test + raison
     // ══════════════════════════════════════════════════════════════
     public String recommanderProchainTest(int scoreBE,
                                           int scoreST,
                                           int scoreHU) {
-        int minScore = Math.min(scoreBE, Math.min(scoreST, scoreHU));
-        if (minScore == scoreST) return "Test de Stress";
-        if (minScore == scoreBE) return "Test de Bien-etre";
+        int min = Math.min(scoreBE, Math.min(scoreST, scoreHU));
+        if (min == scoreST) return "Test de Stress";
+        if (min == scoreBE) return "Test de Bien-etre";
         return "Test d Humeur";
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ✅ Raison de la recommandation
-    // ══════════════════════════════════════════════════════════════
     public String getRaisonRecommandation(int scoreBE,
                                           int scoreST,
                                           int scoreHU) {
-        int minScore = Math.min(scoreBE, Math.min(scoreST, scoreHU));
-        if (minScore == scoreST)
-            return "Votre niveau de stress est le plus critique en ce moment.";
-        if (minScore == scoreBE)
-            return "Votre bien-etre general necessite une attention particuliere.";
+        int min = Math.min(scoreBE, Math.min(scoreST, scoreHU));
+        if (min == scoreST)
+            return "Votre niveau de stress est le plus critique.";
+        if (min == scoreBE)
+            return "Votre bien-etre necessite une attention particuliere.";
         return "Votre humeur montre des signes qui meritent un suivi.";
     }
+    // ══════════════════════════════════════════════════════════════
+    // 🔹 Nouvelle méthode : analyse de l'émotion à partir d'un texte
+    // ══════════════════════════════════════════════════════════════
+    public String analyserEmotion(String texte) {
+        if (texte == null || texte.isEmpty()) return "Non détectée";
+
+        // Prompt pour l'IA : détecter l'émotion principale
+        String prompt = "Analyse l'émotion principale du texte suivant "
+                + "et renvoie un mot ou emoji décrivant l'état émotionnel : "
+                + texte + " Répond uniquement par 1 mot ou un emoji, en français.";
+
+        String emotion = null;
+        try {
+            emotion = appellerGroq(prompt);
+        } catch (Exception e) {
+            System.err.println("❌ Erreur analyse émotion : " + e.getMessage());
+        }
+
+        // Fallback si IA ne renvoie rien
+        if (emotion == null || emotion.trim().isEmpty()) {
+            texte = texte.toLowerCase();
+            if (texte.contains("heureux") || texte.contains("bien") || texte.contains("positif"))
+                emotion = "😊 Heureux / positif";
+            else if (texte.contains("triste") || texte.contains("déprimé") || texte.contains("bas"))
+                emotion = "😢 Triste / déprimé";
+            else if (texte.contains("stressé") || texte.contains("angoissé"))
+                emotion = "😰 Stressé / anxieux";
+            else if (texte.contains("colère") || texte.contains("irrité"))
+                emotion = "😡 En colère / irrité";
+            else
+                emotion = "😶 Indéterminé";
+        }
+
+        return emotion;
+    }
+
 }

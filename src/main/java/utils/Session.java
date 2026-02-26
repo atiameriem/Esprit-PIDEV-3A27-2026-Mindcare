@@ -68,22 +68,46 @@ public class Session {
     //  ALIAS — compatibilité avec tous les contrôleurs
     // ══════════════════════════════════════════════════════════════
 
-    /** Alias de getIdConnecte() — utilisé dans SuivieController */
+    /** Alias de getIdConnecte() */
     public static int getUserId() {
         return idConnecte;
     }
 
-    /** Alias de getNomConnecte() — utilisé dans SuivieController */
+    /** Alias de getNomConnecte() — nom complet "Prénom Nom" */
     public static String getFullName() {
         return nomConnecte != null ? nomConnecte : "";
     }
 
-    /** Prénom seul — utilisé dans PasserTestsController */
+    /**
+     * Nom de famille seul.
+     * Utilisé dans AvatarPersonnalisationController et autres contrôleurs.
+     * Ex : "Alice Dupont" → "Dupont"
+     */
+    public static String getNom() {
+        if (utilisateur != null && utilisateur.getNom() != null
+                && !utilisateur.getNom().isBlank()) {
+            return utilisateur.getNom();
+        }
+        // Fallback : extrait la partie après le premier espace
+        if (nomConnecte != null && nomConnecte.contains(" ")) {
+            return nomConnecte.split(" ", 2)[1];
+        }
+        return nomConnecte != null ? nomConnecte : "";
+    }
+
+    /**
+     * Prénom seul.
+     * Ex : "Alice Dupont" → "Alice"
+     */
     public static String getPrenom() {
-        if (utilisateur != null && utilisateur.getPrenom() != null)
+        if (utilisateur != null && utilisateur.getPrenom() != null
+                && !utilisateur.getPrenom().isBlank()) {
             return utilisateur.getPrenom();
-        if (nomConnecte != null && nomConnecte.contains(" "))
+        }
+        // Fallback : extrait la partie avant le premier espace
+        if (nomConnecte != null && nomConnecte.contains(" ")) {
             return nomConnecte.split(" ", 2)[0];
+        }
         return nomConnecte != null ? nomConnecte : "";
     }
 

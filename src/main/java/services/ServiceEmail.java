@@ -8,7 +8,7 @@ public class ServiceEmail {
 
     // ⚠️ Remplacez par votre Gmail + App Password
     private static final String EXPEDITEUR   = "mindcare563@gmail.com";
-    private static final String APP_PASSWORD = ;
+    private static final String APP_PASSWORD = ";
 
 
     // ══════════════════════════════════════════════════════════════
