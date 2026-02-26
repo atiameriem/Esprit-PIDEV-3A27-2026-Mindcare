@@ -444,10 +444,17 @@ public class RendezVousController {
     @FXML
     private void openCompteRenduFromRendezVous() {
         try {
+            // IMPORTANT: lookup("#contentArea") fonctionne uniquement si l'élément a un Node.id="contentArea"
+            // (pas seulement fx:id). C'est maintenant garanti dans MindCareLayout.fxml.
             VBox contentArea = (VBox) rendezVousContainer.getScene().lookup("#contentArea");
-            if (contentArea == null) return;
+            if (contentArea == null) {
+                throw new IllegalStateException("Zone de contenu introuvable (contentArea)");
+            }
 
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/CompteRendu.fxml"));
+            // Charger la bonne vue selon le rôle (sécurité)
+            String fxml = utils.Session.isPsychologue() ? "CompteRendu.fxml" : "CompteRenduRead.fxml";
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/" + fxml));
             Node view = loader.load();
             contentArea.getChildren().clear();
             contentArea.getChildren().add(view);
@@ -486,10 +493,21 @@ public class RendezVousController {
     private void showError(String title, Exception e) {
         e.printStackTrace();
         Alert a = new Alert(Alert.AlertType.ERROR);
+        stylePopup(a.getDialogPane());
         a.setTitle(title);
         a.setHeaderText(title);
         a.setContentText(e.getMessage());
         a.showAndWait();
+    }
+
+    private void stylePopup(DialogPane pane) {
+        try {
+            if (pane == null) return;
+            pane.getStyleClass().add("mc-dialog");
+            var css = getClass().getResource("/popup.css");
+            if (css != null) pane.getStylesheets().add(css.toExternalForm());
+        } catch (Exception ignored) {
+        }
     }
 
     @FXML

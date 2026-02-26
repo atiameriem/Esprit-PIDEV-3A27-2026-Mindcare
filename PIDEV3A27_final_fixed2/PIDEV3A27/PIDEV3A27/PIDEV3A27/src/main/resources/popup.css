@@ -1,0 +1,86 @@
+/* =========================================================
+   MindCare - Modern popup/dialog theme
+   Applies to Dialog, ChoiceDialog, Alert
+   ========================================================= */
+
+.mc-dialog.dialog-pane{
+    -fx-background-color: rgba(255,255,255,0.92);
+    -fx-padding: 16;
+    -fx-background-radius: 18;
+}
+
+.mc-dialog.dialog-pane > .header-panel{
+    -fx-background-color: rgba(110,142,154,0.12);
+    -fx-background-radius: 16;
+    -fx-padding: 14 14 12 14;
+}
+
+.mc-dialog.dialog-pane > .header-panel .label{
+    -fx-text-fill: #0f172a;
+    -fx-font-weight: 800;
+    -fx-font-size: 14px;
+}
+
+.mc-dialog.dialog-pane .content{
+    -fx-padding: 10 2 2 2;
+}
+
+.mc-dialog.dialog-pane .label{
+    -fx-text-fill: #0f172a;
+}
+
+/* Buttons */
+.mc-dialog.dialog-pane .button-bar .button{
+    -fx-background-radius: 12;
+    -fx-padding: 9 16;
+    -fx-font-weight: 800;
+}
+
+.mc-dialog.dialog-pane .button-bar .button:default{
+    -fx-background-color: #0f766e;
+    -fx-text-fill: white;
+}
+
+.mc-dialog.dialog-pane .button-bar .button:cancel{
+    -fx-background-color: rgba(15, 23, 42, 0.08);
+    -fx-text-fill: #0f172a;
+}
+
+.mc-dialog.dialog-pane .button-bar .button:hover{
+    -fx-opacity: 0.92;
+}
+
+/* Inputs */
+.mc-dialog .text-field,
+.mc-dialog .combo-box,
+.mc-dialog .date-picker,
+.mc-dialog .text-area{
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: rgba(15, 23, 42, 0.14);
+    -fx-background-color: rgba(255,255,255,0.9);
+    -fx-padding: 10 12;
+}
+
+.mc-dialog .text-area{
+    -fx-padding: 10 12;
+}
+
+.mc-dialog .text-field:focused,
+.mc-dialog .combo-box:focused,
+.mc-dialog .date-picker:focused,
+.mc-dialog .text-area:focused{
+    -fx-border-color: rgba(15, 118, 110, 0.65);
+    -fx-effect: dropshadow(gaussian, rgba(15,118,110,0.20), 16, 0, 0, 2);
+}
+
+/* Grid spacing helper */
+.mc-dialog .grid-pane{
+    -fx-hgap: 12;
+    -fx-vgap: 10;
+}
+
+/* Alerts: make graphics a bit nicer */
+.mc-dialog.dialog-pane:alert{
+    -fx-padding: 16;
+}

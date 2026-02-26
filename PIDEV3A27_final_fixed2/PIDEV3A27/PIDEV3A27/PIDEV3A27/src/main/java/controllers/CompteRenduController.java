@@ -14,26 +14,24 @@ import models.RendezVousView;
 import services.PdfCompteRenduService;
 import services.ServiceCompteRenduSeance;
 import services.ServiceRendezVous;
+import services.Paginator;
 import utils.MyDatabase;
 import utils.Session;
 import utils.ValidationUtils;
-import services.Paginator;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * ROLE PSYCHOLOGUE :
  * - Affiche uniquement les comptes-rendus des RDV du psy connecté
  * - Ajout/Edit/Supp via POPUP
  * - Ajout : choisir d'abord le rendez-vous (RDV du psy), ensuite créer le compte-rendu
- * - ✅ Pagination avancée
  */
 public class CompteRenduController {
 
@@ -41,12 +39,11 @@ public class CompteRenduController {
     @FXML private VBox compteRenduContainer;
     @FXML private Button newCompteRenduButton;
 
-    // ✅ Pagination UI (à ajouter dans FXML)
+    // ✅ Pagination UI
     @FXML private Button btnPrev;
     @FXML private Button btnNext;
     @FXML private Label pageLabel;
     @FXML private ComboBox<Integer> pageSizeCombo;
-    @FXML private ScrollPane listScroll;
 
     private final Paginator paginator = new Paginator();
 
@@ -58,44 +55,58 @@ public class CompteRenduController {
     public void initialize() {
         crService = new ServiceCompteRenduSeance(cnx);
         rvService = new ServiceRendezVous(cnx);
-
-        // ✅ page size combo
+        // ✅ Pagination setup (4,6,8,10)
         if (pageSizeCombo != null) {
             pageSizeCombo.setItems(FXCollections.observableArrayList(4, 6, 8, 10));
-            pageSizeCombo.getSelectionModel().select(Integer.valueOf(4)); // par défaut
-            pageSizeCombo.valueProperty().addListener((obs, o, n) -> {
-                paginator.setPageSize(n == null ? 4 : n);
-                paginator.setPage(1);
-                loadCompteRendus();
-            });
+            pageSizeCombo.setValue(4);
             paginator.setPageSize(4);
+            pageSizeCombo.valueProperty().addListener((obs, o, n) -> {
+                if (n != null) {
+                    paginator.setPageSize(n);
+                    loadCompteRendus();
+                }
+            });
         }
 
-        if (searchField != null) {
-            searchField.textProperty().addListener((obs, o, n) -> {
-                paginator.setPage(1);
-                loadCompteRendus();
-            });
-        }
 
         loadCompteRendus();
+
+        if (searchField != null) {
+            searchField.textProperty().addListener((obs, o, n) -> { paginator.first(); loadCompteRendus(); });
+        }
     }
 
-    // ✅ Prev/Next handlers
+    // ── Pagination actions ───────────────────────────────────────────────
     @FXML
     private void prevPage() {
-        if (paginator.getPage() > 1) {
-            paginator.setPage(paginator.getPage() - 1);
+        if (paginator.canPrev()) {
+            paginator.prev();
             loadCompteRendus();
         }
     }
 
     @FXML
     private void nextPage() {
-        if (paginator.getPage() < paginator.getTotalPages()) {
-            paginator.setPage(paginator.getPage() + 1);
+        if (paginator.canNext()) {
+            paginator.next();
             loadCompteRendus();
         }
+    }
+
+    private void updatePaginationUI() {
+        int tp = paginator.getTotalPages();
+        int p = paginator.getPage();
+
+        if (tp <= 0) {
+            if (pageLabel != null) pageLabel.setText("Page 1/1");
+            if (btnPrev != null) btnPrev.setDisable(true);
+            if (btnNext != null) btnNext.setDisable(true);
+            return;
+        }
+
+        if (pageLabel != null) pageLabel.setText("Page " + p + "/" + tp);
+        if (btnPrev != null) btnPrev.setDisable(!paginator.canPrev());
+        if (btnNext != null) btnNext.setDisable(!paginator.canNext());
     }
 
     // ── Bouton "Nouveau Compte-rendu" ──────────────────────────────────────
@@ -137,54 +148,57 @@ public class CompteRenduController {
         dialog.setHeaderText("Sélectionnez le rendez-vous pour créer le compte-rendu");
         dialog.setContentText("Rendez-vous :");
 
+        // ✅ Modern popup theme
+        stylePopup(dialog.getDialogPane());
+
         Optional<RendezVousView> res = dialog.showAndWait();
         return res.orElse(null);
     }
 
-    // ── Chargement / filtre / pagination ───────────────────────────────────
+    // ── Chargement / filtre ───────────────────────────────────────────────
     private void loadCompteRendus() {
         try {
-            List<CompteRenduView> all = crService.findViewsByPsychologist(Session.getUserId());
+            List<CompteRenduView> list = crService.findViewsByPsychologist(Session.getUserId());
 
             String kw = (searchField == null) ? "" : searchField.getText().toLowerCase().trim();
             if (!kw.isEmpty()) {
-                all = all.stream().filter(cr ->
+                list = list.stream().filter(cr ->
                         (cr.getPatientFullName() != null && cr.getPatientFullName().toLowerCase().contains(kw))
                                 || (cr.getResumeSeanceCr() != null && cr.getResumeSeanceCr().toLowerCase().contains(kw))
                                 || (cr.getProchainesActionCr() != null && cr.getProchainesActionCr().toLowerCase().contains(kw))
                                 || (cr.getProgresCr() != null && cr.getProgresCr().name().toLowerCase().contains(kw))
                                 || String.valueOf(cr.getIdAppointment()).contains(kw)
-                ).collect(Collectors.toList());
+                ).collect(java.util.stream.Collectors.toList());
             }
 
-            // (optionnel) tri : plus récent d'abord si tu veux
-            all.sort(Comparator.comparing(CompteRenduView::getRvDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
 
-            // ✅ Pagination calc
-            paginator.setTotalItems(all.size());
+            // ✅ Pagination (après filtre)
+            paginator.setTotalItems(list.size());
+            int from = paginator.getOffset();
+            if (from >= list.size() && paginator.getTotalPages() > 0) {
+                paginator.setPage(paginator.getTotalPages());
+                from = paginator.getOffset();
+            }
+            int to = Math.min(from + paginator.getPageSize(), list.size());
+            List<CompteRenduView> pageList = (from < to) ? list.subList(from, to) : java.util.Collections.emptyList();
 
-            int start = paginator.getOffset();
-            int end = Math.min(start + paginator.getPageSize(), all.size());
-            List<CompteRenduView> pageItems = (start >= end) ? List.of() : all.subList(start, end);
-
-            updatePagerUi();
-
+            updatePaginationUI();
             compteRenduContainer.getChildren().clear();
 
-            if (pageItems.isEmpty()) {
-                Label empty = new Label(all.isEmpty() ? "Aucun compte-rendu trouvé." : "Aucun résultat sur cette page.");
+            if (pageList.isEmpty()) {
+                Label empty = new Label("Aucun compte-rendu trouvé.");
                 empty.setStyle("-fx-text-fill:#666; -fx-font-size: 14px; -fx-padding: 10 0 0 0;");
                 compteRenduContainer.getChildren().add(empty);
                 return;
             }
 
             HBox row = null;
-            for (int i = 0; i < pageItems.size(); i++) {
-                if (i % 3 == 0) {
+            for (int i = 0; i < pageList.size(); i++) {
+                if (i % 2 == 0) {
                     row = new HBox(15);
                     compteRenduContainer.getChildren().add(row);
                 }
-                row.getChildren().add(buildCard(pageItems.get(i)));
+                row.getChildren().add(buildCard(pageList.get(i)));
             }
 
         } catch (SQLException e) {
@@ -192,14 +206,8 @@ public class CompteRenduController {
         }
     }
 
-    private void updatePagerUi() {
-        if (pageLabel != null) pageLabel.setText("Page " + paginator.getPage() + "/" + paginator.getTotalPages());
-        if (btnPrev != null) btnPrev.setDisable(paginator.getPage() <= 1);
-        if (btnNext != null) btnNext.setDisable(paginator.getPage() >= paginator.getTotalPages());
-    }
-
     // ══════════════════════════════════════════════════════════════════════
-    // Card UI (ton code inchangé)
+    // Construction d’une Card
     // ══════════════════════════════════════════════════════════════════════
     private VBox buildCard(CompteRenduView cr) {
         VBox card = new VBox(12);
@@ -227,6 +235,7 @@ public class CompteRenduController {
         dateLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #111; -fx-font-weight: 600;");
         dateRow.getChildren().addAll(calIcon, dateLabel);
 
+        // Title
         Label title = new Label("Compte-rendu de séance");
         title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill:#111;");
 
@@ -242,12 +251,17 @@ public class CompteRenduController {
         patientLabel.setStyle("-fx-font-size: 13px; -fx-text-fill:#222;");
         patientRow.getChildren().addAll(userIcon, patientLabel);
 
+        // Badge progrès
         Label badge = buildProgressBadge(cr.getProgresCr());
+
+        // Rating (lecture seule)
         HBox ratingRow = buildRatingRow(cr);
 
+        // Sections
         VBox resumeBox = buildSection("RÉSUMÉ DE SÉANCE", cr.getResumeSeanceCr(), "#111");
         VBox actionsBox = buildSection("PROCHAINES ACTIONS", cr.getProchainesActionCr(), "#111");
 
+        // Buttons (edit/delete/pdf)
         HBox btns = new HBox(10);
         btns.setAlignment(Pos.CENTER_LEFT);
 
@@ -305,6 +319,7 @@ public class CompteRenduController {
 
     private void handleDelete(CompteRenduView cr) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        stylePopup(alert.getDialogPane());
         alert.setTitle("Confirmation");
         alert.setHeaderText("Supprimer ce compte-rendu ?");
         alert.showAndWait().ifPresent(r -> {
@@ -319,6 +334,7 @@ public class CompteRenduController {
         });
     }
 
+    // ✅ EXPORT PDF
     private void handleExportPdf(CompteRenduView cr) {
         try {
             FileChooser fc = new FileChooser();
@@ -346,13 +362,18 @@ public class CompteRenduController {
         }
     }
 
-    // ── POPUP Add/Edit (ton code inchangé) ─────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════════
+    // POPUP Add/Edit
+    // ══════════════════════════════════════════════════════════════════════
     private void showCompteRenduDialog(String title, CompteRenduView toEdit, RendezVousView selectedRvForAdd) {
 
         boolean isEdit = (toEdit != null);
 
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle(title);
+
+        // ✅ Modern popup theme
+        stylePopup(dialog.getDialogPane());
 
         ButtonType saveBtnType = new ButtonType(isEdit ? "Mettre à jour" : "Ajouter", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveBtnType, ButtonType.CANCEL);
@@ -463,7 +484,9 @@ public class CompteRenduController {
         }
     }
 
-    // ── UI helpers ─────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════════
+    // UI helpers
+    // ══════════════════════════════════════════════════════════════════════
     private Label buildProgressBadge(CompteRenduSeance.ProgresCR progrescr) {
         String text, style;
         if (progrescr == null) {
@@ -471,11 +494,26 @@ public class CompteRenduController {
             style = "-fx-background-color: #F1F5F9; -fx-text-fill: #64748B;";
         } else {
             switch (progrescr) {
-                case amelioration_significative -> { text  = "Amélioration Significative"; style = "-fx-background-color: #DCFCE7; -fx-text-fill: #16A34A;"; }
-                case amelioration_legere -> { text  = "Amélioration Légère"; style = "-fx-background-color: #D1FAE5; -fx-text-fill: #059669;"; }
-                case amelioration_stable -> { text  = "Amélioration Stable"; style = "-fx-background-color: #DBEAFE; -fx-text-fill: #1D4ED8;"; }
-                case stagnation -> { text  = "Stagnation"; style = "-fx-background-color: #FEF9C3; -fx-text-fill: #D97706;"; }
-                default -> { text  = progrescr.name(); style = "-fx-background-color: #F1F5F9; -fx-text-fill: #64748B;"; }
+                case amelioration_significative -> {
+                    text  = "Amélioration Significative";
+                    style = "-fx-background-color: #DCFCE7; -fx-text-fill: #16A34A;";
+                }
+                case amelioration_legere -> {
+                    text  = "Amélioration Légère";
+                    style = "-fx-background-color: #D1FAE5; -fx-text-fill: #059669;";
+                }
+                case amelioration_stable -> {
+                    text  = "Amélioration Stable";
+                    style = "-fx-background-color: #DBEAFE; -fx-text-fill: #1D4ED8;";
+                }
+                case stagnation -> {
+                    text  = "Stagnation";
+                    style = "-fx-background-color: #FEF9C3; -fx-text-fill: #D97706;";
+                }
+                default -> {
+                    text  = progrescr.name();
+                    style = "-fx-background-color: #F1F5F9; -fx-text-fill: #64748B;";
+                }
             }
         }
 
@@ -525,6 +563,7 @@ public class CompteRenduController {
 
     private void error(String title, String msg) {
         Alert a = new Alert(Alert.AlertType.ERROR);
+        stylePopup(a.getDialogPane());
         a.setTitle(title);
         a.setHeaderText(title);
         a.setContentText(msg);
@@ -533,9 +572,21 @@ public class CompteRenduController {
 
     private void info(String title, String msg) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
+        stylePopup(a.getDialogPane());
         a.setTitle(title);
         a.setHeaderText(title);
         a.setContentText(msg);
         a.showAndWait();
+    }
+
+    // ===================== Popup theme helper =====================
+    private void stylePopup(DialogPane pane) {
+        try {
+            if (pane == null) return;
+            pane.getStyleClass().add("mc-dialog");
+            var css = getClass().getResource("/popup.css");
+            if (css != null) pane.getStylesheets().add(css.toExternalForm());
+        } catch (Exception ignored) {
+        }
     }
 }

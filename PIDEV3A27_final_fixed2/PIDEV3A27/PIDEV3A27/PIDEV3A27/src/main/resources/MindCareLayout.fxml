@@ -36,10 +36,18 @@
                 <Button text="🏠  Accueil" styleClass="sideBtn" onAction="#loadAccueil"/>
 
                 <!-- Consultation dropdown -->
-                <TitledPane text="📋  Consultation" expanded="false" styleClass="sidePane">
+                <TitledPane text="📋  Consultation" expanded="true" styleClass="sidePane">
                     <content>
                         <VBox spacing="8" styleClass="submenu">
                             <Button text="📅  Rendez-vous" styleClass="subBtn" onAction="#loadRendezVous"/>
+
+                            <!-- ✅ Visible uniquement pour le psychologue -->
+                            <Button fx:id="statsButton"
+                                    text="📊  Statistiques"
+                                    styleClass="subBtn"
+                                    onAction="#loadRendezVousStats"
+                                    visible="true" managed="true"/>
+
                             <!-- ✅ Demande prof : supprimer le bouton Compte-rendu du sidebar.
                                  Le compte-rendu est maintenant accessible depuis l'interface Rendez-vous (bouton "Consultations terminées"). -->
                         </VBox>
@@ -126,7 +134,13 @@
                 </HBox>
 
                 <!-- Main content area - large white/light panel -->
-                <VBox fx:id="contentArea" spacing="14" styleClass="mainContentPanel" VBox.vgrow="ALWAYS">
+                <!--
+                    IMPORTANT:
+                    Certains contrôleurs (ex: RendezVousController) utilisent scene.lookup("#contentArea")
+                    pour naviguer vers d'autres vues. lookup() cherche via Node.id (CSS id) et pas fx:id.
+                    Donc on définit aussi id="contentArea".
+                -->
+                <VBox fx:id="contentArea" id="contentArea" spacing="14" styleClass="mainContentPanel" VBox.vgrow="ALWAYS">
                     <!-- Empty content area - will be filled dynamically -->
                     <Label text="" style="-fx-min-height: 400px;"/>
                 </VBox>

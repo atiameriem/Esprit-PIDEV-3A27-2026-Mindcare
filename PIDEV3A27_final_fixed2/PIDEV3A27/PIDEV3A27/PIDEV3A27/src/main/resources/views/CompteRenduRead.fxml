@@ -13,26 +13,21 @@
         <Insets top="30" right="30" bottom="30" left="30"/>
     </padding>
 
-    <!-- HEADER -->
     <HBox alignment="CENTER_LEFT" spacing="15">
         <VBox spacing="5">
-            <Label text="Mes comptes-rendus"
-                   style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
-            <Label text="Consultez les comptes-rendus de vos séances"
-                   style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
+            <Label text="Mes comptes-rendus" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+            <Label text="Consultez les comptes-rendus de vos séances" style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
         </VBox>
         <Pane HBox.hgrow="ALWAYS"/>
     </HBox>
 
     <Separator/>
 
-    <!-- SEARCH -->
     <HBox spacing="15" alignment="CENTER_LEFT">
-        <TextField fx:id="searchField"
-                   promptText="Rechercher ici"
-                   prefWidth="520"
+        <TextField fx:id="searchField" promptText="Rechercher ici" prefWidth="520"
                    style="-fx-padding: 10 10 10 10;"/>
     </HBox>
+
 
     <!-- PAGINATION -->
     <HBox spacing="10" alignment="CENTER_RIGHT">
@@ -42,20 +37,8 @@
         <Button fx:id="btnNext" text="Suivant ▶" onAction="#nextPage"/>
     </HBox>
 
-    <!-- LIST -->
-    <ScrollPane fx:id="listScroll"
-                VBox.vgrow="ALWAYS"
-                fitToWidth="true"
-                hbarPolicy="NEVER"
-                vbarPolicy="AS_NEEDED"
-                style="-fx-background-color: white; -fx-background: white;">
-
-        <VBox fx:id="compteRenduContainer"
-              spacing="15"
-              style="-fx-background-color: white; -fx-padding: 5 0 5 0;">
-            <!-- cartes ajoutées en Java -->
-        </VBox>
-
+    <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true" style="-fx-background-color: white; -fx-background: white;">
+        <VBox fx:id="compteRenduContainer" spacing="15" style="-fx-background-color: white; -fx-padding: 5 0 5 0;"/>
     </ScrollPane>
 
 </VBox>

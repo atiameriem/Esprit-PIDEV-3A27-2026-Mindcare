@@ -157,6 +157,7 @@ public class RendezVousCrudController {
                 }
             } else {
                 Alert a = new Alert(Alert.AlertType.WARNING);
+                stylePopup(a.getDialogPane());
                 if (owner != null) a.initOwner(owner);
                 a.setTitle("Échoué");
                 a.setHeaderText("Vérification reCAPTCHA échouée");
@@ -186,6 +187,7 @@ public class RendezVousCrudController {
 
     private void handleDelete(RendezVousView rv) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        stylePopup(alert.getDialogPane());
         alert.setTitle("Confirmation");
         alert.setHeaderText("Supprimer ce rendez-vous ?");
         alert.setContentText("Cette action est irréversible.");
@@ -207,6 +209,7 @@ public class RendezVousCrudController {
         if (rv == null) return;
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        stylePopup(alert.getDialogPane());
         alert.setTitle("Confirmation");
         alert.setHeaderText("Supprimer ce rendez-vous ?");
         alert.setContentText("Cette action est irréversible.");
@@ -331,6 +334,9 @@ public class RendezVousCrudController {
         Dialog<RendezVous> dialog = new Dialog<>();
         dialog.setTitle(isEdit ? "Modifier Rendez-vous" : "Nouveau Rendez-vous");
         dialog.setHeaderText(isEdit ? "Modifier les informations" : "Saisir les informations");
+
+        // ✅ Modern popup theme
+        stylePopup(dialog.getDialogPane());
 
         ButtonType saveType = new ButtonType(isEdit ? "Enregistrer" : "Ajouter", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveType, ButtonType.CANCEL);
@@ -793,6 +799,7 @@ public class RendezVousCrudController {
     private void showError(String title, Exception e) {
         e.printStackTrace();
         Alert a = new Alert(Alert.AlertType.ERROR);
+        stylePopup(a.getDialogPane());
         a.setTitle(title);
         a.setHeaderText(title);
         a.setContentText(e.getMessage());
@@ -801,6 +808,7 @@ public class RendezVousCrudController {
 
     private void showError(String title, String message) {
         Alert a = new Alert(Alert.AlertType.ERROR);
+        stylePopup(a.getDialogPane());
         a.setTitle(title);
         a.setHeaderText(title);
         a.setContentText(message);
@@ -809,6 +817,7 @@ public class RendezVousCrudController {
 
     private void showInfo(String title, String message) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
+        stylePopup(a.getDialogPane());
         a.setTitle(title);
         a.setHeaderText(title);
         a.setContentText(message);
@@ -879,6 +888,9 @@ public class RendezVousCrudController {
         Dialog<LocalTime> dialog = new Dialog<>();
         dialog.setTitle("Choisir une heure");
         dialog.setHeaderText(date == null ? null : ("Créneaux disponibles - " + date.format(DATE_FMT)));
+
+        // ✅ Modern popup theme
+        stylePopup(dialog.getDialogPane());
 
         ButtonType okType = new ButtonType("Valider", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(okType, ButtonType.CANCEL);
@@ -956,5 +968,16 @@ public class RendezVousCrudController {
         });
 
         return dialog.showAndWait().orElse(null);
+    }
+
+    // ===================== Popup theme helper =====================
+    private void stylePopup(DialogPane pane) {
+        try {
+            if (pane == null) return;
+            pane.getStyleClass().add("mc-dialog");
+            var css = getClass().getResource("/popup.css");
+            if (css != null) pane.getStylesheets().add(css.toExternalForm());
+        } catch (Exception ignored) {
+        }
     }
 }

@@ -35,7 +35,11 @@ public class MindCareLayoutController {
         // Charger accueil par défaut
         loadAccueil();
     }
-
+    @FXML
+    public void loadRendezVousStats() {
+        if (!Session.isPsychologue()) return;
+        loadView("RendezVousStats.fxml");
+    }
     /**
      * Charger une vue FXML dans la zone de contenu (centre)
      */

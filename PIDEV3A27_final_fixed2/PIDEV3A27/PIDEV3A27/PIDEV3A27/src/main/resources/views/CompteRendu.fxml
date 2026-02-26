@@ -9,18 +9,15 @@
       spacing="20"
       style="-fx-background-color: white;">
 
-    <!-- PADDING GLOBAL -->
     <padding>
         <Insets top="30" right="30" bottom="30" left="30"/>
     </padding>
 
-    <!-- ================= HEADER ================= -->
+    <!-- HEADER -->
     <HBox alignment="CENTER_LEFT" spacing="15">
-
         <VBox spacing="5">
             <Label text="Comptes-rendus de Séance"
                    style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
-
             <Label text="Suivez la progression thérapeutique de chaque séance"
                    style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
         </VBox>
@@ -30,57 +27,36 @@
         <Button fx:id="newCompteRenduButton"
                 text="+ Nouveau Compte-rendu"
                 onAction="#handleNewCompteRendu"
-                style="-fx-background-color: #1a6b7c;
-                       -fx-text-fill: white;
-                       -fx-padding: 10 20;
-                       -fx-background-radius: 8;"/>
+                style="-fx-background-color: #1a6b7c; -fx-text-fill: white;
+                       -fx-padding: 10 20; -fx-background-radius: 5;"/>
     </HBox>
 
     <Separator/>
 
-    <!-- ================= SEARCH ================= -->
+    <!-- SEARCH فقط -->
     <HBox spacing="15" alignment="CENTER_LEFT">
         <TextField fx:id="searchField"
-                   promptText="Rechercher ici"
+                   promptText="Rechercher ici "
                    prefWidth="520"
                    style="-fx-padding: 10 10 10 10;"/>
     </HBox>
 
-    <!-- ================= PAGINATION ================= -->
+
+    <!-- PAGINATION -->
     <HBox spacing="10" alignment="CENTER_RIGHT">
-
         <ComboBox fx:id="pageSizeCombo" prefWidth="90"/>
-
-        <Button fx:id="btnPrev"
-                text="◀ Précédent"
-                onAction="#prevPage"/>
-
-        <Label fx:id="pageLabel"
-               text="Page 1/1"
-               style="-fx-font-weight: 600;"/>
-
-        <Button fx:id="btnNext"
-                text="Suivant ▶"
-                onAction="#nextPage"/>
-
+        <Button fx:id="btnPrev" text="◀ Précédent" onAction="#prevPage"/>
+        <Label fx:id="pageLabel" text="Page 1/1"/>
+        <Button fx:id="btnNext" text="Suivant ▶" onAction="#nextPage"/>
     </HBox>
 
-    <!-- ================= LIST ================= -->
-    <ScrollPane fx:id="listScroll"
-                VBox.vgrow="ALWAYS"
-                fitToWidth="true"
-                hbarPolicy="NEVER"
-                vbarPolicy="AS_NEEDED"
-                style="-fx-background-color: white;
-                       -fx-background: white;">
-
-        <VBox fx:id="compteRenduContainer"
-              spacing="15"
-              style="-fx-background-color: white;
-                     -fx-padding: 5 0 5 0;">
-            <!-- Les cartes sont ajoutées dynamiquement en Java -->
+    <!-- LISTE -->
+    <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true"
+                style="-fx-background-color: white; -fx-background: white;">
+        <VBox fx:id="compteRenduContainer" spacing="15"
+              style="-fx-background-color: white; -fx-padding: 5 0 5 0;">
+            <!-- ✅ les cartes seront ajoutées en Java -->
         </VBox>
-
     </ScrollPane>
 
 </VBox>
