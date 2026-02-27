@@ -10,27 +10,33 @@ public class Formation {
     private String description;
     private String duree;
     private String niveau;
+    private String categorie;
     private String imagePath;
+    private int idCreateur;
+    private double averageRating;
     private List<Module> modules = new ArrayList<>();
 
     public Formation() {
     }
 
     public Formation(String titre, String description,
-                     String duree, String niveau) {
+            String duree, String niveau, String categorie) {
         this.titre = titre;
         this.description = description;
         this.duree = duree;
         this.niveau = niveau;
+        this.categorie = categorie;
     }
 
     public Formation(String titre, String description,
-                     String duree, String niveau, String imagePath) {
+            String duree, String niveau, String categorie, String imagePath, int idCreateur) {
         this.titre = titre;
         this.description = description;
         this.duree = duree;
         this.niveau = niveau;
+        this.categorie = categorie;
         this.imagePath = imagePath;
+        this.idCreateur = idCreateur;
     }
 
     public int getId() {
@@ -73,12 +79,28 @@ public class Formation {
         this.niveau = niveau;
     }
 
+    public String getCategorie() {
+        return categorie;
+    }
+
+    public void setCategorie(String categorie) {
+        this.categorie = categorie;
+    }
+
     public String getImagePath() {
         return imagePath;
     }
 
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
+    }
+
+    public int getIdCreateur() {
+        return idCreateur;
+    }
+
+    public void setIdCreateur(int idCreateur) {
+        this.idCreateur = idCreateur;
     }
 
     public void ajouterModule(Module module) {
@@ -91,5 +113,13 @@ public class Formation {
 
     public void setModules(List<Module> modules) {
         this.modules = modules != null ? modules : new ArrayList<>();
+    }
+
+    public double getAverageRating() {
+        return averageRating;
+    }
+
+    public void setAverageRating(double averageRating) {
+        this.averageRating = averageRating;
     }
 }

@@ -3,53 +3,81 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.shape.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="controllers.ConsulterSupportController"
-      spacing="20"
-      style="-fx-background-color: #F5F6FA;">
+<ScrollPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.statistique"
+            fitToWidth="true"
+            style="-fx-background-color: #F8FAFC; -fx-background: #F8FAFC;">
 
-    <padding>
-        <Insets top="25" right="25" bottom="25" left="25"/>
-    </padding>
-
-    <!-- HEADER CARD -->
-
-
-    <!-- MODULE PRINCIPAL -->
-    <VBox spacing="15"
-          style="-fx-background-color: white;
-                 -fx-padding: 20;
-                 -fx-background-radius: 15;">
-
-        <Label text="Introduction à la TCC"
-               style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-
-        <!-- Progression -->
-        <VBox spacing="5">
-            <Label text="Progression"/>
-            <ProgressBar fx:id="progressBar"
-                         progress="0.6"
-                         prefHeight="8"/>
-        </VBox>
-
-        <!-- Contenu -->
+    <VBox spacing="30" style="-fx-padding: 40;">
+        
+        <!-- HEADER -->
         <VBox spacing="10">
-
-            <Button text="🎧 Podcast - Qu’est-ce que la Thérapie Cognitive ?"
-                    onAction="#playPodcast"
-                    styleClass="contentBtn"/>
-
-            <Button text="📖 Les Principes de la TCC"
-                    onAction="#openPrincipes"
-                    styleClass="contentBtn"/>
-
-            <Button text="🎥 Présentation vidéo : Identifier les distorsions cognitives"
-                    onAction="#playVideo"
-                    styleClass="contentBtn"/>
-
+            <Label text="Tableau de Bord Personnel" 
+                   style="-fx-font-size: 32px; -fx-font-weight: 900; -fx-text-fill: #1E293B;"/>
+            <Label text="Suivez votre progression et votre engagement bien-être" 
+                   style="-fx-font-size: 16px; -fx-text-fill: #64748B;"/>
         </VBox>
+
+        <!-- STAT CARDS -->
+        <HBox spacing="20">
+            <VBox HBox.hgrow="ALWAYS" spacing="15" 
+                  style="-fx-background-color: white; -fx-padding: 25; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 15, 0, 0, 8);">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <StackPane style="-fx-background-color: #E0F2FE; -fx-background-radius: 12; -fx-padding: 10;">
+                        <Label text="⏱" style="-fx-font-size: 24px;"/>
+                    </StackPane>
+                    <VBox>
+                        <Label text="Temps Passé" style="-fx-text-fill: #64748B; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                        <Label fx:id="timeSpentLabel" text="0 min" style="-fx-text-fill: #0EA5E9; -fx-font-size: 28px; -fx-font-weight: 800;"/>
+                    </VBox>
+                </HBox>
+                <Label text="Temps total investi dans votre parcours" style="-fx-text-fill: #94A3B8; -fx-font-size: 12px;"/>
+            </VBox>
+
+            <VBox HBox.hgrow="ALWAYS" spacing="15" 
+                  style="-fx-background-color: white; -fx-padding: 25; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 15, 0, 0, 8);">
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <StackPane style="-fx-background-color: #F0FDF4; -fx-background-radius: 12; -fx-padding: 10;">
+                        <Label text="📈" style="-fx-font-size: 24px;"/>
+                    </StackPane>
+                    <VBox>
+                        <Label text="Progression" style="-fx-text-fill: #64748B; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                        <Label fx:id="progressLabel" text="0%" style="-fx-text-fill: #22C55E; -fx-font-size: 28px; -fx-font-weight: 800;"/>
+                    </VBox>
+                </HBox>
+                <ProgressBar fx:id="progressBar" progress="0.0" maxWidth="Infinity" style="-fx-accent: #22C55E; -fx-pref-height: 8;"/>
+            </VBox>
+        </HBox>
+
+        <!-- AI INSIGHT SECTION -->
+        <VBox spacing="20" 
+              style="-fx-background-color: linear-gradient(to bottom right, #5C98A8, #7FB9C7); -fx-padding: 35; -fx-background-radius: 24; -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.3), 20, 0, 0, 10);">
+            
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <StackPane style="-fx-background-color: rgba(255,255,255,0.2); -fx-background-radius: 50; -fx-padding: 8;">
+                    <Label text="✨" style="-fx-font-size: 20px; -fx-text-fill: white;"/>
+                </StackPane>
+                <Label text="MindCare AI" style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+            </HBox>
+            
+            <Separator style="-fx-opacity: 0.2;"/>
+            
+            <VBox spacing="15">
+                <Label text="Suggestions Personnalisées" style="-fx-text-fill: rgba(255,255,255,0.8); -fx-font-weight: bold;"/>
+                <Label fx:id="geminiInsightLabel" text="Analyse de vos données en cours..." 
+                       wrapText="true" 
+                       style="-fx-text-fill: white; -fx-font-size: 18px; -fx-line-spacing: 6;"/>
+            </VBox>
+
+            <Region prefHeight="20"/>
+            
+            <Button text="Rafraîchir les suggestions" onAction="#refreshAiInsight"
+                    maxWidth="250"
+                    style="-fx-background-color: white; -fx-text-fill: #5C98A8; -fx-font-weight: bold; -fx-background-radius: 12; -fx-padding: 12; -fx-cursor: hand;"/>
+        </VBox>
+
     </VBox>
-
-
-</VBox>
+</ScrollPane>

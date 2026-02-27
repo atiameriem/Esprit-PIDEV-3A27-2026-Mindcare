@@ -6,6 +6,13 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.stage.Stage;
+import models.User;
+import utils.UserSession;
+import javafx.event.ActionEvent;
 
 import java.io.IOException;
 
@@ -17,12 +24,20 @@ public class MindCareLayoutController {
     private TextField searchField;
     @FXML
     private VBox contentArea;
+    @FXML
+    private Label userNameLabel;
 
     @FXML
     public void initialize() {
         if (sortCombo != null) {
             sortCombo.getItems().setAll("Plus récents", "Plus anciens", "Plus aimés");
             sortCombo.getSelectionModel().selectFirst();
+        }
+
+        // Afficher le nom de l'utilisateur connecté
+        User user = UserSession.getInstance().getUser();
+        if (user != null) {
+            userNameLabel.setText(user.getNom() + " " + user.getPrenom());
         }
 
         // Charger la page d'accueil par défaut
@@ -70,11 +85,6 @@ public class MindCareLayoutController {
     }
 
     @FXML
-    private void loadChatbot() {
-        loadView("Chatbot.fxml");
-    }
-
-    @FXML
     private void loadPasserTests() {
         loadView("PasserTests.fxml");
     }
@@ -107,5 +117,23 @@ public class MindCareLayoutController {
     @FXML
     private void loadLocaux() {
         loadView("Locaux.fxml");
+    }
+
+    @FXML
+    private void handleLogout(ActionEvent event) {
+        // Clean session
+        UserSession.getInstance().cleanUserSession();
+
+        // Navigate back to Login
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/Login.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

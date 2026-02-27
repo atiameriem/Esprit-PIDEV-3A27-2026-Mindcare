@@ -8,6 +8,7 @@ public class Participation {
     private int idFormation;
     private Date dateInscription;
     private String statut; // "en attente", "accepté"
+    private int rating; // 0 à 5 stars
 
     private String titreFormation;
     private String imagePath;
@@ -76,5 +77,13 @@ public class Participation {
 
     public void setTitreFormation(String titreFormation) {
         this.titreFormation = titreFormation;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
     }
 }

@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS formation (
     description TEXT,
     duree VARCHAR(100),
     niveau VARCHAR(50),
+    categorie VARCHAR(100),
     image_path VARCHAR(500)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
