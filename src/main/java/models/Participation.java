@@ -13,6 +13,7 @@ public class Participation {
     private String titreFormation;
     private String imagePath;
 
+
     public String getImagePath() {
         return imagePath;
     }
