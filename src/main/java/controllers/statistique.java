@@ -1,76 +1,84 @@
 package controllers;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import models.ProgressionModule;
+import services.GeminiService;
+import services.ProgressionService;
+import utils.UserSession;
 
+import java.sql.SQLException;
+import java.util.List;
+
+/**
+ * Contrôleur pour la vue Statistiques.
+ * Calcule le temps passé et la progression réelle de l'utilisateur.
+ */
 public class statistique {
 
     @FXML
+    private Label timeSpentLabel;
+    @FXML
+    private Label progressLabel;
+    @FXML
     private ProgressBar progressBar;
+    @FXML
+    private Label geminiInsightLabel;
+
+    private final ProgressionService progressionService = new ProgressionService();
+    private final GeminiService geminiService = new GeminiService();
+    private int currentUserId;
 
     @FXML
     public void initialize() {
-        progressBar.setProgress(0.6);
+        if (UserSession.getInstance().getUser() != null) {
+            currentUserId = UserSession.getInstance().getUser().getId();
+            loadStats();
+        }
     }
 
-    /* ========================= */
-    /* ===== ACTIONS HEADER ==== */
-    /* ========================= */
+    private void loadStats() {
+        try {
+            // 1. Temps Total
+            int totalMinutes = progressionService.getTotalTimeSpent(currentUserId);
+            timeSpentLabel.setText(totalMinutes + " min");
 
-    @FXML
-    private void inscrireCours() {
-        showMessage("Inscription",
-                "Vous êtes maintenant inscrit au cours !");
-    }
+            // 2. Progression Globale
+            List<ProgressionModule> progs = progressionService.getAllForUser(currentUserId);
+            if (!progs.isEmpty()) {
+                double avg = progs.stream().mapToDouble(ProgressionModule::getTaux_completion).average().orElse(0.0);
+                progressBar.setProgress(avg);
+                progressLabel.setText((int) (avg * 100) + "%");
 
-    /* ========================= */
-    /* ===== CONTENU PRINCIPAL == */
-    /* ========================= */
+                // 3. Gemini Insight
+                refreshAiInsight();
+            } else {
+                geminiInsightLabel.setText("Commencez votre première formation pour recevoir des suggestions !");
+            }
 
-    @FXML
-    private void playPodcast() {
-        showMessage("Podcast",
-                "Lecture du podcast en cours...");
-    }
-
-    @FXML
-    private void openPrincipes() {
-        showMessage("Document",
-                "Ouverture du document PDF...");
-    }
-
-    @FXML
-    private void playVideo() {
-        showMessage("Vidéo",
-                "Lecture de la vidéo...");
-    }
-
-    /* ========================= */
-    /* ===== AUTRES MODULES ==== */
-    /* ========================= */
-
-    @FXML
-    private void openExercice() {
-        showMessage("Exercice",
-                "Ouverture de l'exercice pratique...");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
-    private void openCaseStudy() {
-        showMessage("Étude de cas",
-                "Ouverture de l'étude de cas...");
-    }
+    private void refreshAiInsight() {
+        geminiInsightLabel.setText("L'IA analyse votre parcours...");
 
-    /* ========================= */
-    /* ===== UTILITAIRE ======== */
-    /* ========================= */
+        new Thread(() -> {
+            try {
+                int totalMinutes = progressionService.getTotalTimeSpent(currentUserId);
+                List<ProgressionModule> progs = progressionService.getAllForUser(currentUserId);
+                double avg = progs.stream().mapToDouble(ProgressionModule::getTaux_completion).average().orElse(0.0);
 
-    private void showMessage(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+                String insight = geminiService.getAiInsights(totalMinutes, avg);
+
+                Platform.runLater(() -> geminiInsightLabel.setText(insight));
+            } catch (Exception e) {
+                Platform.runLater(() -> geminiInsightLabel.setText("L'IA MindCare vous encourage à continuer !"));
+            }
+        }).start();
     }
 }

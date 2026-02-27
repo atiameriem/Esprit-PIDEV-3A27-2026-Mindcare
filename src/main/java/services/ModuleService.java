@@ -88,6 +88,19 @@ public class ModuleService implements IService<Module> {
         return modules;
     }
 
+    public Module findById(int id) throws SQLException {
+        String query = "SELECT * FROM module WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, id);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToModule(resultSet);
+                }
+            }
+        }
+        return null;
+    }
+
     private Module mapResultSetToModule(ResultSet rs) throws SQLException {
         Module m = new Module();
         m.setId(rs.getInt("id"));

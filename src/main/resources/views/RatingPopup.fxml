@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER" spacing="20.0" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RatingPopupController">
+   <children>
+      <Label text="Évaluez votre formation" textFill="#1a237e">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </Label>
+      <Label text="Comment s'est passée votre expérience ?" textFill="#555555" wrapText="true" alignment="CENTER" />
+      
+      <HBox alignment="CENTER" spacing="15.0">
+         <children>
+            <Button fx:id="star1" mnemonicParsing="false" onAction="#handleStar1" prefHeight="60.0" prefWidth="60.0" style="-fx-background-color: transparent; -fx-cursor: hand;">
+               <graphic>
+                  <javafx.scene.shape.SVGPath fx:id="path1" content="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="#E0E0E0" scaleX="2.5" scaleY="2.5" />
+               </graphic>
+            </Button>
+            <Button fx:id="star2" mnemonicParsing="false" onAction="#handleStar2" prefHeight="60.0" prefWidth="60.0" style="-fx-background-color: transparent; -fx-cursor: hand;">
+               <graphic>
+                  <javafx.scene.shape.SVGPath fx:id="path2" content="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="#E0E0E0" scaleX="2.5" scaleY="2.5" />
+               </graphic>
+            </Button>
+            <Button fx:id="star3" mnemonicParsing="false" onAction="#handleStar3" prefHeight="60.0" prefWidth="60.0" style="-fx-background-color: transparent; -fx-cursor: hand;">
+               <graphic>
+                  <javafx.scene.shape.SVGPath fx:id="path3" content="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="#E0E0E0" scaleX="2.5" scaleY="2.5" />
+               </graphic>
+            </Button>
+            <Button fx:id="star4" mnemonicParsing="false" onAction="#handleStar4" prefHeight="60.0" prefWidth="60.0" style="-fx-background-color: transparent; -fx-cursor: hand;">
+               <graphic>
+                  <javafx.scene.shape.SVGPath fx:id="path4" content="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="#E0E0E0" scaleX="2.5" scaleY="2.5" />
+               </graphic>
+            </Button>
+            <Button fx:id="star5" mnemonicParsing="false" onAction="#handleStar5" prefHeight="60.0" prefWidth="60.0" style="-fx-background-color: transparent; -fx-cursor: hand;">
+               <graphic>
+                  <javafx.scene.shape.SVGPath fx:id="path5" content="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="#E0E0E0" scaleX="2.5" scaleY="2.5" />
+               </graphic>
+            </Button>
+         </children>
+      </HBox>
+      
+      <HBox alignment="CENTER" spacing="15.0">
+         <children>
+            <Button mnemonicParsing="false" onAction="#handleCancel" prefWidth="100.0" style="-fx-background-color: #f5f5f5; -fx-text-fill: #333; -fx-background-radius: 5; -fx-cursor: hand; -fx-padding: 8;" text="Plus tard" />
+            <Button mnemonicParsing="false" onAction="#handleSave" prefWidth="100.0" style="-fx-background-color: #1a237e; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-padding: 8; -fx-font-weight: bold;" text="Valider" />
+         </children>
+         <VBox.margin>
+            <Insets top="10.0" />
+         </VBox.margin>
+      </HBox>
+   </children>
+</VBox>

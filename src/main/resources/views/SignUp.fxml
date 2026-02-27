@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+<?import javafx.collections.FXCollections?>
+
+<AnchorPane prefHeight="700.0" prefWidth="1200.0" stylesheets="@../mindcare.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.SignUpController">
+   <children>
+      <VBox alignment="CENTER" layoutX="350.0" layoutY="50.0" prefHeight="600.0" prefWidth="500.0" spacing="15.0" styleClass="mainContentPanel" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="350.0" AnchorPane.rightAnchor="350.0" AnchorPane.topAnchor="50.0">
+         <children>
+            <VBox alignment="CENTER" spacing="5.0">
+               <children>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="contentTopTitle" text="Create Account">
+                     <font>
+                        <Font name="System Bold" size="28.0" />
+                     </font>
+                  </Text>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="contentTopSubtitle" text="Join MindCare today and start your journey." />
+               </children>
+               <VBox.margin>
+                  <Insets bottom="10.0" />
+               </VBox.margin>
+            </VBox>
+            <HBox spacing="15.0">
+               <children>
+                  <VBox HBox.hgrow="ALWAYS" spacing="5.0">
+                     <children>
+                        <Label text="First Name" textFill="#1f2a33">
+                           <font>
+                              <Font name="System Bold" size="13.0" />
+                           </font>
+                        </Label>
+                        <TextField fx:id="prenomField" prefHeight="40.0" promptText="First Name" styleClass="searchField" />
+                     </children>
+                  </VBox>
+                  <VBox HBox.hgrow="ALWAYS" spacing="5.0">
+                     <children>
+                        <Label text="Last Name" textFill="#1f2a33">
+                           <font>
+                              <Font name="System Bold" size="13.0" />
+                           </font>
+                        </Label>
+                        <TextField fx:id="nomField" prefHeight="40.0" promptText="Last Name" styleClass="searchField" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <VBox spacing="5.0">
+               <children>
+                  <Label text="Email Address" textFill="#1f2a33">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="emailField" prefHeight="40.0" promptText="Enter your email" styleClass="searchField" />
+               </children>
+            </VBox>
+            <VBox spacing="5.0">
+               <children>
+                  <Label text="Password" textFill="#1f2a33">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </Label>
+                  <PasswordField fx:id="passwordField" prefHeight="40.0" promptText="Enter your password" styleClass="searchField" />
+               </children>
+            </VBox>
+            <VBox spacing="5.0">
+               <children>
+                  <Label text="Role" textFill="#1f2a33">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </Label>
+                  <ComboBox fx:id="roleComboBox" prefHeight="40.0" prefWidth="500.0" promptText="Select your role" styleClass="searchField">
+                     <items>
+                        <FXCollections fx:factory="observableArrayList">
+                           <String fx:value="patient" />
+                            <String fx:value="admin" />
+                           <String fx:value="psychologue" />
+                        </FXCollections>
+                     </items>
+                  </ComboBox>
+               </children>
+            </VBox>
+            <Label fx:id="errorLabel" textFill="#e74c3c" visible="false">
+               <font>
+                  <Font size="13.0" />
+               </font>
+            </Label>
+            <Button fx:id="signUpButton" mnemonicParsing="false" onAction="#handleSignUp" prefHeight="45.0" prefWidth="500.0" text="Create Account">
+               <styleClass>
+                  <String fx:value="primaryBtn" />
+               </styleClass>
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+               <VBox.margin>
+                  <Insets top="10.0" />
+               </VBox.margin>
+            </Button>
+            <HBox alignment="CENTER" spacing="5.0">
+               <children>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Already have an account?" />
+                  <Hyperlink onAction="#handleShowLogin" text="Log In" textFill="#5c98a8">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </Hyperlink>
+               </children>
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+            </HBox>
+         </children>
+         <padding>
+            <Insets bottom="30.0" left="40.0" right="40.0" top="30.0" />
+         </padding>
+      </VBox>
+   </children>
+</AnchorPane>

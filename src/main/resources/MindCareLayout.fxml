@@ -26,7 +26,7 @@
             <!-- Profile card -->
             <VBox spacing="6" styleClass="profileCard">
                 <Label text="Bonjour," styleClass="mutedWhite"/>
-                <Label text="Dr. Marie Dubois" styleClass="whiteBold"/>
+                <Label fx:id="userNameLabel" text="Dr. Marie Dubois" styleClass="whiteBold"/>
             </VBox>
 
             <!-- Menu -->
@@ -49,7 +49,6 @@
                     <content>
                         <VBox spacing="8" styleClass="submenu">
                             <Button text="📰  Fil d'actualité" styleClass="subBtn" onAction="#loadForum"/>
-                            <Button text="🤖  Chatbot" styleClass="subBtn" onAction="#loadChatbot"/>
                         </VBox>
                     </content>
                 </TitledPane>
@@ -120,7 +119,7 @@
                     <Pane HBox.hgrow="ALWAYS"/>
 
                     <!-- Right: Déconnexion button -->
-                    <Button text="🚪  Déconnexion" styleClass="logoutBtn"/>
+                    <Button text="🚪  Déconnexion" styleClass="logoutBtn" onAction="#handleLogout"/>
                 </HBox>
 
                 <!-- Main content area - large white/light panel -->
