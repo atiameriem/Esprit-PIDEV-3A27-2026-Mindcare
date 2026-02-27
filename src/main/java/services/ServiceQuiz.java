@@ -35,7 +35,7 @@ public class ServiceQuiz implements IService<Quiz> {
         String req = "INSERT INTO quiz (id_users, cree_par, titre, description, type_test, actif, date_creation) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pst = cnx.prepareStatement(req, Statement.RETURN_GENERATED_KEYS)) {
-            pst.setInt    (1, quiz.getIdUsers());
+            pst.setInt    (1, quiz.getIdUsers());   // 0 = global, >0 = patient spécifique
             pst.setInt    (2, quiz.getCreePar());
             pst.setString (3, quiz.getTitre());
             pst.setString (4, quiz.getDescription());
@@ -49,7 +49,8 @@ public class ServiceQuiz implements IService<Quiz> {
                 if (rs.next()) quiz.setIdQuiz(rs.getInt(1));
             }
         }
-        System.out.println("Quiz ajouté avec ID = " + quiz.getIdQuiz());
+        System.out.println("Quiz ajouté avec ID = " + quiz.getIdQuiz()
+                + (quiz.getIdUsers() == 0 ? " [GLOBAL — tous les patients]" : " [Patient ID=" + quiz.getIdUsers() + "]"));
     }
 
     @Override
@@ -76,10 +77,17 @@ public class ServiceQuiz implements IService<Quiz> {
         System.out.println("Quiz supprimé ID = " + quiz.getIdQuiz());
     }
 
+    /**
+     * Retourne TOUS les quiz (globaux + spécifiques à un patient).
+     * Utilisé par le psychologue pour voir l'ensemble des quiz.
+     */
     @Override
     public List<Quiz> getAll() throws SQLException {
         List<Quiz> quizzes = new ArrayList<>();
-        String req = "SELECT q.*, u.nom, u.prenom FROM quiz q JOIN users u ON q.cree_par = u.id_users";
+        String req = "SELECT q.*, u.nom, u.prenom " +
+                "FROM quiz q " +
+                "JOIN users u ON q.cree_par = u.id_users " +
+                "ORDER BY q.date_creation DESC";
         try (Statement st = cnx.createStatement();
              ResultSet rs = st.executeQuery(req)) {
             while (rs.next()) quizzes.add(mapResultSetToQuiz(rs));
@@ -109,7 +117,7 @@ public class ServiceQuiz implements IService<Quiz> {
     // ── Psychologue ───────────────────────────────────────────────
     public List<Quiz> getQuizParPsychologue(int idPsychologue) throws SQLException {
         List<Quiz> quizzes = new ArrayList<>();
-        String req = "SELECT * FROM quiz WHERE cree_par = ?";
+        String req = "SELECT * FROM quiz WHERE cree_par = ? ORDER BY date_creation DESC";
         try (PreparedStatement pst = cnx.prepareStatement(req)) {
             pst.setInt(1, idPsychologue);
             try (ResultSet rs = pst.executeQuery()) {
@@ -125,9 +133,16 @@ public class ServiceQuiz implements IService<Quiz> {
     }
 
     // ── Patient ───────────────────────────────────────────────────
+    /**
+     * Retourne les quiz visibles par un patient :
+     *  - Les quiz globaux (id_users = 0) → pour tous les patients
+     *  - Les quiz spécifiquement assignés à ce patient (id_users = idPatient)
+     */
     public List<Quiz> getQuizParPatient(int idPatient) throws SQLException {
         List<Quiz> quizzes = new ArrayList<>();
-        String req = "SELECT * FROM quiz WHERE id_users = ?";
+        String req = "SELECT * FROM quiz " +
+                "WHERE id_users = ? OR id_users = 0 " +
+                "ORDER BY date_creation DESC";
         try (PreparedStatement pst = cnx.prepareStatement(req)) {
             pst.setInt(1, idPatient);
             try (ResultSet rs = pst.executeQuery()) {
@@ -140,6 +155,19 @@ public class ServiceQuiz implements IService<Quiz> {
     // ✅ Alias pour PasserTestsController
     public List<Quiz> getQuizByPatient(int idPatient) throws SQLException {
         return getQuizParPatient(idPatient);
+    }
+
+    /**
+     * Retourne uniquement les quiz globaux (id_users = 0).
+     */
+    public List<Quiz> getQuizGlobaux() throws SQLException {
+        List<Quiz> quizzes = new ArrayList<>();
+        String req = "SELECT * FROM quiz WHERE id_users = 0 ORDER BY date_creation DESC";
+        try (Statement st = cnx.createStatement();
+             ResultSet rs = st.executeQuery(req)) {
+            while (rs.next()) quizzes.add(mapResultSetToQuiz(rs));
+        }
+        return quizzes;
     }
 
     // ── Score & Historique ────────────────────────────────────────
@@ -182,7 +210,6 @@ public class ServiceQuiz implements IService<Quiz> {
         List<String> historique = new ArrayList<>();
         String req =
                 "SELECT h.score_total, h.date_passage, q.titre, " +
-                        // ✅ score_max = nb_questions × valeur_max par question
                         "(SELECT COUNT(DISTINCT qst.id_question) * MAX(r.valeur) " +
                         " FROM question qst " +
                         " JOIN reponse r ON r.id_question = qst.id_question " +
@@ -197,14 +224,13 @@ public class ServiceQuiz implements IService<Quiz> {
             try (ResultSet rs = pst.executeQuery()) {
                 while (rs.next()) {
                     int scoreMax = rs.getInt("score_max");
-                    if (scoreMax <= 0) scoreMax = 6; // fallback sécurité
+                    if (scoreMax <= 0) scoreMax = 6;
 
                     historique.add(
-                            "Quiz: "  + rs.getString("titre") +
+                            "Quiz: "   + rs.getString("titre") +
                                     " | Score: " + rs.getInt("score_total") +
-                                    " | Max: "   + scoreMax +           // ✅ AJOUT
-                                    " | Date: "  + rs.getTimestamp("date_passage")
-                                    .toLocalDateTime()
+                                    " | Max: "   + scoreMax +
+                                    " | Date: "  + rs.getTimestamp("date_passage").toLocalDateTime()
                     );
                 }
             }
@@ -215,7 +241,6 @@ public class ServiceQuiz implements IService<Quiz> {
     // ── Patients ──────────────────────────────────────────────────
     public Map<Integer, String> getTousLesPatients() throws SQLException {
         Map<Integer, String> patients = new LinkedHashMap<>();
-        // ✅ Cherche 'patient' en minuscule ET majuscule
         String req = "SELECT id_users, nom, prenom FROM users WHERE LOWER(role) = 'patient'";
         try (PreparedStatement pst = cnx.prepareStatement(req);
              ResultSet rs = pst.executeQuery()) {
@@ -233,7 +258,7 @@ public class ServiceQuiz implements IService<Quiz> {
     private Quiz mapResultSetToQuiz(ResultSet rs) throws SQLException {
         Quiz quiz = new Quiz();
         quiz.setIdQuiz      (rs.getInt      ("id_quiz"));
-        quiz.setIdUsers     (rs.getInt      ("id_users"));
+        quiz.setIdUsers     (rs.getInt      ("id_users"));   // 0 = global
         quiz.setCreePar     (rs.getInt      ("cree_par"));
         quiz.setTitre       (rs.getString   ("titre"));
         quiz.setDescription (rs.getString   ("description"));

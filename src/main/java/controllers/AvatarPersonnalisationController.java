@@ -16,15 +16,11 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * ══════════════════════════════════════════════════════════════
- *  AvatarPersonnalisationController — v3 CORRIGÉ
+ *  AvatarPersonnalisationController — v4
  *
- *  ✅ Fix 1 : Pseudo = nom réel depuis Session.getPrenom()
- *  ✅ Fix 2 : Bouton Sauvegarder toujours visible (hors ScrollPane)
- *  ✅ Fix 3 : FlowPane pour les couleurs (setWrap supprimé)
- *  ✅ Fix 4 : Après sauvegarde → rafraichirCache() pour mettre à jour
- *             le PNG local avec le nouveau seed/style/couleur
- *  ✅ Fix 5 : Le dashboard doit appeler chargerPrefs() + getAvatarUrl()
- *             ou simplement getAvatarUrlDepuisFichier(userId)
+ *  Nouveauté : sauvegarderPrefs() écrit en DB + fichier local
+ *  L'image base64 est téléchargée et stockée en DB au moment
+ *  du clic sur "Sauvegarder" → affichage instantané au prochain login
  * ══════════════════════════════════════════════════════════════
  */
 public class AvatarPersonnalisationController {
@@ -35,7 +31,7 @@ public class AvatarPersonnalisationController {
     private Runnable onSauvegardeCallback;
 
     // ══════════════════════════════════════════════════════════════
-    // Point d'entrée statique
+    // Point d'entrée
     // ══════════════════════════════════════════════════════════════
     public static void ouvrir(int userId,
                               AvatarService avatarService,
@@ -45,10 +41,10 @@ public class AvatarPersonnalisationController {
                     new AvatarPersonnalisationController();
             ctrl.onSauvegardeCallback = onSauvegarde;
 
-            // ── Charge les prefs depuis le fichier (seed stable) ──
+            // Charge depuis DB en priorité
             ctrl.prefs = avatarService.chargerPrefs(userId);
 
-            // ── Pseudo = prénom réel, jamais "Patient #X" ─────────
+            // Pseudo = prénom réel
             String prenom = Session.getPrenom();
             if (prenom == null || prenom.isBlank())
                 prenom = Session.getFullName();
@@ -77,7 +73,7 @@ public class AvatarPersonnalisationController {
         root.setStyle("-fx-background-color:#f8fafc;");
 
         // ════════════════════════════════════════════════════════
-        // PANNEAU GAUCHE — Prévisualisation live
+        // PANNEAU GAUCHE — Prévisualisation
         // ════════════════════════════════════════════════════════
         VBox panneauGauche = new VBox(18);
         panneauGauche.setAlignment(Pos.CENTER);
@@ -88,36 +84,29 @@ public class AvatarPersonnalisationController {
                 "-fx-background-color:white;" +
                         "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.08),12,0,2,0);");
 
-        Label lblAvatarTitre = new Label("🖼️ Aperçu en direct");
-        lblAvatarTitre.setStyle(
+        Label lblTitreG = new Label("🖼️ Aperçu en direct");
+        lblTitreG.setStyle(
                 "-fx-font-size:12px; -fx-font-weight:900;" +
                         "-fx-text-fill:#64748b;" +
                         "-fx-background-color:#f1f5f9;" +
                         "-fx-background-radius:20; -fx-padding:5 14 5 14;");
 
-        // Cercle avatar avec halos
+        // Cercle avatar
         StackPane avatarPane = new StackPane();
-        avatarPane.setMinSize(200, 200);
-        avatarPane.setMaxSize(200, 200);
-
+        avatarPane.setMinSize(200, 200); avatarPane.setMaxSize(200, 200);
         Circle haloExt = new Circle(100, 100, 98);
         haloExt.setStyle("-fx-fill:rgba(99,102,241,0.08);");
         Circle haloInt = new Circle(100, 100, 84);
         haloInt.setStyle("-fx-fill:rgba(99,102,241,0.06);");
         Circle fondC = new Circle(100, 100, 76);
-        fondC.setStyle(
-                "-fx-fill:white;" +
-                        "-fx-stroke:rgba(99,102,241,0.18); -fx-stroke-width:2;" +
-                        "-fx-effect:dropshadow(gaussian,rgba(99,102,241,0.20),16,0,0,4);");
-
+        fondC.setStyle("-fx-fill:white; -fx-stroke:rgba(99,102,241,0.18);" +
+                "-fx-stroke-width:2; -fx-effect:dropshadow(gaussian," +
+                "rgba(99,102,241,0.20),16,0,0,4);");
         ImageView avatarImg = new ImageView();
-        avatarImg.setFitWidth(148);
-        avatarImg.setFitHeight(148);
+        avatarImg.setFitWidth(148); avatarImg.setFitHeight(148);
         avatarImg.setPreserveRatio(true);
-
         Label lblChargement = new Label("⏳");
         lblChargement.setStyle("-fx-font-size:32px;");
-
         avatarPane.getChildren().addAll(haloExt, haloInt, fondC, avatarImg, lblChargement);
 
         Label lblPseudo = new Label(prefs.pseudo);
@@ -138,7 +127,6 @@ public class AvatarPersonnalisationController {
                         "-fx-padding:9 18 9 18;" +
                         "-fx-border-color:#e2e8f0; -fx-border-radius:12; -fx-border-width:1;");
         btnRegenerer.setOnAction(e -> {
-            // ✅ Nouveau seed via méthode dédiée — temporaire jusqu'à Save
             prefs.seed = svc.genererNouveauSeed(prefs.userId);
             rafraichirPreview(avatarImg, lblChargement, svc);
         });
@@ -148,8 +136,8 @@ public class AvatarPersonnalisationController {
                 "-fx-font-size:9px; -fx-text-fill:#cbd5e1; -fx-font-style:italic;");
 
         panneauGauche.getChildren().addAll(
-                lblAvatarTitre, avatarPane,
-                lblPseudo, lblStyleActuel, btnRegenerer, lblCredit);
+                lblTitreG, avatarPane, lblPseudo,
+                lblStyleActuel, btnRegenerer, lblCredit);
 
         // ════════════════════════════════════════════════════════
         // PANNEAU DROIT — Contenu scrollable
@@ -182,9 +170,7 @@ public class AvatarPersonnalisationController {
         VBox sectionStyles = creerSection("🎭  Style d'avatar");
         TilePane grillStyles = new TilePane();
         grillStyles.setHgap(8); grillStyles.setVgap(8);
-        grillStyles.setPrefColumns(4);
-        grillStyles.setPrefTileWidth(95);
-
+        grillStyles.setPrefColumns(4); grillStyles.setPrefTileWidth(95);
         ToggleGroup toggleStyle = new ToggleGroup();
         for (Style s : Style.values()) {
             ToggleButton btn = new ToggleButton(s.label);
@@ -202,19 +188,17 @@ public class AvatarPersonnalisationController {
         }
         sectionStyles.getChildren().add(grillStyles);
 
-        // § Couleurs — FlowPane (correction setWrap)
+        // § Couleurs
         VBox sectionCouleurs = creerSection("🎨  Couleur de fond");
         FlowPane grillCouleurs = new FlowPane(10, 10);
         grillCouleurs.setAlignment(Pos.CENTER_LEFT);
-
         for (CouleurFond c : CouleurFond.values()) {
             StackPane cercle = new StackPane();
             cercle.setMinSize(38, 38); cercle.setMaxSize(38, 38);
             cercle.setUserData(c);
             appliquerStyleCercle(cercle, c, prefs.fond == c);
             Label tick = new Label(prefs.fond == c ? "✓" : "");
-            tick.setStyle(
-                    "-fx-font-size:14px; -fx-font-weight:bold; -fx-text-fill:#6366f1;");
+            tick.setStyle("-fx-font-size:14px; -fx-font-weight:bold; -fx-text-fill:#6366f1;");
             cercle.getChildren().add(tick);
             Tooltip.install(cercle, new Tooltip(c.label));
             cercle.setOnMouseClicked(e -> {
@@ -238,9 +222,8 @@ public class AvatarPersonnalisationController {
         VBox sectionTaille = creerSection("📐  Taille de l'avatar");
         Label lblTailleVal = new Label(prefs.taille + " px");
         lblTailleVal.setStyle(
-                "-fx-font-size:11px; -fx-font-weight:bold;" +
-                        "-fx-text-fill:#6366f1; -fx-background-color:#ede9fe;" +
-                        "-fx-background-radius:20; -fx-padding:3 10 3 10;");
+                "-fx-font-size:11px; -fx-font-weight:bold; -fx-text-fill:#6366f1;" +
+                        "-fx-background-color:#ede9fe; -fx-background-radius:20; -fx-padding:3 10 3 10;");
         Slider sliderTaille = new Slider(100, 300, prefs.taille);
         sliderTaille.setMajorTickUnit(50);
         sliderTaille.setShowTickLabels(true);
@@ -258,24 +241,18 @@ public class AvatarPersonnalisationController {
         contenuScroll.getChildren().addAll(
                 lblTitreApp, lblSousTitre,
                 new Separator(),
-                sectionPseudo,
-                sectionStyles,
-                sectionCouleurs,
-                sectionTaille);
+                sectionPseudo, sectionStyles,
+                sectionCouleurs, sectionTaille);
 
         ScrollPane scroll = new ScrollPane(contenuScroll);
         scroll.setFitToWidth(true);
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scroll.setStyle(
-                "-fx-background:transparent;" +
-                        "-fx-background-color:transparent;" +
-                        "-fx-border-color:transparent;");
+        scroll.setStyle("-fx-background:transparent; -fx-background-color:transparent;" +
+                "-fx-border-color:transparent;");
         VBox.setVgrow(scroll, Priority.ALWAYS);
 
-        // ── Boutons FIXES en bas (hors scroll) ────────────────
-        Separator sepBas = new Separator();
-
+        // ── Boutons fixes en bas ───────────────────────────────
         final String styleSave =
                 "-fx-background-color:#6366f1; -fx-text-fill:white;" +
                         "-fx-font-size:13px; -fx-font-weight:800;" +
@@ -301,26 +278,26 @@ public class AvatarPersonnalisationController {
         btnSauvegarder.setOnMouseEntered(e -> btnSauvegarder.setStyle(styleSaveHover));
         btnSauvegarder.setOnMouseExited(e  -> btnSauvegarder.setStyle(styleSave));
         btnSauvegarder.setOnAction(e -> {
-            // 1. Sauvegarde les prefs (seed, style, couleur, taille, pseudo)
-            svc.sauvegarderPrefs(prefs);
+            // Désactive pendant la sauvegarde
+            btnSauvegarder.setDisable(true);
+            btnSauvegarder.setText("⏳ Sauvegarde...");
 
-            // 2. ✅ Télécharge le PNG avec les NOUVELLES prefs sauvegardées
-            //    → le cache local est maintenant synchronisé
-            String urlFinale = svc.getAvatarUrl(prefs);
-            CompletableFuture.runAsync(
-                    () -> svc.telechargerAvatarLocal(urlFinale, prefs.userId));
-
-            stage.close();
-
-            // 3. Notifie le dashboard → il doit recharger via chargerPrefs()
-            if (onSauvegardeCallback != null)
-                Platform.runLater(onSauvegardeCallback);
+            CompletableFuture.runAsync(() -> {
+                // ✅ Sauvegarde en DB + fichier local + encode base64 en DB
+                svc.sauvegarderPrefs(prefs);
+            }).thenRun(() -> Platform.runLater(() -> {
+                btnSauvegarder.setDisable(false);
+                btnSauvegarder.setText("💾  Sauvegarder l'avatar");
+                stage.close();
+                if (onSauvegardeCallback != null)
+                    onSauvegardeCallback.run();
+            }));
         });
 
         HBox boutonsLigne = new HBox(12, btnAnnuler, btnSauvegarder);
         boutonsLigne.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox zoneBoutons = new VBox(10, sepBas, boutonsLigne);
+        VBox zoneBoutons = new VBox(10, new Separator(), boutonsLigne);
         zoneBoutons.setPadding(new Insets(10, 28, 20, 28));
         zoneBoutons.setStyle("-fx-background-color:#f8fafc;");
 
@@ -333,13 +310,21 @@ public class AvatarPersonnalisationController {
         javafx.scene.Scene scene = new javafx.scene.Scene(root, 720, 600);
         stage.setScene(scene);
 
-        // Aperçu initial basé sur les prefs chargées depuis fichier
-        rafraichirPreview(avatarImg, lblChargement, svc);
+        // Aperçu initial — essaie base64 d'abord, sinon URL
+        Image imgBase64 = svc.getImageDepuisBase64(prefs);
+        if (imgBase64 != null && !imgBase64.isError()) {
+            avatarImg.setImage(imgBase64);
+            avatarImg.setVisible(true);
+            lblChargement.setVisible(false);
+        } else {
+            rafraichirPreview(avatarImg, lblChargement, svc);
+        }
+
         stage.showAndWait();
     }
 
     // ══════════════════════════════════════════════════════════════
-    // Preview asynchrone avec animation
+    // Preview live asynchrone
     // ══════════════════════════════════════════════════════════════
     private void rafraichirPreview(ImageView avatarImg,
                                    Label lblChargement,
@@ -347,31 +332,26 @@ public class AvatarPersonnalisationController {
         lblChargement.setVisible(true);
         avatarImg.setVisible(false);
         String url = svc.getAvatarUrl(prefs);
-        System.out.println("🖼️ URL preview : " + url);
+        System.out.println("🖼️ Preview : " + url);
 
         CompletableFuture.supplyAsync(() -> {
             try { return new Image(url, 200, 200, true, true, true); }
-            catch (Exception ex) {
-                System.err.println("❌ Preview : " + ex.getMessage());
-                return null;
-            }
+            catch (Exception ex) { return null; }
         }).thenAccept(img -> Platform.runLater(() -> {
             if (img != null && !img.isError()) {
                 avatarImg.setImage(img);
                 avatarImg.setVisible(true);
-
-                javafx.animation.FadeTransition fade =
+                javafx.animation.FadeTransition ft =
                         new javafx.animation.FadeTransition(
                                 javafx.util.Duration.millis(400), avatarImg);
-                fade.setFromValue(0); fade.setToValue(1); fade.play();
-
-                javafx.animation.ScaleTransition scale =
+                ft.setFromValue(0); ft.setToValue(1); ft.play();
+                javafx.animation.ScaleTransition sc =
                         new javafx.animation.ScaleTransition(
                                 javafx.util.Duration.millis(400), avatarImg);
-                scale.setFromX(0.7); scale.setFromY(0.7);
-                scale.setToX(1.0);   scale.setToY(1.0);
-                scale.setInterpolator(javafx.animation.Interpolator.EASE_OUT);
-                scale.play();
+                sc.setFromX(0.7); sc.setFromY(0.7);
+                sc.setToX(1.0);   sc.setToY(1.0);
+                sc.setInterpolator(javafx.animation.Interpolator.EASE_OUT);
+                sc.play();
             }
             lblChargement.setVisible(false);
         }));
@@ -381,12 +361,11 @@ public class AvatarPersonnalisationController {
     // Helpers visuels
     // ══════════════════════════════════════════════════════════════
     private VBox creerSection(String titre) {
-        VBox section = new VBox(10);
-        Label lbl = new Label(titre);
-        lbl.setStyle(
-                "-fx-font-size:12px; -fx-font-weight:900; -fx-text-fill:#374151;");
-        section.getChildren().add(lbl);
-        return section;
+        VBox s = new VBox(10);
+        Label l = new Label(titre);
+        l.setStyle("-fx-font-size:12px; -fx-font-weight:900; -fx-text-fill:#374151;");
+        s.getChildren().add(l);
+        return s;
     }
 
     private void appliquerStyleToggle(ToggleButton btn, boolean sel) {
@@ -395,14 +374,12 @@ public class AvatarPersonnalisationController {
                         "-fx-text-fill:"        + (sel ? "white"   : "#475569") + ";" +
                         "-fx-font-size:10px; -fx-font-weight:bold;" +
                         "-fx-background-radius:10; -fx-cursor:hand; -fx-padding:7 10 7 10;" +
-                        "-fx-border-color:" + (sel ? "#6366f1" : "#e2e8f0") + ";" +
-                        "-fx-border-radius:10;");
+                        "-fx-border-color:" + (sel ? "#6366f1" : "#e2e8f0") + "; -fx-border-radius:10;");
     }
 
     private void appliquerStyleCercle(StackPane cercle, CouleurFond c, boolean sel) {
         cercle.setStyle(
-                "-fx-background-color:#" + c.hex + ";" +
-                        "-fx-background-radius:19;" +
+                "-fx-background-color:#" + c.hex + "; -fx-background-radius:19;" +
                         "-fx-border-color:" + (sel ? "#6366f1" : "transparent") + ";" +
                         "-fx-border-radius:19; -fx-border-width:2.5; -fx-cursor:hand;");
     }

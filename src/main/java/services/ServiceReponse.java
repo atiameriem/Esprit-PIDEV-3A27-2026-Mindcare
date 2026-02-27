@@ -6,7 +6,9 @@ import utils.MyDatabase;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ServiceReponse implements IService<Reponse> {
 
@@ -282,6 +284,82 @@ public class ServiceReponse implements IService<Reponse> {
         }
 
         return reponses;
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    public Map<Integer, String> getPatientsParPsychologue(int idPsy) throws SQLException {
+        Map<Integer, String> patients = new LinkedHashMap<>();
+
+        String sql = """
+        SELECT DISTINCT rv.id_patient,
+                        u.nom,
+                        u.prenom
+        FROM rendez_vous rv
+        JOIN users u ON u.id_users = rv.id_patient
+        WHERE rv.id_psychologist = ?
+        ORDER BY u.nom, u.prenom
+        """;
+
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, idPsy);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int    id     = rs.getInt("id_patient");
+                    String nom    = rs.getString("nom")    != null ? rs.getString("nom")    : "";
+                    String prenom = rs.getString("prenom") != null ? rs.getString("prenom") : "";
+                    String nomComplet = (prenom + " " + nom).trim();
+                    patients.put(id, nomComplet);
+                }
+            }
+        }
+        return patients;
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // Récupère les détails des réponses d'un patient (existant)
+    // ══════════════════════════════════════════════════════════════
+
+
+    // ══════════════════════════════════════════════════════════════
+    // Labels utilitaires (utilisés dans les cartes RDV si besoin)
+    // ══════════════════════════════════════════════════════════════
+    public static String labelStatut(String statut) {
+        if (statut == null) return "";
+        return switch (statut) {
+            case "termine"  -> "✅ Terminé";
+            case "en_cours" -> "🔄 En cours";
+            default         -> statut;
+        };
+    }
+
+    public static String labelConfirmation(String conf) {
+        if (conf == null) return "";
+        return switch (conf) {
+            case "confirme"   -> "✅ Confirmé";
+            case "annule"     -> "❌ Annulé";
+            case "en_attente" -> "⏳ En attente";
+            default           -> conf;
+        };
+    }
+
+    public static String labelType(String type) {
+        if (type == null) return "";
+        return switch (type) {
+            case "premiere_consultation" -> "1ère consultation";
+            case "suivi"                 -> "Suivi";
+            case "urgence"               -> "🚨 Urgence";
+            default                      -> type;
+        };
+    }
+
+    public static String couleurConfirmation(String conf) {
+        if (conf == null) return "#94a3b8";
+        return switch (conf) {
+            case "confirme"   -> "#10B981";
+            case "annule"     -> "#EF4444";
+            case "en_attente" -> "#F59E0B";
+            default           -> "#94a3b8";
+        };
     }
 
 

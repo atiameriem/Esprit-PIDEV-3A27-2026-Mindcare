@@ -1,43 +1,263 @@
 package services;
 
+import utils.MyDatabase;
+
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.*;
+import java.sql.*;
 import java.util.*;
+import java.util.Base64;
 
 /**
  * ══════════════════════════════════════════════════════════════
- *  AvatarService — v3 CORRIGÉ
+ *  AvatarService v5 — COMPORTEMENT ÉMOTIONNEL RÉACTIF
  *
- *  PROBLÈMES RÉSOLUS :
- *  ✅ Seed STABLE : jamais recalculé, toujours relu depuis le fichier
- *  ✅ chargerPrefsEtUrl() → méthode unique pour le dashboard
- *  ✅ getAvatarUrlDepuisFichier() → lit le fichier .properties DIRECTEMENT
- *     sans passer par un objet PrefsAvatar en mémoire
- *  ✅ Après sauvegarde, le dashboard appelle chargerPrefs() pour avoir
- *     le bon seed à jour
+ *  Comportement avatar selon état détecté :
+ *  ┌──────────────────┬──────────────────────┬──────────────────────┐
+ *  │ État détecté     │ Réaction avatar       │ Animation            │
+ *  ├──────────────────┼──────────────────────┼──────────────────────┤
+ *  │ 😤 Colère        │ Ton calme            │ SECOUSSE             │
+ *  │ 💜 Stress élevé  │ Voix douce           │ RESPIRATION          │
+ *  │ 😢 Tristesse     │ Regard empathique    │ FONDU_DOUX           │
+ *  │ 🌟 Score élevé  │ Ton énergique        │ BOUNCE_JOIE          │
+ *  │ 💪 Amélioration │ Félicitations animées│ PULSE                │
+ *  │ 😌 Équilibre     │ Stable et posé       │ STANDARD             │
+ *  │ 👋 Neutre        │ Bienvenue            │ AUCUNE               │
+ *  └──────────────────┴──────────────────────┴──────────────────────┘
+ *
+ *  Paramètres DiceBear avataaars utilisés :
+ *  ┌──────────────────┬──────────────┬──────────────┬───────────────────────┐
+ *  │ État détecté     │ mouth=       │ eyes=        │ eyebrows=             │
+ *  ├──────────────────┼──────────────┼──────────────┼───────────────────────┤
+ *  │ 😰 Stress élevé │ concerned    │ squint       │ sadConcerned          │
+ *  │ 😢 Tristesse     │ sad          │ cry          │ sadConcernedNatural   │
+ *  │ 😤 Colère        │ grimace      │ xDizzy       │ angry                 │
+ *  │ 🌟 Score élevé  │ twinkle      │ hearts       │ raisedExcited         │
+ *  │ 💪 Amélioration │ smile        │ happy        │ raisedExcitedNatural  │
+ *  │ 😌 Équilibre     │ serious      │ side         │ defaultNatural        │
+ *  │ 😐 Neutre        │ default      │ default      │ default               │
+ *  └──────────────────┴──────────────┴──────────────┴───────────────────────┘
+ *
+ *  RÈGLE SEED :
+ *   • getAvatarUrl()           → seed fixe  → image stable (cache DB)
+ *   • getAvatarUrlEmotionnel() → seed fixe + mouth/eyes/eyebrows
+ *     Le PERSONNAGE ne change pas, seule l'expression change.
+ *
+ *  ⚠️  Seul le style "avataaars" supporte mouth/eyes/eyebrows.
+ *      Les autres styles utilisent un seed suffixé par état (fallback).
  * ══════════════════════════════════════════════════════════════
  */
 public class AvatarService {
 
     private static final String DICEBEAR_BASE = "https://api.dicebear.com/9.x/";
-
     private static final String PREFS_DIR =
             System.getProperty("user.home") + "/.mindcare/avatars/";
+
+    // ── Seuils de détection (centralisés pour faciliter la maintenance) ──
+    private static final int SEUIL_COLERE          = 20;  // scoreST < 20 → colère
+    private static final int SEUIL_STRESS          = 30;  // scoreST < 30 → stress
+    private static final int SEUIL_TRISTESSE       = 30;  // scoreBE < 30 && scoreHU < 30 → tristesse
+    private static final int SEUIL_SCORE_ELEVE     = 80;  // moy >= 80    → épanoui
+    private static final int SEUIL_AMELIORATION    = 55;  // moy >= 55    → amélioration
+    private static final int SEUIL_EQUILIBRE       = 35;  // moy >= 35    → équilibre
+
+    // ══════════════════════════════════════════════════════════════
+    // ÉTAT ÉMOTIONNEL DÉTECTÉ
+    // ══════════════════════════════════════════════════════════════
+    public enum EtatDetecte {
+        EN_COLERE,      // stress critique  : scoreST < SEUIL_COLERE
+        STRESS_ELEVE,   // stress élevé     : scoreST < SEUIL_STRESS
+        TRISTE,         // tristesse        : scoreBE < SEUIL_TRISTESSE ET scoreHU < SEUIL_TRISTESSE
+        SCORE_ELEVE,    // épanoui          : moy >= SEUIL_SCORE_ELEVE
+        AMELIORATION,   // progression      : moy >= SEUIL_AMELIORATION
+        EQUILIBRE,      // stable           : moy >= SEUIL_EQUILIBRE
+        NEUTRE          // par défaut
+    }
+
+    /**
+     * Détecte l'état dominant à partir des 3 scores (0-100).
+     *
+     * Ordre de priorité (du plus urgent au plus positif) :
+     *  1. Colère      → stress critique avant tout
+     *  2. Stress      → stress élevé
+     *  3. Tristesse   → combinaison bien-être + humeur bas
+     *  4. Score élevé → épanouissement
+     *  5. Amélioration→ progression
+     *  6. Équilibre   → stabilité
+     *  7. Neutre      → fallback
+     */
+    public static EtatDetecte detecterEtat(int scoreBE, int scoreST, int scoreHU) {
+        int moy = (scoreBE + scoreST + scoreHU) / 3;
+
+        // ── Priorité 1 : états négatifs (du plus critique au moins critique) ──
+        if (scoreST < SEUIL_COLERE)                                  return EtatDetecte.EN_COLERE;
+        if (scoreST < SEUIL_STRESS)                                  return EtatDetecte.STRESS_ELEVE;
+        if (scoreBE < SEUIL_TRISTESSE && scoreHU < SEUIL_TRISTESSE)  return EtatDetecte.TRISTE;
+
+        // ── Priorité 2 : états positifs (du plus haut au plus bas) ──
+        if (moy >= SEUIL_SCORE_ELEVE)   return EtatDetecte.SCORE_ELEVE;
+        if (moy >= SEUIL_AMELIORATION)  return EtatDetecte.AMELIORATION;
+        if (moy >= SEUIL_EQUILIBRE)     return EtatDetecte.EQUILIBRE;
+
+        return EtatDetecte.NEUTRE;
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // EXPRESSION — paramètres DiceBear + réaction UI
+    // ══════════════════════════════════════════════════════════════
+    public static class Expression {
+        // Paramètres URL DiceBear avataaars
+        public final String mouth;
+        public final String eyes;
+        public final String eyebrows;
+        public final String fondHex;
+
+        // Réaction UI (message + emoji + animation)
+        public final String titreReaction;
+        public final String messageReaction;
+        public final String emoji;
+        public final String couleurBandeau;
+        public final String couleurBandeauBg;
+        public final AnimationType animation;
+
+        public Expression(String mouth, String eyes, String eyebrows,
+                          String fondHex, String titreReaction,
+                          String messageReaction, String emoji,
+                          String couleurBandeau, String couleurBandeauBg,
+                          AnimationType animation) {
+            this.mouth            = mouth;
+            this.eyes             = eyes;
+            this.eyebrows         = eyebrows;
+            this.fondHex          = fondHex;
+            this.titreReaction    = titreReaction;
+            this.messageReaction  = messageReaction;
+            this.emoji            = emoji;
+            this.couleurBandeau   = couleurBandeau;
+            this.couleurBandeauBg = couleurBandeauBg;
+            this.animation        = animation;
+        }
+    }
+
+    /** Type d'animation JavaFX à jouer sur l'ImageView avatar */
+    public enum AnimationType {
+        RESPIRATION,    // ScaleTransition lente 0.95↔1.05 ∞ — stress élevé
+        FONDU_DOUX,     // FadeTransition lente 0.65→1.0 ∞  — tristesse
+        SECOUSSE,       // TranslateTransition courte → puis apaisement — colère
+        BOUNCE_JOIE,    // ScaleTransition + RotateTransition — score élevé
+        PULSE,          // ScaleTransition 1.0→1.12→1.0 (4 cycles) — amélioration
+        STANDARD,       // FadeTransition 500ms — équilibre
+        AUCUNE          // pas d'animation — neutre
+    }
+
+    /**
+     * Retourne l'expression complète selon l'état détecté.
+     *
+     * Tableau comportement :
+     *   EN_COLERE    → Ton calme        (grimace / xDizzy / angry)      → SECOUSSE
+     *   STRESS_ELEVE → Voix douce       (concerned / squint / sadC.)    → RESPIRATION
+     *   TRISTE       → Regard empathique(sad / cry / sadConcernedNat.)  → FONDU_DOUX
+     *   SCORE_ELEVE  → Ton énergique    (twinkle / hearts / raisedExc.) → BOUNCE_JOIE
+     *   AMELIORATION → Félicitations    (smile / happy / raisedExcNat.) → PULSE
+     *   EQUILIBRE    → Stable et posé   (serious / side / defaultNat.)  → STANDARD
+     *   NEUTRE       → Bienvenue        (default / default / default)   → AUCUNE
+     */
+    public static Expression getExpression(EtatDetecte etat) {
+        switch (etat) {
+
+            case EN_COLERE:
+                // Ton calme — bouche crispée, yeux tournoyants → invitation à l'apaisement
+                return new Expression(
+                        "grimace", "xDizzy", "angry",
+                        "ffd5b8",
+                        "😤 Moment difficile",
+                        "Respirez lentement.\nVotre avatar vous invite au calme. 🌬️",
+                        "🌬️", "#c2410c", "#fff7ed",
+                        AnimationType.SECOUSSE
+                );
+
+            case STRESS_ELEVE:
+                // Voix douce — bouche inquiète, yeux plissés (fatigue/anxiété)
+                return new Expression(
+                        "concerned", "squint", "sadConcerned",
+                        "e8d5f4",
+                        "💜 Voix douce",
+                        "Votre avatar vous envoie de la douceur.\nPrenez soin de vous. 💜",
+                        "💜", "#7c3aed", "#ede9fe",
+                        AnimationType.RESPIRATION
+                );
+
+            case TRISTE:
+                // Regard empathique — avatar qui partage et comprend la tristesse
+                return new Expression(
+                        "sad", "cry", "sadConcernedNatural",
+                        "ffd5dc",
+                        "🤗 Regard empathique",
+                        "Votre avatar vous comprend.\nCe moment passera, tenez bon. 🌧️",
+                        "🤗", "#be185d", "#fce7f3",
+                        AnimationType.FONDU_DOUX
+                );
+
+            case SCORE_ELEVE:
+                // Ton énergique — yeux cœurs, sourire rayonnant, célébration
+                return new Expression(
+                        "twinkle", "hearts", "raisedExcited",
+                        "d1f4e0",
+                        "🌟 Ton énergique !",
+                        "Vous êtes au sommet !\nVotre avatar est fou de joie pour vous. 🎉",
+                        "🌟", "#065f46", "#d1fae5",
+                        AnimationType.BOUNCE_JOIE
+                );
+
+            case AMELIORATION:
+                // Félicitations animées — grand sourire, yeux heureux, progression visible
+                return new Expression(
+                        "smile", "happy", "raisedExcitedNatural",
+                        "b6e3f4",
+                        "💪 Félicitations !",
+                        "Quelle belle progression !\nContinuez sur cette lancée. ✨",
+                        "🎉", "#0369a1", "#e0f2fe",
+                        AnimationType.PULSE
+                );
+
+            case EQUILIBRE:
+                // Stable et posé — expression réfléchie et sereine
+                return new Expression(
+                        "serious", "side", "defaultNatural",
+                        "fef3c7",
+                        "😌 En équilibre",
+                        "Vous êtes stable et posé(e).\nVotre avatar veille sur vous. 🌤️",
+                        "😌", "#92400e", "#fffbeb",
+                        AnimationType.STANDARD
+                );
+
+            default: // NEUTRE
+                return new Expression(
+                        "default", "default", "default",
+                        "f1f5f9",
+                        "👋 Bienvenue",
+                        "Votre avatar vous accompagne au quotidien. 👋",
+                        "👋", "#334155", "#f1f5f9",
+                        AnimationType.AUCUNE
+                );
+        }
+    }
 
     // ══════════════════════════════════════════════════════════════
     // Styles disponibles
     // ══════════════════════════════════════════════════════════════
     public enum Style {
-        ADVENTURER("adventurer",  "🧗 Aventurier"),
-        AVATAAARS ("avataaars",   "😊 Personnage"),
-        BOTTTS    ("bottts",      "🤖 Robot"),
-        LORELEI   ("lorelei",     "🌸 Lorelei"),
-        MICAH     ("micah",       "🎨 Micah"),
-        PERSONAS  ("personas",    "👤 Persona"),
-        PIXEL_ART ("pixel-art",   "🎮 Pixel Art"),
-        FUN_EMOJI ("fun-emoji",   "😄 Fun Emoji");
+        // ✅ Seul avataaars supporte les vraies grimaces (mouth/eyes/eyebrows)
+        AVATAAARS ("avataaars",  "😊 Personnage (avec expressions 🎭)"),
+        // ℹ️  Les styles suivants changent de fond/seed selon l'état, pas de visage
+        ADVENTURER("adventurer", "🧗 Aventurier"),
+        BOTTTS    ("bottts",     "🤖 Robot"),
+        LORELEI   ("lorelei",    "🌸 Lorelei"),
+        MICAH     ("micah",      "🎨 Micah"),
+        PERSONAS  ("personas",   "👤 Persona"),
+        PIXEL_ART ("pixel-art",  "🎮 Pixel Art"),
+        FUN_EMOJI ("fun-emoji",  "😄 Fun Emoji");
 
         public final String apiId;
         public final String label;
@@ -45,6 +265,21 @@ public class AvatarService {
         Style(String apiId, String label) {
             this.apiId = apiId;
             this.label = label;
+        }
+
+        public static Style fromApiId(String apiId) {
+            for (Style s : values())
+                if (s.apiId.equalsIgnoreCase(apiId)) return s;
+            return AVATAAARS;
+        }
+
+        /**
+         * Seul avataaars supporte les paramètres mouth= eyes= eyebrows=.
+         * Les autres styles utilisent un seed suffixé par état (fallback).
+         * → Pour de vraies grimaces, l'utilisateur doit choisir AVATAAARS.
+         */
+        public boolean supporteExpression() {
+            return this == AVATAAARS;
         }
     }
 
@@ -68,10 +303,18 @@ public class AvatarService {
             this.hex   = hex;
             this.label = label;
         }
+
+        public static CouleurFond fromHex(String hex) {
+            if (hex == null) return BLEU;
+            String h = hex.replace("#", "").toLowerCase();
+            for (CouleurFond c : values())
+                if (c.hex.equalsIgnoreCase(h)) return c;
+            return BLEU;
+        }
     }
 
     // ══════════════════════════════════════════════════════════════
-    // Préférences utilisateur
+    // Préférences avatar
     // ══════════════════════════════════════════════════════════════
     public static class PrefsAvatar {
         public int         userId;
@@ -80,240 +323,305 @@ public class AvatarService {
         public CouleurFond fond;
         public String      pseudo;
         public int         taille;
+        public String      avatarBase64;
 
         public PrefsAvatar(int userId) {
-            this.userId  = userId;
-            this.seed    = seedParDefaut(userId);  // "mc_" + userId — JAMAIS de timestamp
-            this.style   = Style.ADVENTURER;
-            this.fond    = CouleurFond.BLEU;
-            this.pseudo  = "";
-            this.taille  = 200;
-        }
-
-        /** Seed fixe par défaut — identique à chaque instanciation */
-        public static String seedParDefaut(int userId) {
-            return "mc_" + userId;
+            this.userId       = userId;
+            this.seed         = "mc_" + userId;
+            this.style        = Style.AVATAAARS;
+            this.fond         = CouleurFond.BLEU;
+            this.pseudo       = "";
+            this.taille       = 200;
+            this.avatarBase64 = null;
         }
     }
 
     // ══════════════════════════════════════════════════════════════
-    // MÉTHODE PRINCIPALE POUR LE DASHBOARD
-    // Lit DIRECTEMENT le fichier .properties → URL toujours à jour
+    // URLS DICEBEAR
     // ══════════════════════════════════════════════════════════════
 
     /**
-     * Retourne l'URL DiceBear en lisant le fichier .properties directement.
-     * C'est cette méthode que le dashboard doit appeler pour afficher l'avatar.
-     * → Garantit que l'URL correspond exactement aux dernières préférences sauvegardées.
+     * URL STABLE — seed fixe, pas d'expression.
+     * Utilisée pour le cache DB et l'affichage par défaut.
      */
-    public String getAvatarUrlDepuisFichier(int userId) {
-        PrefsAvatar prefs = chargerPrefs(userId);
-        String url = getAvatarUrl(prefs);
-        System.out.println("🔄 URL depuis fichier userId=" + userId + " : " + url);
-        return url;
-    }
-
-    /**
-     * Retourne le chemin du cache PNG local si disponible.
-     * Sinon retourne null → le dashboard doit appeler getAvatarUrlDepuisFichier().
-     */
-    public String getCacheLocal(int userId) {
-        String fichier = PREFS_DIR + "avatar_" + userId + ".png";
-        if (Files.exists(Paths.get(fichier))) {
-            System.out.println("💾 Cache local trouvé : " + fichier);
-            return fichier;
-        }
-        return null;
-    }
-
-    /**
-     * Rafraîchit le cache local PNG depuis l'URL à jour.
-     * À appeler dans le dashboard après une sauvegarde de préférences.
-     */
-    public void rafraichirCache(int userId) {
-        String url = getAvatarUrlDepuisFichier(userId);
-        telechargerAvatarLocal(url, userId);
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // URL à partir d'un objet PrefsAvatar en mémoire
-    // ══════════════════════════════════════════════════════════════
     public String getAvatarUrl(PrefsAvatar prefs) {
         return DICEBEAR_BASE
                 + prefs.style.apiId
-                + "/png?seed="        + encodeUrl(prefs.seed)
+                + "/png?seed="        + encode(prefs.seed)
                 + "&size="            + prefs.taille
                 + "&backgroundColor=" + prefs.fond.hex
                 + "&radius=50";
     }
 
     /**
-     * Génère un seed aléatoire unique.
-     * Utilisé UNIQUEMENT par le bouton "Régénérer" dans le controller.
-     * Ne persiste que si l'utilisateur clique ensuite sur "Sauvegarder".
-     */
-    public String genererNouveauSeed(int userId) {
-        return "mc_" + userId + "_" + Long.toHexString(System.currentTimeMillis());
-    }
-
-    /**
-     * URL émotionnelle — n'écrase JAMAIS le seed principal.
+     * URL ÉMOTIONNELLE — même seed + paramètres d'expression.
+     *
+     * Pour avataaars : ajoute &mouth= &eyes= &eyebrows=
+     *   → le PERSONNAGE est identique, seul le visage change.
+     *
+     * Pour autres styles : seed suffixé par code état (3 lettres)
+     *   → variation légère du même personnage (expression simulée).
      */
     public String getAvatarUrlEmotionnel(PrefsAvatar prefs,
                                          int scoreBE, int scoreST, int scoreHU) {
-        String moodSeed = prefs.seed + "_m" + calculerMoodHash(scoreBE, scoreST, scoreHU);
-        CouleurFond fondAdapte = choisirFondEmotionnel(scoreBE, scoreST, scoreHU);
-        return DICEBEAR_BASE
-                + prefs.style.apiId
-                + "/png?seed="        + encodeUrl(moodSeed)
-                + "&size="            + prefs.taille
-                + "&backgroundColor=" + fondAdapte.hex
-                + "&radius=50";
-    }
+        EtatDetecte etat = detecterEtat(scoreBE, scoreST, scoreHU);
+        Expression  expr = getExpression(etat);
 
-    // ══════════════════════════════════════════════════════════════
-    // Sauvegarder préférences
-    // ══════════════════════════════════════════════════════════════
-    public void sauvegarderPrefs(PrefsAvatar prefs) {
-        try {
-            Files.createDirectories(Paths.get(PREFS_DIR));
-            String fichier = PREFS_DIR + "prefs_" + prefs.userId + ".properties";
-
-            Properties p = new Properties();
-            p.setProperty("seed",   prefs.seed);
-            p.setProperty("style",  prefs.style.name());
-            p.setProperty("fond",   prefs.fond.name());
-            p.setProperty("pseudo", prefs.pseudo);
-            p.setProperty("taille", String.valueOf(prefs.taille));
-
-            try (FileWriter fw = new FileWriter(fichier)) {
-                p.store(fw, "MindCare Avatar Prefs — userId=" + prefs.userId);
-            }
-            System.out.println("✅ Prefs sauvegardées — userId=" + prefs.userId
-                    + " seed=" + prefs.seed);
-        } catch (Exception e) {
-            System.err.println("❌ Erreur sauvegarde prefs : " + e.getMessage());
+        if (prefs.style.supporteExpression()) {
+            // ✅ avataaars — vrais paramètres visage DiceBear
+            return DICEBEAR_BASE
+                    + prefs.style.apiId
+                    + "/png?seed="        + encode(prefs.seed)
+                    + "&size="            + prefs.taille
+                    + "&backgroundColor=" + expr.fondHex
+                    + "&radius=50"
+                    + "&mouth="           + expr.mouth
+                    + "&eyes="            + expr.eyes
+                    + "&eyebrows="        + expr.eyebrows;
+        } else {
+            // Fallback : seed modifié par état pour variation visuelle
+            String code = etat.name().toLowerCase().substring(0, 3);
+            return DICEBEAR_BASE
+                    + prefs.style.apiId
+                    + "/png?seed="        + encode(prefs.seed + "_" + code)
+                    + "&size="            + prefs.taille
+                    + "&backgroundColor=" + expr.fondHex
+                    + "&radius=50";
         }
     }
 
+    /** Retourne l'expression courante selon les scores (pour animations UI) */
+    public Expression getExpressionCourante(int scoreBE, int scoreST, int scoreHU) {
+        return getExpression(detecterEtat(scoreBE, scoreST, scoreHU));
+    }
+
+    /** Génère un seed unique pour le bouton "Régénérer" */
+    public String genererNouveauSeed(int userId) {
+        return "mc_" + userId + "_"
+                + Long.toHexString(System.currentTimeMillis());
+    }
+
     // ══════════════════════════════════════════════════════════════
-    // Charger préférences — TOUJOURS depuis le fichier
+    // PERSISTANCE DB
     // ══════════════════════════════════════════════════════════════
     public PrefsAvatar chargerPrefs(int userId) {
-        PrefsAvatar prefs = new PrefsAvatar(userId);   // seed = "mc_" + userId par défaut
-        String fichier = PREFS_DIR + "prefs_" + userId + ".properties";
-        try {
-            if (!Files.exists(Paths.get(fichier))) {
-                System.out.println("ℹ️ Pas de prefs pour userId=" + userId
-                        + " → seed par défaut=" + prefs.seed);
-                return prefs;
+        PrefsAvatar prefs = chargerPrefsDB(userId);
+        if (prefs != null) return prefs;
+        return chargerPrefsLocal(userId);
+    }
+
+    public PrefsAvatar chargerPrefsDB(int userId) {
+        String sql = """
+            SELECT seed, style, couleur_fond, pseudo, taille
+            FROM avatar_preferences WHERE user_id = ?
+            """;
+        // ⚠️  On ne charge PLUS avatar_png_base64 :
+        //     ce cache contient l'image stable (sans expression).
+        //     L'affichage passe toujours par getAvatarUrlEmotionnel()
+        //     pour avoir les vraies grimaces selon l'état émotionnel.
+        try (Connection c = MyDatabase.getInstance().getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                PrefsAvatar p  = new PrefsAvatar(userId);
+                p.seed         = rs.getString("seed");
+                p.style        = Style.fromApiId(rs.getString("style"));
+                p.fond         = CouleurFond.fromHex(rs.getString("couleur_fond"));
+                p.pseudo       = rs.getString("pseudo");
+                p.taille       = rs.getInt("taille");
+                p.avatarBase64 = null; // jamais de cache stable — toujours URL émotionnelle
+                return p;
             }
-
-            Properties p = new Properties();
-            try (FileReader fr = new FileReader(fichier)) {
-                p.load(fr);
-            }
-
-            // ✅ Seed relu depuis fichier — JAMAIS recalculé
-            prefs.seed   = p.getProperty("seed",   prefs.seed);
-            prefs.pseudo = p.getProperty("pseudo", prefs.pseudo);
-
-            try {
-                prefs.taille = Integer.parseInt(p.getProperty("taille", "200"));
-            } catch (NumberFormatException ignored) { prefs.taille = 200; }
-
-            try {
-                prefs.style = Style.valueOf(p.getProperty("style", "ADVENTURER"));
-            } catch (Exception ignored) {}
-
-            try {
-                prefs.fond = CouleurFond.valueOf(p.getProperty("fond", "BLEU"));
-            } catch (Exception ignored) {}
-
-            System.out.println("✅ Prefs chargées — userId=" + userId
-                    + " seed=" + prefs.seed);
         } catch (Exception e) {
-            System.err.println("❌ Erreur chargement prefs : " + e.getMessage());
+            System.err.println("❌ chargerPrefsDB : " + e.getMessage());
         }
-        return prefs;
+        return null;
+    }
+
+    public void sauvegarderPrefs(PrefsAvatar prefs) {
+        sauvegarderPrefsDB(prefs);
+        sauvegarderPrefsLocal(prefs);
+    }
+
+    /**
+     * Sauvegarde les préférences en DB.
+     *
+     * ⚠️  On ne sauvegarde PLUS le base64 de l'image stable ici.
+     *     Raison : l'image stable (sans expression) écrasait l'image
+     *     émotionnelle dynamique à chaque rechargement.
+     *     L'image est toujours reconstituée via getAvatarUrlEmotionnel()
+     *     au moment de l'affichage, en fonction des scores courants.
+     */
+    public void sauvegarderPrefsDB(PrefsAvatar prefs) {
+        String sql = """
+            INSERT INTO avatar_preferences
+                (user_id, seed, style, couleur_fond, pseudo, taille,
+                 avatar_url, avatar_png_base64)
+            VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
+            ON DUPLICATE KEY UPDATE
+                seed=VALUES(seed), style=VALUES(style),
+                couleur_fond=VALUES(couleur_fond), pseudo=VALUES(pseudo),
+                taille=VALUES(taille), avatar_url=VALUES(avatar_url),
+                avatar_png_base64=NULL,
+                updated_at=CURRENT_TIMESTAMP
+            """;
+        try (Connection c = MyDatabase.getInstance().getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt   (1, prefs.userId);
+            ps.setString(2, prefs.seed);
+            ps.setString(3, prefs.style.apiId);
+            ps.setString(4, prefs.fond.hex);
+            ps.setString(5, prefs.pseudo);
+            ps.setInt   (6, prefs.taille);
+            ps.setString(7, getAvatarUrl(prefs));
+            ps.executeUpdate();
+            prefs.avatarBase64 = null; // jamais de cache stable en mémoire
+            System.out.println("✅ Prefs sauvegardées DB userId=" + prefs.userId);
+        } catch (Exception e) {
+            System.err.println("❌ sauvegarderPrefsDB : " + e.getMessage());
+        }
+    }
+
+    /**
+     * Conservée pour compatibilité — ne fait plus rien.
+     * On ne stocke plus de base64 en DB car cela écraserait
+     * l'image émotionnelle dynamique lors du rechargement.
+     */
+    public void mettreAJourImageDB(int userId, String base64) {
+        // Intentionnellement vide : voir sauvegarderPrefsDB
     }
 
     // ══════════════════════════════════════════════════════════════
-    // Télécharger avatar en cache local PNG
+    // IMAGE depuis base64
     // ══════════════════════════════════════════════════════════════
-    public String telechargerAvatarLocal(String avatarUrl, int userId) {
+    public javafx.scene.image.Image getImageDepuisBase64(PrefsAvatar prefs) {
+        if (prefs == null || prefs.avatarBase64 == null
+                || prefs.avatarBase64.isBlank()) return null;
         try {
-            Files.createDirectories(Paths.get(PREFS_DIR));
-            String fichier = PREFS_DIR + "avatar_" + userId + ".png";
+            byte[] b = Base64.getDecoder().decode(prefs.avatarBase64);
+            return new javafx.scene.image.Image(
+                    new ByteArrayInputStream(b), 200, 200, true, true);
+        } catch (Exception e) {
+            System.err.println("❌ base64 decode : " + e.getMessage());
+            return null;
+        }
+    }
 
+    // ══════════════════════════════════════════════════════════════
+    // TÉLÉCHARGEMENT
+    // ══════════════════════════════════════════════════════════════
+    public String telechargerEtEncoder(String avatarUrl) {
+        try {
             URL url = new URL(avatarUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setConnectTimeout(8000);
             conn.setReadTimeout(8000);
             conn.setRequestProperty("User-Agent", "MindCare/1.0");
-
             if (conn.getResponseCode() == 200) {
                 try (InputStream is = conn.getInputStream()) {
-                    Files.copy(is, Paths.get(fichier),
-                            StandardCopyOption.REPLACE_EXISTING);
+                    return Base64.getEncoder().encodeToString(is.readAllBytes());
                 }
-                System.out.println("✅ Avatar téléchargé : " + fichier);
-                return fichier;
             }
         } catch (Exception e) {
-            System.err.println("❌ Erreur téléchargement : " + e.getMessage());
+            System.err.println("❌ telechargerEtEncoder : " + e.getMessage());
         }
         return null;
     }
 
+    public String telechargerAvatarLocal(String url, int userId) {
+        try {
+            Files.createDirectories(Paths.get(PREFS_DIR));
+            String f = PREFS_DIR + "avatar_" + userId + ".png";
+            HttpURLConnection conn =
+                    (HttpURLConnection) new URL(url).openConnection();
+            conn.setConnectTimeout(8000);
+            conn.setReadTimeout(8000);
+            conn.setRequestProperty("User-Agent", "MindCare/1.0");
+            if (conn.getResponseCode() == 200) {
+                try (InputStream is = conn.getInputStream()) {
+                    Files.copy(is, Paths.get(f), StandardCopyOption.REPLACE_EXISTING);
+                }
+                return f;
+            }
+        } catch (Exception e) {
+            System.err.println("❌ telechargerAvatarLocal : " + e.getMessage());
+        }
+        return null;
+    }
+
+    public String getCacheLocal(int userId) {
+        String f = PREFS_DIR + "avatar_" + userId + ".png";
+        return Files.exists(Paths.get(f)) ? f : null;
+    }
+
     // ══════════════════════════════════════════════════════════════
-    // Accompagnement émotionnel
+    // FALLBACK local (fichier .properties)
+    // ══════════════════════════════════════════════════════════════
+    public void sauvegarderPrefsLocal(PrefsAvatar prefs) {
+        try {
+            Files.createDirectories(Paths.get(PREFS_DIR));
+            String f = PREFS_DIR + "prefs_" + prefs.userId + ".properties";
+            Properties p = new Properties();
+            p.setProperty("seed",   prefs.seed);
+            p.setProperty("style",  prefs.style.apiId);
+            p.setProperty("fond",   prefs.fond.name());
+            p.setProperty("pseudo", prefs.pseudo);
+            p.setProperty("taille", String.valueOf(prefs.taille));
+            try (FileWriter fw = new FileWriter(f)) {
+                p.store(fw, "MindCare userId=" + prefs.userId);
+            }
+        } catch (Exception e) {
+            System.err.println("❌ sauvegarderPrefsLocal : " + e.getMessage());
+        }
+    }
+
+    public PrefsAvatar chargerPrefsLocal(int userId) {
+        PrefsAvatar prefs = new PrefsAvatar(userId);
+        String f = PREFS_DIR + "prefs_" + userId + ".properties";
+        try {
+            if (!Files.exists(Paths.get(f))) return prefs;
+            Properties p = new Properties();
+            try (FileReader fr = new FileReader(f)) { p.load(fr); }
+            prefs.seed   = p.getProperty("seed",   prefs.seed);
+            prefs.pseudo = p.getProperty("pseudo", prefs.pseudo);
+            try { prefs.taille = Integer.parseInt(
+                    p.getProperty("taille", "200")); }
+            catch (NumberFormatException ignored) {}
+            try { prefs.style = Style.fromApiId(
+                    p.getProperty("style", "avataaars")); }
+            catch (Exception ignored) {}
+            try { prefs.fond = CouleurFond.valueOf(
+                    p.getProperty("fond", "BLEU")); }
+            catch (Exception ignored) {}
+        } catch (Exception e) {
+            System.err.println("❌ chargerPrefsLocal : " + e.getMessage());
+        }
+        return prefs;
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // Compatibilité ancienne API (calculerEtat)
     // ══════════════════════════════════════════════════════════════
     public EtatEmotionnel calculerEtat(int scoreBE, int scoreST, int scoreHU) {
-        int moy = (scoreBE + scoreST + scoreHU) / 3;
-        if (moy >= 75) return new EtatEmotionnel("Épanoui(e) ✨",
-                "Votre avatar rayonne de bien-être !\nContinuez sur cette belle lancée.",
-                "#10b981", "#d1fae5", "🌟");
-        if (moy >= 55) return new EtatEmotionnel("Équilibré(e) 🌤️",
-                "Vous avancez bien.\nUn peu de pleine conscience vous aidera.",
-                "#0ea5e9", "#e0f2fe", "💙");
-        if (moy >= 40) return new EtatEmotionnel("En progression 💪",
-                "Votre avatar vous encourage !\nChaque petit pas compte.",
-                "#f97316", "#fff7ed", "🔥");
-        if (moy >= 25) return new EtatEmotionnel("Vulnérable 🌱",
-                "C'est normal de traverser des phases difficiles.\nVotre avatar est là pour vous soutenir.",
-                "#8b5cf6", "#ede9fe", "💜");
-        return new EtatEmotionnel("A besoin de soutien 🤗",
-                "Votre avatar vous envoie de la force.\nPensez à consulter un professionnel.",
-                "#ef4444", "#fef2f2", "❤️");
+        Expression expr = getExpression(detecterEtat(scoreBE, scoreST, scoreHU));
+        return new EtatEmotionnel(
+                expr.titreReaction,
+                expr.messageReaction,
+                expr.couleurBandeau,
+                expr.couleurBandeauBg,
+                expr.emoji);
     }
 
     public static class EtatEmotionnel {
         public final String titre, message, couleur, couleurBg, emoji;
-        EtatEmotionnel(String titre, String message,
-                       String couleur, String couleurBg, String emoji) {
-            this.titre = titre; this.message = message;
-            this.couleur = couleur; this.couleurBg = couleurBg; this.emoji = emoji;
+        public EtatEmotionnel(String t, String m, String c, String cb, String e) {
+            titre = t; message = m; couleur = c; couleurBg = cb; emoji = e;
         }
     }
 
     // ══════════════════════════════════════════════════════════════
-    // Helpers privés
-    // ══════════════════════════════════════════════════════════════
-    private CouleurFond choisirFondEmotionnel(int be, int st, int hu) {
-        int moy = (be + st + hu) / 3;
-        if (moy >= 70) return CouleurFond.VERT;
-        if (moy >= 55) return CouleurFond.BLEU;
-        if (moy >= 40) return CouleurFond.PECHE;
-        if (moy >= 25) return CouleurFond.LAVANDE;
-        return CouleurFond.ROSE;
-    }
-
-    private String calculerMoodHash(int be, int st, int hu) {
-        return String.valueOf((be / 20) * 100 + (st / 20) * 10 + (hu / 20));
-    }
-
-    private String encodeUrl(String s) {
+    private String encode(String s) {
         try { return java.net.URLEncoder.encode(s, "UTF-8"); }
         catch (Exception e) { return s; }
     }

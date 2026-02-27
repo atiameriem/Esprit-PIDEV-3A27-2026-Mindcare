@@ -44,10 +44,9 @@ public class NouveauTestController {
     // ✅ idPsychologue depuis la session connectée
     private int idPsychologue = Session.getUserId();
 
-    // ✅ idPatientCible — patient pour qui on crée le test
-    private int idPatientCible = 3;
-
-    // ✅ Connexion via MyDatabase — plus de constantes dupliquées
+    // ✅ -1 = quiz global pour TOUS les patients
+    //    >0  = quiz pour un patient spécifique
+    private int idPatientCible = -1;
 
     private Quiz    quizEnEdition = null;
     private boolean modeEdition   = false;
@@ -55,9 +54,13 @@ public class NouveauTestController {
     private final List<QuestionBloc> questionBlocs = new ArrayList<>();
 
     // ════════════════════════════════════════════════════════
-    // ✅ Appelé depuis EspacePraticienController
+    // ✅ Appelé depuis EspacePraticienController (patient spécifique)
     // ════════════════════════════════════════════════════════
     public void setIdPatientCible(int idPatientCible) {
+        if (idPatientCible <= 0) {
+            System.err.println("⚠️ setIdPatientCible : ID invalide — quiz global.");
+            return;
+        }
         this.idPatientCible = idPatientCible;
 
         String sql = "SELECT nom FROM users WHERE id_users = ?";
@@ -72,8 +75,7 @@ public class NouveauTestController {
                             "Création d'un test pour : " + nom);
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur chargement patient : "
-                    + e.getMessage());
+            System.err.println("❌ Erreur chargement patient : " + e.getMessage());
         }
     }
 
@@ -85,43 +87,41 @@ public class NouveauTestController {
                 && role != utils.Session.Role.PSYCHOLOGUE
                 && role != utils.Session.Role.ADMIN) {
             if (labelTitrePage != null)
-                labelTitrePage.setText(
-                        "⛔ Accès réservé aux psychologues.");
+                labelTitrePage.setText("⛔ Accès réservé aux psychologues.");
             if (btnSauvegarder != null)
                 btnSauvegarder.setDisable(true);
             return;
         }
 
-        idPsychologue = Session.getUserId() > 0
-                ? Session.getUserId() : 6;
-        comboTypeTest.setItems(
-                FXCollections.observableArrayList(
-                        "psychologique", "cognitif",
-                        "comportemental", "émotionnel",
-                        "STRESS", "BIEN_ETRE", "HUMEUR"
-                ));
+        idPsychologue = Session.getUserId() > 0 ? Session.getUserId() : 6;
+
+        comboTypeTest.setItems(FXCollections.observableArrayList(
+                "psychologique", "cognitif", "comportemental",
+                "émotionnel", "STRESS", "BIEN_ETRE", "HUMEUR"
+        ));
         comboTypeTest.getSelectionModel().selectFirst();
+
+        // Indiquer par défaut que le quiz est pour tous les patients
+        if (labelSousTitrePage != null)
+            labelSousTitrePage.setText("📢 Ce test sera envoyé à tous les patients");
     }
 
     // ════════════════════════════════════════════════════════
     // MODE ÉDITION
     // ════════════════════════════════════════════════════════
     public void setQuizPourEdition(Quiz quiz) {
-        this.quizEnEdition = quiz;
-        this.modeEdition   = true;
+        this.quizEnEdition  = quiz;
+        this.modeEdition    = true;
+        this.idPatientCible = quiz.getIdUsers();
 
         labelTitrePage.setText("Modifier le Test");
-        labelSousTitrePage.setText(
-                "Modifiez les informations, questions et choix");
+        labelSousTitrePage.setText("Modifiez les informations, questions et choix");
         btnSauvegarder.setText("💾  Mettre à jour le test");
 
         fieldTitre.setText(quiz.getTitre());
-        fieldDescription.setText(
-                quiz.getDescription() != null
-                        ? quiz.getDescription() : "");
+        fieldDescription.setText(quiz.getDescription() != null ? quiz.getDescription() : "");
         if (quiz.getTypeTest() != null)
-            comboTypeTest.getSelectionModel()
-                    .select(quiz.getTypeTest());
+            comboTypeTest.getSelectionModel().select(quiz.getTypeTest());
 
         chargerQuestionsExistantes(quiz.getIdQuiz());
     }
@@ -140,14 +140,12 @@ public class NouveauTestController {
             labelAucuneQuestion.setVisible(false);
 
             for (int i = 0; i < questions.size(); i++) {
-                QuestionBloc bloc =
-                        new QuestionBloc(i + 1, questions.get(i));
+                QuestionBloc bloc = new QuestionBloc(i + 1, questions.get(i));
                 questionBlocs.add(bloc);
                 listeQuestionsForm.getChildren().add(bloc.getNode());
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur chargement questions : "
-                    + e.getMessage());
+            System.err.println("❌ Erreur chargement questions : " + e.getMessage());
         }
     }
 
@@ -155,8 +153,7 @@ public class NouveauTestController {
     @FXML
     private void ajouterQuestion() {
         labelAucuneQuestion.setVisible(false);
-        QuestionBloc bloc =
-                new QuestionBloc(questionBlocs.size() + 1, null);
+        QuestionBloc bloc = new QuestionBloc(questionBlocs.size() + 1, null);
         questionBlocs.add(bloc);
         listeQuestionsForm.getChildren().add(bloc.getNode());
     }
@@ -169,19 +166,16 @@ public class NouveauTestController {
             return;
         }
         if (questionBlocs.isEmpty()) {
-            afficherAlerte("Erreur",
-                    "Ajoutez au moins une question.");
+            afficherAlerte("Erreur", "Ajoutez au moins une question.");
             return;
         }
         for (QuestionBloc b : questionBlocs) {
             if (b.getTexteQuestion().trim().isEmpty()) {
-                afficherAlerte("Erreur",
-                        "Remplissez le texte de toutes les questions.");
+                afficherAlerte("Erreur", "Remplissez le texte de toutes les questions.");
                 return;
             }
             if (b.getChoix().size() < 2) {
-                afficherAlerte("Erreur",
-                        "Chaque question doit avoir au moins 2 choix.");
+                afficherAlerte("Erreur", "Chaque question doit avoir au moins 2 choix.");
                 return;
             }
         }
@@ -190,16 +184,17 @@ public class NouveauTestController {
             if (modeEdition) mettreAJourQuiz();
             else             creerNouveauQuiz();
         } catch (SQLException e) {
-            afficherAlerte("Erreur",
-                    "Impossible de sauvegarder : " + e.getMessage());
+            afficherAlerte("Erreur", "Impossible de sauvegarder : " + e.getMessage());
         }
     }
 
     // ── Création ──────────────────────────────────────────────────
     private void creerNouveauQuiz() throws SQLException {
-        // ✅ Utilise idPatientCible
+        // 0 = convention "tous les patients" en base
+        int idUserPourQuiz = idPatientCible > 0 ? idPatientCible : 0;
+
         Quiz quiz = new Quiz(
-                idPatientCible, idPsychologue,
+                idUserPourQuiz, idPsychologue,
                 fieldTitre.getText().trim(),
                 fieldDescription.getText().trim(),
                 comboTypeTest.getValue(), true
@@ -207,84 +202,107 @@ public class NouveauTestController {
         serviceQuiz.add(quiz);
         sauvegarderQuestions(quiz.getIdQuiz());
 
-        // ✅ Email avec idPatientCible
-        final int patientId = this.idPatientCible;
+        // ✅ Envoi email — tous les patients OU un patient spécifique
+        envoyerEmailsPatients(quiz);
+
+        String msg = idPatientCible > 0
+                ? "📧 Email envoyé au patient."
+                : "📧 Email envoyé à tous les patients.";
+        afficherInfo("Succès", "Test \"" + quiz.getTitre() + "\" créé !\n" + msg);
+        retourListe();
+    }
+
+    // ✅ Envoi email à tous les patients OU à un seul selon idPatientCible
+    private void envoyerEmailsPatients(Quiz quiz) {
+        final int patientCible = this.idPatientCible;
+        final Quiz quizFinal   = quiz;
+
         Thread emailThread = new Thread(() -> {
-            String sql =
-                    "SELECT nom, email FROM users WHERE id_users = ?";
+            // Requête dynamique selon le mode
+            String sql;
+            if (patientCible > 0) {
+                // Patient spécifique uniquement
+                sql = "SELECT id_users, nom, email FROM users " +
+                        "WHERE id_users = " + patientCible +
+                        " AND email IS NOT NULL AND email != ''";
+            } else {
+                // Tous les patients
+                sql = "SELECT id_users, nom, email FROM users " +
+                        "WHERE LOWER(role) = 'patient' " +
+                        "AND email IS NOT NULL AND email != ''";
+            }
+
             try (Connection conn = MyDatabase.getInstance().getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setInt(1, patientId);
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
+                 PreparedStatement ps = conn.prepareStatement(sql);
+                 ResultSet rs = ps.executeQuery()) {
+
+                ServiceEmail se = new ServiceEmail();
+                int nbEnvoyes = 0;
+
+                while (rs.next()) {
                     String nom   = rs.getString("nom");
                     String email = rs.getString("email");
-                    if (email != null && !email.isEmpty()) {
-                        ServiceEmail se = new ServiceEmail();
+                    try {
                         String html = se.templateNouveauQuiz(
-                                nom, quiz.getTitre(),
-                                quiz.getDescription() != null
-                                        ? quiz.getDescription()
+                                nom,
+                                quizFinal.getTitre(),
+                                quizFinal.getDescription() != null
+                                        ? quizFinal.getDescription()
                                         : "Test psychologique",
-                                quiz.getTypeTest() != null
-                                        ? quiz.getTypeTest()
+                                quizFinal.getTypeTest() != null
+                                        ? quizFinal.getTypeTest()
                                         : "psychologique"
                         );
                         se.envoyerEmail(email,
                                 "🧠 MindCare — Nouveau test : "
-                                        + quiz.getTitre(), html);
+                                        + quizFinal.getTitre(), html);
+                        nbEnvoyes++;
+                        System.out.println("📧 Email envoyé à : " + email);
+                    } catch (Exception e) {
+                        System.err.println("❌ Erreur email pour "
+                                + email + " : " + e.getMessage());
                     }
                 }
+                System.out.println("✅ " + nbEnvoyes + " email(s) envoyé(s).");
+
             } catch (Exception e) {
-                System.err.println("❌ Erreur email : "
+                System.err.println("❌ Erreur récupération patients : "
                         + e.getMessage());
             }
         });
         emailThread.setDaemon(true);
         emailThread.start();
-
-        afficherInfo("Succès",
-                "Test \"" + quiz.getTitre()
-                        + "\" créé !\n📧 Email envoyé au patient.");
-        retourListe();
     }
 
     // ── Mise à jour ───────────────────────────────────────────────
     private void mettreAJourQuiz() throws SQLException {
         quizEnEdition.setTitre(fieldTitre.getText().trim());
-        quizEnEdition.setDescription(
-                fieldDescription.getText().trim());
+        quizEnEdition.setDescription(fieldDescription.getText().trim());
         quizEnEdition.setTypeTest(comboTypeTest.getValue());
         serviceQuiz.update(quizEnEdition);
 
         List<Question> anciennes =
-                serviceQuestion.getQuestionsByQuiz(
-                        quizEnEdition.getIdQuiz());
+                serviceQuestion.getQuestionsByQuiz(quizEnEdition.getIdQuiz());
         for (Question q : anciennes) {
             List<Reponse> choix =
-                    serviceReponse.getChoixParQuestion(
-                            q.getIdQuestion());
+                    serviceReponse.getChoixParQuestion(q.getIdQuestion());
             for (Reponse r : choix) serviceReponse.delete(r);
             serviceQuestion.delete(q);
         }
         sauvegarderQuestions(quizEnEdition.getIdQuiz());
-        afficherInfo("Succès",
-                "Test \"" + quizEnEdition.getTitre()
-                        + "\" mis à jour !");
+        afficherInfo("Succès", "Test \"" + quizEnEdition.getTitre() + "\" mis à jour !");
         retourListe();
     }
 
     // ── Sauvegarder questions + choix ─────────────────────────────
-    private void sauvegarderQuestions(int idQuiz)
-            throws SQLException {
+    private void sauvegarderQuestions(int idQuiz) throws SQLException {
         for (int i = 0; i < questionBlocs.size(); i++) {
             QuestionBloc bloc = questionBlocs.get(i);
             Question q = new Question(
                     idQuiz, bloc.getTexteQuestion(), i + 1, "radio");
             List<Reponse> choix = new ArrayList<>();
             for (QuestionBloc.ChoixEntry e : bloc.getChoix())
-                choix.add(new Reponse(idQuiz, 0,
-                        e.texte, e.valeur));
+                choix.add(new Reponse(idQuiz, 0, e.texte, e.valeur));
             serviceQuestion.addAvecChoix(q, choix);
         }
     }
@@ -296,16 +314,13 @@ public class NouveauTestController {
     private void retourListe() {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource(
-                            "/views/PasserTests.fxml"));
+                    getClass().getResource("/views/PasserTests.fxml"));
             Node vue = loader.load();
-            VBox parent = (VBox) fieldTitre.getScene()
-                    .lookup("#contentArea");
+            VBox parent = (VBox) fieldTitre.getScene().lookup("#contentArea");
             if (parent != null)
                 parent.getChildren().setAll(vue);
         } catch (IOException e) {
-            System.err.println("❌ Erreur retour : "
-                    + e.getMessage());
+            System.err.println("❌ Erreur retour : " + e.getMessage());
         }
     }
 
@@ -329,8 +344,7 @@ public class NouveauTestController {
         private final VBox             node;
         private final TextField        fieldTexte;
         private final VBox             choixContainer;
-        private final List<ChoixEntry> choixEntries =
-                new ArrayList<>();
+        private final List<ChoixEntry> choixEntries = new ArrayList<>();
 
         QuestionBloc(int numero, Question question) {
             node = new VBox(10);
@@ -344,49 +358,40 @@ public class NouveauTestController {
             HBox header = new HBox(10);
             header.setAlignment(Pos.CENTER_LEFT);
             Label num = new Label("Question " + numero);
-            num.setStyle("-fx-font-size:13px;"
-                    + "-fx-font-weight:bold;"
+            num.setStyle("-fx-font-size:13px; -fx-font-weight:bold;"
                     + "-fx-text-fill:#2c4a6e;");
             HBox.setHgrow(num, Priority.ALWAYS);
             Button del = new Button("✕");
             del.setStyle("-fx-background-color:transparent;"
-                    + "-fx-text-fill:#e74c3c;"
-                    + "-fx-font-size:13px;-fx-cursor:hand;");
+                    + "-fx-text-fill:#e74c3c; -fx-font-size:13px; -fx-cursor:hand;");
             del.setOnAction(e -> supprimerBloc());
             header.getChildren().addAll(num, del);
 
             fieldTexte = new TextField(
-                    question != null
-                            ? question.getTexteQuestion() : "");
+                    question != null ? question.getTexteQuestion() : "");
             fieldTexte.setPromptText("Texte de la question...");
             fieldTexte.setStyle(
                     "-fx-background-color:white;"
-                            + "-fx-border-color:#e0e0e0;"
-                            + "-fx-border-radius:8;"
+                            + "-fx-border-color:#e0e0e0; -fx-border-radius:8;"
                             + "-fx-background-radius:8;"
-                            + "-fx-padding:10;-fx-font-size:13px;");
+                            + "-fx-padding:10; -fx-font-size:13px;");
 
             Label choixLabel = new Label("Choix de réponses");
-            choixLabel.setStyle("-fx-font-size:12px;"
-                    + "-fx-text-fill:#7f8c8d;");
+            choixLabel.setStyle("-fx-font-size:12px; -fx-text-fill:#7f8c8d;");
 
             choixContainer = new VBox(8);
 
             Button addChoix = new Button("+ Ajouter un choix");
             addChoix.setStyle(
-                    "-fx-background-color:transparent;"
-                            + "-fx-text-fill:#2c4a6e;"
-                            + "-fx-font-size:12px;"
-                            + "-fx-font-weight:bold;-fx-cursor:hand;");
-            addChoix.setOnAction(e ->
-                    ajouterChoix("", choixEntries.size()));
+                    "-fx-background-color:transparent; -fx-text-fill:#2c4a6e;"
+                            + "-fx-font-size:12px; -fx-font-weight:bold; -fx-cursor:hand;");
+            addChoix.setOnAction(e -> ajouterChoix("", choixEntries.size()));
 
             if (question != null
                     && question.getReponses() != null
                     && !question.getReponses().isEmpty()) {
                 for (Reponse r : question.getReponses())
-                    ajouterChoix(r.getTexteReponse(),
-                            r.getValeur());
+                    ajouterChoix(r.getTexteReponse(), r.getValeur());
             } else {
                 ajouterChoix("", 0);
                 ajouterChoix("", 1);
@@ -401,28 +406,25 @@ public class NouveauTestController {
             ligne.setAlignment(Pos.CENTER_LEFT);
 
             Label dot = new Label("○");
-            dot.setStyle("-fx-text-fill:#95a5a6;"
-                    + "-fx-font-size:14px;");
+            dot.setStyle("-fx-text-fill:#95a5a6; -fx-font-size:14px;");
 
             TextField ft = new TextField(texte);
             ft.setPromptText("Texte du choix");
             ft.setPrefWidth(300);
             ft.setStyle("-fx-background-color:white;"
-                    + "-fx-border-color:#e0e0e0;"
-                    + "-fx-border-radius:6;"
+                    + "-fx-border-color:#e0e0e0; -fx-border-radius:6;"
                     + "-fx-background-radius:6;"
-                    + "-fx-padding:7;-fx-font-size:12px;");
+                    + "-fx-padding:7; -fx-font-size:12px;");
 
             Label vl = new Label("Valeur:");
-            vl.setStyle("-fx-font-size:11px;"
-                    + "-fx-text-fill:#95a5a6;");
+            vl.setStyle("-fx-font-size:11px; -fx-text-fill:#95a5a6;");
 
             Spinner<Integer> sv = new Spinner<>(0, 10, valeur);
             sv.setPrefWidth(70);
 
             Button rm = new Button("✕");
             rm.setStyle("-fx-background-color:transparent;"
-                    + "-fx-text-fill:#e74c3c;-fx-cursor:hand;");
+                    + "-fx-text-fill:#e74c3c; -fx-cursor:hand;");
 
             ChoixEntry entry = new ChoixEntry(ft, sv);
             choixEntries.add(entry);

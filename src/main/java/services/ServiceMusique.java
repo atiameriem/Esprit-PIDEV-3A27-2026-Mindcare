@@ -8,7 +8,7 @@ import java.util.*;
 public class ServiceMusique {
 
     // ✅ COLLER TES CLÉS ICI
-    private static final String FREESOUND_KEY = "";
+    private static final String FREESOUND_KEY = "s";
     private static final String GROQ_KEY      = "";
 
 

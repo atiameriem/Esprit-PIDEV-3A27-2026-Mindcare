@@ -22,35 +22,54 @@
     <HBox spacing="60" alignment="CENTER">
         <VBox alignment="CENTER" spacing="5">
             <Label text="👥" style="-fx-font-size: 28px;"/>
-            <Label fx:id="lblTotalPatients" text="3"
+            <Label fx:id="lblTotalPatients" text="0"
                    style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
             <Label text="Patients suivis" style="-fx-text-fill: #9CA3AF;"/>
         </VBox>
 
         <VBox alignment="CENTER" spacing="5">
             <Label text="📊" style="-fx-font-size: 28px;"/>
-            <Label fx:id="lblTestsSemaine" text="8"
+            <Label fx:id="lblTestsSemaine" text="0"
                    style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
             <Label text="Tests cette semaine" style="-fx-text-fill: #9CA3AF;"/>
         </VBox>
 
         <VBox alignment="CENTER" spacing="5">
             <Label text="📈" style="-fx-font-size: 28px;"/>
-            <Label fx:id="lblProgressionMoyenne" text="+12%"
+            <Label fx:id="lblProgressionMoyenne" text="N/A"
                    style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
             <Label text="Progression moyenne" style="-fx-text-fill: #9CA3AF;"/>
         </VBox>
     </HBox>
 
+    <!-- ✅ ONGLETS : Tous les patients | Mes patients -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Button fx:id="btnTous"
+                text="Tous les patients"
+                onAction="#afficherTousPatients"
+                style="-fx-background-color:#4F46E5; -fx-text-fill:white;
+                       -fx-font-size:13px; -fx-font-weight:800;
+                       -fx-padding:10 24; -fx-background-radius:12; -fx-cursor:hand;"/>
+
+        <Button fx:id="btnMesPatients"
+                text="👨‍⚕️  Mes patients"
+                onAction="#afficherMesPatients"
+                style="-fx-background-color:#F3F4F6; -fx-text-fill:#6B7280;
+                       -fx-font-size:13px; -fx-font-weight:700;
+                       -fx-padding:10 24; -fx-background-radius:12; -fx-cursor:hand;"/>
+    </HBox>
+
     <!-- RECHERCHE -->
     <HBox spacing="10">
-        <TextField fx:id="fieldRecherche" promptText="Rechercher un patient..." HBox.hgrow="ALWAYS"/>
-        <ComboBox fx:id="comboFiltre" prefWidth="120"/>
+        <TextField fx:id="fieldRecherche"
+                   promptText="Rechercher un patient..."
+                   HBox.hgrow="ALWAYS"/>
+        <ComboBox fx:id="comboFiltre" prefWidth="160"/>
     </HBox>
 
     <!-- LISTE -->
-    <ScrollPane fitToWidth="true">
-        <VBox fx:id="listePatients" spacing="15"/>
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+        <VBox fx:id="listePatients" spacing="15" style="-fx-padding: 4 2 4 2;"/>
     </ScrollPane>
 
 </VBox>

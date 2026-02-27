@@ -75,7 +75,6 @@
 
             <!-- Cercle avatar avec halo coloré -->
             <StackPane prefWidth="110" prefHeight="110">
-                <!-- Halo animation (couleur mise à jour par le controller) -->
                 <Circle fx:id="circleAvatarHalo"
                         centerX="55" centerY="55" radius="54"
                         style="-fx-fill:rgba(99,102,241,0.12);"/>
@@ -92,6 +91,7 @@
 
             <!-- Infos avatar + état émotionnel -->
             <VBox spacing="8" HBox.hgrow="ALWAYS">
+
                 <!-- Nom + badge état -->
                 <HBox alignment="CENTER_LEFT" spacing="10">
                     <Label fx:id="lblAvatarPseudo"
@@ -120,8 +120,28 @@
                 </VBox>
             </VBox>
 
-            <!-- Bouton personnaliser -->
-            <VBox alignment="CENTER" spacing="8">
+            <!-- Boutons côté droit -->
+            <VBox alignment="CENTER" spacing="10">
+
+                <!-- 🔊 Bouton voix avatar -->
+                <Button fx:id="btnVoixAvatar"
+                        text="🔊"
+                        onAction="#toggleVoixAvatar"
+                        style="-fx-background-color:#EDE9FE;
+                               -fx-text-fill:#7C3AED;
+                               -fx-background-radius:20;
+                               -fx-font-size:14px;
+                               -fx-cursor:hand;
+                               -fx-border-color:#C4B5FD;
+                               -fx-border-radius:20;
+                               -fx-border-width:1.5;
+                               -fx-padding:6 14 6 14;">
+                    <tooltip>
+                        <Tooltip text="Activer / désactiver la voix de l'avatar"/>
+                    </tooltip>
+                </Button>
+
+                <!-- 🎨 Bouton personnaliser -->
                 <Button fx:id="btnPersonnaliserAvatar"
                         text="🎨 Personnaliser"
                         onAction="#personnaliserAvatar"
@@ -133,9 +153,7 @@
                                -fx-cursor:hand;
                                -fx-effect:dropshadow(gaussian,
                                rgba(99,102,241,0.35),8,0,0,3);"/>
-                <Label text="DiceBear API"
-                       style="-fx-font-size:9px; -fx-text-fill:#94a3b8;
-                              -fx-font-style:italic;"/>
+
             </VBox>
         </HBox>
 
@@ -266,8 +284,6 @@
                      -fx-padding:18 20 18 20;
                      -fx-effect:dropshadow(gaussian,
                      rgba(0,0,0,0.06),10,0,0,2);">
-
-            <!-- Titre + compteur (rempli dynamiquement) -->
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <Label text="🏅"
                        style="-fx-font-size:20px;
@@ -283,95 +299,36 @@
                 </VBox>
             </HBox>
 
-            <!-- Paliers visuels (décoratif — rempli par le controller) -->
             <HBox alignment="CENTER" spacing="8">
                 <VBox alignment="CENTER" spacing="4" prefWidth="56">
                     <Label text="🧘" style="-fx-font-size:22px; -fx-opacity:0.3;"/>
-                    <Label text="500"
-                           style="-fx-font-size:9px; -fx-font-weight:700;
-                                  -fx-text-fill:#94a3b8;"/>
+                    <Label text="500" style="-fx-font-size:9px; -fx-font-weight:700; -fx-text-fill:#94a3b8;"/>
                 </VBox>
-                <Pane HBox.hgrow="ALWAYS"
-                      style="-fx-background-color:#e2e8f0;
-                             -fx-pref-height:3; -fx-background-radius:2;"/>
+                <Pane HBox.hgrow="ALWAYS" style="-fx-background-color:#e2e8f0; -fx-pref-height:3; -fx-background-radius:2;"/>
                 <VBox alignment="CENTER" spacing="4" prefWidth="56">
                     <Label text="🌤️" style="-fx-font-size:22px; -fx-opacity:0.3;"/>
-                    <Label text="1 500"
-                           style="-fx-font-size:9px; -fx-font-weight:700;
-                                  -fx-text-fill:#94a3b8;"/>
+                    <Label text="1 500" style="-fx-font-size:9px; -fx-font-weight:700; -fx-text-fill:#94a3b8;"/>
                 </VBox>
-                <Pane HBox.hgrow="ALWAYS"
-                      style="-fx-background-color:#e2e8f0;
-                             -fx-pref-height:3; -fx-background-radius:2;"/>
+                <Pane HBox.hgrow="ALWAYS" style="-fx-background-color:#e2e8f0; -fx-pref-height:3; -fx-background-radius:2;"/>
                 <VBox alignment="CENTER" spacing="4" prefWidth="56">
                     <Label text="💪" style="-fx-font-size:22px; -fx-opacity:0.3;"/>
-                    <Label text="3 000"
-                           style="-fx-font-size:9px; -fx-font-weight:700;
-                                  -fx-text-fill:#94a3b8;"/>
+                    <Label text="3 000" style="-fx-font-size:9px; -fx-font-weight:700; -fx-text-fill:#94a3b8;"/>
                 </VBox>
-                <Pane HBox.hgrow="ALWAYS"
-                      style="-fx-background-color:#e2e8f0;
-                             -fx-pref-height:3; -fx-background-radius:2;"/>
+                <Pane HBox.hgrow="ALWAYS" style="-fx-background-color:#e2e8f0; -fx-pref-height:3; -fx-background-radius:2;"/>
                 <VBox alignment="CENTER" spacing="4" prefWidth="56">
                     <Label text="🔥" style="-fx-font-size:22px; -fx-opacity:0.3;"/>
-                    <Label text="5 000"
-                           style="-fx-font-size:9px; -fx-font-weight:700;
-                                  -fx-text-fill:#94a3b8;"/>
+                    <Label text="5 000" style="-fx-font-size:9px; -fx-font-weight:700; -fx-text-fill:#94a3b8;"/>
                 </VBox>
-                <Pane HBox.hgrow="ALWAYS"
-                      style="-fx-background-color:#e2e8f0;
-                             -fx-pref-height:3; -fx-background-radius:2;"/>
+                <Pane HBox.hgrow="ALWAYS" style="-fx-background-color:#e2e8f0; -fx-pref-height:3; -fx-background-radius:2;"/>
                 <VBox alignment="CENTER" spacing="4" prefWidth="56">
                     <Label text="🌈" style="-fx-font-size:22px; -fx-opacity:0.3;"/>
-                    <Label text="8 000"
-                           style="-fx-font-size:9px; -fx-font-weight:700;
-                                  -fx-text-fill:#94a3b8;"/>
+                    <Label text="8 000" style="-fx-font-size:9px; -fx-font-weight:700; -fx-text-fill:#94a3b8;"/>
                 </VBox>
             </HBox>
 
-            <!-- Message d'attente — remplacé dynamiquement -->
             <Label text="🎯 Complète des sessions pour débloquer tes badges !"
                    style="-fx-font-size:11px; -fx-text-fill:#94a3b8;
                           -fx-font-style:italic; -fx-padding:4 0;"/>
-        </VBox>
-
-        <!-- ═══════ 2b. TEST RECOMMANDÉ IA ═════════════════════════ -->
-        <VBox spacing="10" alignment="CENTER"
-              style="-fx-background-color:rgba(124,58,237,0.06);
-                     -fx-background-radius:16;
-                     -fx-border-color:rgba(124,58,237,0.20);
-                     -fx-border-radius:16;
-                     -fx-border-width:1.5;
-                     -fx-padding:16;">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="🎯"
-                       style="-fx-font-size:20px;
-                              -fx-background-color:rgba(124,58,237,0.12);
-                              -fx-background-radius:10;
-                              -fx-padding:6 8 6 8;"/>
-                <VBox spacing="3" HBox.hgrow="ALWAYS">
-                    <Label text="Test recommandé par l'IA"
-                           style="-fx-font-size:12px;
-                                  -fx-font-weight:900;
-                                  -fx-text-fill:#7C3AED;"/>
-                    <Label fx:id="lblTestRecommande"
-                           text="🤖 Analyse en cours..."
-                           wrapText="true"
-                           style="-fx-font-size:12px;
-                                  -fx-text-fill:#4B5563;
-                                  -fx-font-weight:600;"/>
-                </VBox>
-            </HBox>
-            <Button fx:id="btnPasserTestRecommande"
-                    text="▶ Passer le test"
-                    onAction="#passerTestRecommande"
-                    visible="false" managed="false"
-                    style="-fx-background-color:#7C3AED;
-                           -fx-text-fill:white; -fx-font-size:13px;
-                           -fx-font-weight:800; -fx-padding:10 28 10 28;
-                           -fx-background-radius:14; -fx-cursor:hand;
-                           -fx-effect:dropshadow(gaussian,
-                           rgba(124,58,237,0.3),8,0,0,2);"/>
         </VBox>
 
         <!-- ═══════ 3. GRAPHIQUE ═════════════════════════════════════ -->
@@ -397,30 +354,22 @@
             <AreaChart fx:id="evolutionChart" animated="true"
                        legendVisible="false" prefHeight="190"
                        style="-fx-background-color:transparent;">
-                <xAxis><CategoryAxis tickLabelFill="#9CA3AF"
-                                     style="-fx-font-size:11px;"/></xAxis>
-                <yAxis><NumberAxis lowerBound="0" upperBound="100"
-                                   tickUnit="20" tickLabelFill="#9CA3AF"
-                                   style="-fx-font-size:11px;"/></yAxis>
+                <xAxis><CategoryAxis tickLabelFill="#9CA3AF" style="-fx-font-size:11px;"/></xAxis>
+                <yAxis><NumberAxis lowerBound="0" upperBound="100" tickUnit="20"
+                                   tickLabelFill="#9CA3AF" style="-fx-font-size:11px;"/></yAxis>
             </AreaChart>
             <HBox alignment="CENTER" spacing="24">
                 <HBox alignment="CENTER_LEFT" spacing="6">
                     <Circle fill="#A78BFA" radius="5"/>
-                    <Label text="Bien-être"
-                           style="-fx-font-size:11px; -fx-font-weight:700;
-                                  -fx-text-fill:#6B7280;"/>
+                    <Label text="Bien-être" style="-fx-font-size:11px; -fx-font-weight:700; -fx-text-fill:#6B7280;"/>
                 </HBox>
                 <HBox alignment="CENTER_LEFT" spacing="6">
                     <Circle fill="#FF6B9D" radius="5"/>
-                    <Label text="Stress"
-                           style="-fx-font-size:11px; -fx-font-weight:700;
-                                  -fx-text-fill:#6B7280;"/>
+                    <Label text="Stress" style="-fx-font-size:11px; -fx-font-weight:700; -fx-text-fill:#6B7280;"/>
                 </HBox>
                 <HBox alignment="CENTER_LEFT" spacing="6">
                     <Circle fill="#4FACFE" radius="5"/>
-                    <Label text="Humeur"
-                           style="-fx-font-size:11px; -fx-font-weight:700;
-                                  -fx-text-fill:#6B7280;"/>
+                    <Label text="Humeur" style="-fx-font-size:11px; -fx-font-weight:700; -fx-text-fill:#6B7280;"/>
                 </HBox>
             </HBox>
         </VBox>
@@ -431,27 +380,22 @@
                      -fx-padding:18;
                      -fx-effect:dropshadow(gaussian,
                      rgba(0,0,0,0.06),10,0,0,2);">
-
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <VBox spacing="2" HBox.hgrow="ALWAYS">
                     <Label text="🎵 Musicothérapie IA"
-                           style="-fx-font-size:15px; -fx-font-weight:900;
-                                  -fx-text-fill:#1F2937;"/>
+                           style="-fx-font-size:15px; -fx-font-weight:900; -fx-text-fill:#1F2937;"/>
                     <Label fx:id="lblMusiqueMessage"
                            text="Musique thérapeutique adaptée à votre état"
-                           style="-fx-font-size:11px; -fx-text-fill:#6B7280;
-                                  -fx-font-weight:600;"/>
+                           style="-fx-font-size:11px; -fx-text-fill:#6B7280; -fx-font-weight:600;"/>
                 </VBox>
                 <Button fx:id="btnChargerMusique"
                         text="🎶 Charger" onAction="#chargerMusique"
-                        style="-fx-background-color:#7C3AED;
-                               -fx-text-fill:white; -fx-font-size:12px;
-                               -fx-font-weight:800; -fx-padding:8 16 8 16;
-                               -fx-background-radius:12; -fx-cursor:hand;"/>
+                        style="-fx-background-color:#7C3AED; -fx-text-fill:white;
+                               -fx-font-size:12px; -fx-font-weight:800;
+                               -fx-padding:8 16 8 16; -fx-background-radius:12;
+                               -fx-cursor:hand;"/>
             </HBox>
-
             <Separator/>
-
             <VBox fx:id="playerBox" spacing="10"
                   style="-fx-background-color:rgba(124,58,237,0.06);
                          -fx-background-radius:14;
@@ -461,59 +405,45 @@
                     <Label fx:id="lblPisteEmoji" text="🎵"
                            style="-fx-font-size:22px;
                                   -fx-background-color:rgba(124,58,237,0.12);
-                                  -fx-background-radius:10;
-                                  -fx-padding:6 8 6 8;"/>
+                                  -fx-background-radius:10; -fx-padding:6 8 6 8;"/>
                     <VBox spacing="2" HBox.hgrow="ALWAYS">
-                        <Label fx:id="lblPisteNom"
-                               text="Aucune piste sélectionnée"
-                               style="-fx-font-size:13px; -fx-font-weight:800;
-                                      -fx-text-fill:#1F2937;"/>
+                        <Label fx:id="lblPisteNom" text="Aucune piste sélectionnée"
+                               style="-fx-font-size:13px; -fx-font-weight:800; -fx-text-fill:#1F2937;"/>
                         <Label fx:id="lblPisteDuree" text="--"
-                               style="-fx-font-size:11px;
-                                      -fx-text-fill:#9CA3AF;"/>
+                               style="-fx-font-size:11px; -fx-text-fill:#9CA3AF;"/>
                     </VBox>
                     <Label fx:id="lblEtatLecture" text="⏸"
                            style="-fx-font-size:18px; -fx-text-fill:#7C3AED;"/>
                 </HBox>
-
                 <HBox alignment="CENTER" spacing="12">
                     <Button text="⏮" onAction="#pistePrecedente"
                             style="-fx-background-color:rgba(124,58,237,0.12);
                                    -fx-text-fill:#7C3AED; -fx-font-size:16px;
-                                   -fx-background-radius:50;
-                                   -fx-min-width:40; -fx-min-height:40;
-                                   -fx-cursor:hand;"/>
-                    <Button fx:id="btnPlayPause" text="▶"
-                            onAction="#togglePlayPause"
-                            style="-fx-background-color:#7C3AED;
-                                   -fx-text-fill:white; -fx-font-size:18px;
-                                   -fx-background-radius:50;
-                                   -fx-min-width:50; -fx-min-height:50;
-                                   -fx-cursor:hand;"/>
+                                   -fx-background-radius:50; -fx-min-width:40;
+                                   -fx-min-height:40; -fx-cursor:hand;"/>
+                    <Button fx:id="btnPlayPause" text="▶" onAction="#togglePlayPause"
+                            style="-fx-background-color:#7C3AED; -fx-text-fill:white;
+                                   -fx-font-size:18px; -fx-background-radius:50;
+                                   -fx-min-width:50; -fx-min-height:50; -fx-cursor:hand;"/>
                     <Button text="⏭" onAction="#pisteSuivante"
                             style="-fx-background-color:rgba(124,58,237,0.12);
                                    -fx-text-fill:#7C3AED; -fx-font-size:16px;
-                                   -fx-background-radius:50;
-                                   -fx-min-width:40; -fx-min-height:40;
-                                   -fx-cursor:hand;"/>
+                                   -fx-background-radius:50; -fx-min-width:40;
+                                   -fx-min-height:40; -fx-cursor:hand;"/>
                     <Button text="⏹" onAction="#stopMusique"
                             style="-fx-background-color:rgba(239,68,68,0.12);
                                    -fx-text-fill:#EF4444; -fx-font-size:16px;
-                                   -fx-background-radius:50;
-                                   -fx-min-width:40; -fx-min-height:40;
-                                   -fx-cursor:hand;"/>
-                    <Label text="🔊"
-                           style="-fx-font-size:14px; -fx-text-fill:#6B7280;"/>
-                    <Slider fx:id="sliderVolume" min="0" max="1"
-                            value="0.8" prefWidth="80"
+                                   -fx-background-radius:50; -fx-min-width:40;
+                                   -fx-min-height:40; -fx-cursor:hand;"/>
+                    <Label text="🔊" style="-fx-font-size:14px; -fx-text-fill:#6B7280;"/>
+                    <Slider fx:id="sliderVolume" min="0" max="1" value="0.8"
+                            prefWidth="80"
                             style="-fx-control-inner-background:#A78BFA;"/>
                 </HBox>
             </VBox>
-
             <VBox fx:id="listePistesBox" spacing="6">
                 <Label text="🎶 Liste de lecture"
-                       style="-fx-font-size:12px; -fx-font-weight:800;
-                              -fx-text-fill:#6B7280;"/>
+                       style="-fx-font-size:12px; -fx-font-weight:800; -fx-text-fill:#6B7280;"/>
                 <Label fx:id="lblChargementPistes"
                        text="Cliquez sur 🎶 Charger pour générer votre playlist"
                        style="-fx-font-size:12px; -fx-text-fill:#9CA3AF;
@@ -528,12 +458,10 @@
                      -fx-effect:dropshadow(gaussian,
                      rgba(0,0,0,0.06),10,0,0,2);">
             <Label text="💡 Conseils personnalisés"
-                   style="-fx-font-size:14px; -fx-font-weight:800;
-                          -fx-text-fill:#1F2937;"/>
+                   style="-fx-font-size:14px; -fx-font-weight:800; -fx-text-fill:#1F2937;"/>
             <Label fx:id="lblConseil" wrapText="true"
                    text="Chargement des conseils..."
-                   style="-fx-font-size:13px; -fx-text-fill:#374151;
-                          -fx-font-weight:600;
+                   style="-fx-font-size:13px; -fx-text-fill:#374151; -fx-font-weight:600;
                           -fx-background-color:rgba(167,139,250,0.08);
                           -fx-background-radius:12;
                           -fx-border-color:rgba(167,139,250,0.2);
@@ -541,42 +469,33 @@
             <Separator/>
             <HBox spacing="10" alignment="TOP_LEFT">
                 <Label fx:id="lblEmoji1" text="🧘"
-                       style="-fx-font-size:18px;
-                              -fx-background-color:rgba(167,139,250,0.12);
-                              -fx-background-radius:10;
-                              -fx-padding:6 8 6 8;"/>
+                       style="-fx-font-size:18px; -fx-background-color:rgba(167,139,250,0.12);
+                              -fx-background-radius:10; -fx-padding:6 8 6 8;"/>
                 <VBox spacing="2">
                     <Label fx:id="lblTitre1" text="Chargement..."
-                           style="-fx-font-size:12px; -fx-font-weight:700;
-                                  -fx-text-fill:#1F2937;"/>
+                           style="-fx-font-size:12px; -fx-font-weight:700; -fx-text-fill:#1F2937;"/>
                     <Label fx:id="lblDesc1" text="" wrapText="true"
                            style="-fx-font-size:11px; -fx-text-fill:#6B7280;"/>
                 </VBox>
             </HBox>
             <HBox spacing="10" alignment="TOP_LEFT">
                 <Label fx:id="lblEmoji2" text="😮‍💨"
-                       style="-fx-font-size:18px;
-                              -fx-background-color:rgba(255,107,157,0.12);
-                              -fx-background-radius:10;
-                              -fx-padding:6 8 6 8;"/>
+                       style="-fx-font-size:18px; -fx-background-color:rgba(255,107,157,0.12);
+                              -fx-background-radius:10; -fx-padding:6 8 6 8;"/>
                 <VBox spacing="2">
                     <Label fx:id="lblTitre2" text="Chargement..."
-                           style="-fx-font-size:12px; -fx-font-weight:700;
-                                  -fx-text-fill:#1F2937;"/>
+                           style="-fx-font-size:12px; -fx-font-weight:700; -fx-text-fill:#1F2937;"/>
                     <Label fx:id="lblDesc2" text="" wrapText="true"
                            style="-fx-font-size:11px; -fx-text-fill:#6B7280;"/>
                 </VBox>
             </HBox>
             <HBox spacing="10" alignment="TOP_LEFT">
                 <Label fx:id="lblEmoji3" text="🌙"
-                       style="-fx-font-size:18px;
-                              -fx-background-color:rgba(79,172,254,0.12);
-                              -fx-background-radius:10;
-                              -fx-padding:6 8 6 8;"/>
+                       style="-fx-font-size:18px; -fx-background-color:rgba(79,172,254,0.12);
+                              -fx-background-radius:10; -fx-padding:6 8 6 8;"/>
                 <VBox spacing="2">
                     <Label fx:id="lblTitre3" text="Chargement..."
-                           style="-fx-font-size:12px; -fx-font-weight:700;
-                                  -fx-text-fill:#1F2937;"/>
+                           style="-fx-font-size:12px; -fx-font-weight:700; -fx-text-fill:#1F2937;"/>
                     <Label fx:id="lblDesc3" text="" wrapText="true"
                            style="-fx-font-size:11px; -fx-text-fill:#6B7280;"/>
                 </VBox>
@@ -590,8 +509,7 @@
                      -fx-effect:dropshadow(gaussian,
                      rgba(0,0,0,0.06),10,0,0,2);">
             <Label text="📅 Dernières sessions"
-                   style="-fx-font-size:14px; -fx-font-weight:800;
-                          -fx-text-fill:#1F2937;"/>
+                   style="-fx-font-size:14px; -fx-font-weight:800; -fx-text-fill:#1F2937;"/>
             <VBox fx:id="historyBox" spacing="0">
                 <Label text="Chargement de l'historique..."
                        style="-fx-font-size:12px; -fx-text-fill:#9CA3AF;"/>

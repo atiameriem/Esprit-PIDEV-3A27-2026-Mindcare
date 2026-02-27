@@ -126,16 +126,8 @@ public class PasserTestsController {
         HBox actions = new HBox(8);
         actions.setAlignment(Pos.CENTER_RIGHT);
 
-        Button btnPasser = new Button("Passer  ›");
-        btnPasser.setStyle(
-                "-fx-background-color:#2c4a6e;" +
-                        "-fx-text-fill:white;" +
-                        "-fx-font-size:13px; -fx-font-weight:bold;" +
-                        "-fx-padding:10 20 10 20;" +
-                        "-fx-background-radius:8; -fx-cursor:hand;");
-        btnPasser.setOnAction(e -> passerQuiz(quiz));
-
         if (estPsychologue) {
+            // Psychologue / Admin : uniquement édition et suppression, PAS de bouton Passer
             Button btnEdit = new Button("✏");
             btnEdit.setStyle(
                     "-fx-background-color:transparent;" +
@@ -151,9 +143,19 @@ public class PasserTestsController {
             btnDelete.setOnAction(e -> supprimerQuiz(quiz));
 
             actions.getChildren().addAll(btnEdit, btnDelete);
+        } else {
+            // Patient : uniquement le bouton Passer
+            Button btnPasser = new Button("Passer  ›");
+            btnPasser.setStyle(
+                    "-fx-background-color:#2c4a6e;" +
+                            "-fx-text-fill:white;" +
+                            "-fx-font-size:13px; -fx-font-weight:bold;" +
+                            "-fx-padding:10 20 10 20;" +
+                            "-fx-background-radius:8; -fx-cursor:hand;");
+            btnPasser.setOnAction(e -> passerQuiz(quiz));
+            actions.getChildren().add(btnPasser);
         }
 
-        actions.getChildren().add(btnPasser);
         carte.getChildren().addAll(iconBox, infos, actions);
         return carte;
     }
