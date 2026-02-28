@@ -403,14 +403,37 @@ public class EspacePraticienQuizController {
 
     // ── Helpers UI ───────────────────────────────────────────────
     private VBox creerBlocStat(String emoji, String valeur, String label, String couleur) {
-        VBox bloc = new VBox(4);
+        VBox bloc = new VBox(5);
         bloc.setAlignment(Pos.CENTER);
-        bloc.setPadding(new Insets(13, 15, 13, 15));
+        bloc.setPadding(new Insets(14, 10, 14, 10));
         HBox.setHgrow(bloc, Priority.ALWAYS);
-        Label e = new Label(emoji); e.setStyle("-fx-font-size:16px;");
-        Label v = new Label(valeur); v.setStyle("-fx-font-size:17px; -fx-font-weight:900; -fx-text-fill:" + couleur + ";");
-        Label l = new Label(label); l.setStyle("-fx-font-size:10px; -fx-text-fill:" + C_GREY + "; -fx-font-weight:600;");
-        bloc.getChildren().addAll(e, v, l);
+
+        // Icône colorée (petit carré avec fond)
+        String icBg, icFg;
+        if (couleur.equals(C_TEAL)) {
+            icBg = "#B2D8E8"; icFg = "#2C5F6E";
+        } else if (couleur.equals(C_VIOLET)) {
+            icBg = "#C9B0FF"; icFg = "#5B21B6";
+        } else if (couleur.equals(C_GREEN)) {
+            icBg = "#6EE7B7"; icFg = "#065F46";
+        } else if (couleur.equals(C_ROSE)) {
+            icBg = "#FCA5C0"; icFg = "#9B1239";
+        } else {
+            icBg = "#CBD5E1"; icFg = "#475569";
+        }
+
+        StackPane iconBox = new StackPane();
+        iconBox.setPrefSize(22, 22); iconBox.setMinSize(22, 22);
+        iconBox.setStyle("-fx-background-color:" + icBg + "; -fx-background-radius:6;");
+        Label icLabel = new Label(emoji);
+        icLabel.setStyle("-fx-font-size:11px; -fx-text-fill:" + icFg + "; -fx-font-weight:900;");
+        iconBox.getChildren().add(icLabel);
+
+        Label v = new Label(valeur);
+        v.setStyle("-fx-font-size:17px; -fx-font-weight:900; -fx-text-fill:" + couleur + ";");
+        Label l = new Label(label);
+        l.setStyle("-fx-font-size:10px; -fx-text-fill:" + C_GREY + "; -fx-font-weight:600;");
+        bloc.getChildren().addAll(iconBox, v, l);
         return bloc;
     }
 

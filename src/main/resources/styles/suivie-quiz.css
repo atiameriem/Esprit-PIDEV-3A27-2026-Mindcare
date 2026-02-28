@@ -1,0 +1,408 @@
+/* ══════════════════════════════════════════════════════════════════
+   suivie-quiz.css  —  Styles pour SuivieQuizController
+   Palette :  Bien-être #A78BFA · Stress #FF6B9D · Humeur #4FACFE
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── ROOT / FOND PAGE ──────────────────────────────────────────── */
+.scroll-root {
+    -fx-background: #F0F9FF;
+    -fx-background-color: #F0F9FF;
+    -fx-border-color: transparent;
+}
+
+/* ── CARTES (fond blanc + ombre) ───────────────────────────────── */
+.card {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+}
+
+.card-lg {
+    -fx-background-color: white;
+    -fx-background-radius: 22;
+    -fx-padding: 18 20 18 20;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.10), 14, 0, 0, 3);
+}
+
+/* ── 1. HEADER ─────────────────────────────────────────────────── */
+.lbl-bienvenue {
+    -fx-font-size: 26px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #1F2937;
+}
+
+.lbl-sous-titre {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6B7280;
+    -fx-font-weight: 600;
+}
+
+.btn-assistant {
+    -fx-background-color: rgba(124,58,237,0.12);
+    -fx-text-fill: #7C3AED;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-padding: 10 18 10 18;
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(124,58,237,0.25);
+    -fx-border-radius: 14;
+    -fx-cursor: hand;
+}
+
+.btn-assistant:hover {
+    -fx-background-color: rgba(124,58,237,0.20);
+}
+
+.btn-espace-psy {
+    -fx-background-color: rgba(59,130,246,0.12);
+    -fx-text-fill: #3B82F6;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-padding: 10 18 10 18;
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(59,130,246,0.25);
+    -fx-border-radius: 14;
+    -fx-cursor: hand;
+}
+
+.btn-espace-psy:hover {
+    -fx-background-color: rgba(59,130,246,0.22);
+}
+
+.badge-session-count {
+    -fx-background-color: rgba(167,139,250,0.12);
+    -fx-border-color: rgba(167,139,250,0.25);
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-padding: 4 12 4 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #7C3AED;
+}
+
+/* ── 2. AVATAR ─────────────────────────────────────────────────── */
+.avatar-halo {
+    -fx-fill: rgba(99,102,241,0.12);
+}
+
+.avatar-cercle {
+    -fx-fill: white;
+    -fx-stroke: rgba(99,102,241,0.20);
+    -fx-stroke-width: 2;
+}
+
+.avatar-image {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 6, 0, 0, 2);
+}
+
+.avatar-pseudo {
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #1e293b;
+}
+
+.avatar-etat-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #6366f1;
+    -fx-background-color: #ede9fe;
+    -fx-background-radius: 20;
+    -fx-padding: 4 12 4 12;
+}
+
+.avatar-etat-box {
+    -fx-background-color: #f0f9ff;
+    -fx-background-radius: 12;
+    -fx-padding: 10 14 10 14;
+}
+
+.avatar-message {
+    -fx-font-size: 12px;
+    -fx-text-fill: #475569;
+    -fx-line-spacing: 3;
+}
+
+.btn-voix-active {
+    -fx-background-color: #EDE9FE;
+    -fx-text-fill: #7C3AED;
+    -fx-background-radius: 20;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-border-color: #C4B5FD;
+    -fx-border-radius: 20;
+    -fx-border-width: 1.5;
+    -fx-padding: 6 14 6 14;
+}
+
+.btn-voix-active:hover {
+    -fx-background-color: #ddd6fe;
+}
+
+.btn-personnaliser {
+    -fx-background-color: #6366f1;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-padding: 10 18 10 18;
+    -fx-background-radius: 14;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.35), 8, 0, 0, 3);
+}
+
+.btn-personnaliser:hover {
+    -fx-background-color: #4f46e5;
+}
+
+/* ── 3. SCORES / CERCLES ───────────────────────────────────────── */
+.score-card {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-padding: 18 16 18 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+}
+
+.arc-track-bienetre  { -fx-stroke: #E9D5FF; -fx-stroke-width: 8; -fx-fill: transparent; }
+.arc-track-stress    { -fx-stroke: #FFD4E5; -fx-stroke-width: 8; -fx-fill: transparent; }
+.arc-track-humeur    { -fx-stroke: #D4F1FF; -fx-stroke-width: 8; -fx-fill: transparent; }
+
+.arc-fill-bienetre   { -fx-stroke: #A78BFA; -fx-stroke-width: 8; -fx-fill: transparent; -fx-stroke-line-cap: round; }
+.arc-fill-stress     { -fx-stroke: #FF6B9D; -fx-stroke-width: 8; -fx-fill: transparent; -fx-stroke-line-cap: round; }
+.arc-fill-humeur     { -fx-stroke: #4FACFE; -fx-stroke-width: 8; -fx-fill: transparent; -fx-stroke-line-cap: round; }
+
+.score-value-bienetre { -fx-font-size: 16px; -fx-font-weight: 900; -fx-text-fill: #7C3AED; }
+.score-value-stress   { -fx-font-size: 16px; -fx-font-weight: 900; -fx-text-fill: #FF6B9D; }
+.score-value-humeur   { -fx-font-size: 16px; -fx-font-weight: 900; -fx-text-fill: #4FACFE; }
+
+.score-titre-bienetre { -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #7C3AED; }
+.score-titre-stress   { -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #FF6B9D; }
+.score-titre-humeur   { -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #4FACFE; }
+
+/* Tendances — couleur injectée dynamiquement en Java */
+.trend-positive {
+    -fx-font-size: 11px; -fx-font-weight: 700;
+    -fx-text-fill: #065F46;
+    -fx-background-color: rgba(16,185,129,0.1);
+    -fx-background-radius: 20; -fx-padding: 3 10 3 10;
+}
+.trend-negative {
+    -fx-font-size: 11px; -fx-font-weight: 700;
+    -fx-text-fill: #9D174D;
+    -fx-background-color: rgba(239,68,68,0.1);
+    -fx-background-radius: 20; -fx-padding: 3 10 3 10;
+}
+.trend-neutral {
+    -fx-font-size: 11px; -fx-font-weight: 700;
+    -fx-text-fill: #64748b;
+    -fx-background-color: rgba(100,116,139,0.1);
+    -fx-background-radius: 20; -fx-padding: 3 10 3 10;
+}
+
+/* Coins */
+.coins-emoji   { -fx-font-size: 26px; }
+.coins-valeur  { -fx-font-size: 15px; -fx-font-weight: 900; -fx-text-fill: #7C3AED; }
+.coins-label   { -fx-font-size: 10px; -fx-font-weight: 700; -fx-text-fill: #9CA3AF; }
+
+/* ── 4. BADGES ─────────────────────────────────────────────────── */
+.badges-section-titre {
+    -fx-font-size: 14px; -fx-font-weight: 900; -fx-text-fill: #1e293b;
+}
+.badges-section-sous {
+    -fx-font-size: 11px; -fx-text-fill: #94a3b8;
+}
+.badge-icone-bg {
+    -fx-background-color: rgba(99,102,241,0.10);
+    -fx-background-radius: 10;
+    -fx-padding: 6 8 6 8;
+}
+
+/* Icônes paliers */
+.palier-emoji    { -fx-font-size: 22px; -fx-opacity: 0.3; }
+.palier-label    { -fx-font-size: 9px; -fx-font-weight: 700; -fx-text-fill: #94a3b8; }
+.palier-separateur { -fx-background-color: #e2e8f0; -fx-pref-height: 3; -fx-background-radius: 2; }
+
+.badges-hint {
+    -fx-font-size: 11px; -fx-text-fill: #94a3b8;
+    -fx-font-style: italic; -fx-padding: 4 0;
+}
+
+/* Items badges (état injecté dynamiquement) */
+.badge-item-locked {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 14; -fx-border-radius: 14;
+    -fx-border-color: #e2e8f0; -fx-border-width: 1.5;
+    -fx-opacity: 0.45; -fx-padding: 10 14;
+}
+.badge-nom-locked   { -fx-font-size: 12px; -fx-font-weight: 900; -fx-text-fill: #94a3b8; }
+.badge-sous-locked  { -fx-font-size: 10px; -fx-text-fill: #94a3b8; }
+.badge-sous-ok      { -fx-font-size: 10px; -fx-text-fill: #64748b; }
+
+.badge-next-hint {
+    -fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-style: italic;
+}
+.badge-all-unlocked {
+    -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6366f1;
+}
+
+/* ── 5. GRAPHIQUE ──────────────────────────────────────────────── */
+.evolution-chart { -fx-background-color: transparent; }
+
+.evolution-chart .chart-plot-background { -fx-background-color: #FAFBFC; }
+
+.evolution-chart .default-color0.chart-series-area-fill { -fx-fill: rgba(167,139,250,0.25); }
+.evolution-chart .default-color0.chart-series-area-line { -fx-stroke: #A78BFA; -fx-stroke-width: 2.5px; }
+.evolution-chart .default-color0.chart-area-symbol      { -fx-background-color: #A78BFA, white; }
+
+.evolution-chart .default-color1.chart-series-area-fill { -fx-fill: rgba(255,107,157,0.2); }
+.evolution-chart .default-color1.chart-series-area-line { -fx-stroke: #FF6B9D; -fx-stroke-width: 2.5px; }
+.evolution-chart .default-color1.chart-area-symbol      { -fx-background-color: #FF6B9D, white; }
+
+.evolution-chart .default-color2.chart-series-area-fill { -fx-fill: rgba(79,172,254,0.2); }
+.evolution-chart .default-color2.chart-series-area-line { -fx-stroke: #4FACFE; -fx-stroke-width: 2.5px; }
+.evolution-chart .default-color2.chart-area-symbol      { -fx-background-color: #4FACFE, white; }
+
+.combo-periode {
+    -fx-background-color: #F3F4F6;
+    -fx-background-radius: 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+}
+
+.graphique-titre   { -fx-font-size: 15px; -fx-font-weight: 900; -fx-text-fill: #1F2937; }
+.graphique-sous    { -fx-font-size: 11px; -fx-text-fill: #9CA3AF; -fx-font-weight: 600; }
+
+.legende-label {
+    -fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #6B7280;
+}
+
+/* ── 6. MUSICOTHÉRAPIE ─────────────────────────────────────────── */
+.musique-titre  { -fx-font-size: 15px; -fx-font-weight: 900; -fx-text-fill: #1F2937; }
+.musique-sous   { -fx-font-size: 11px; -fx-text-fill: #6B7280; -fx-font-weight: 600; }
+
+.btn-charger-musique {
+    -fx-background-color: #7C3AED;
+    -fx-text-fill: white;
+    -fx-font-size: 12px; -fx-font-weight: 800;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+}
+.btn-charger-musique:hover    { -fx-background-color: #6D28D9; }
+.btn-charger-musique:disabled { -fx-background-color: #c4b5fd; }
+
+.player-box {
+    -fx-background-color: rgba(124,58,237,0.06);
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(124,58,237,0.15);
+    -fx-border-radius: 14;
+    -fx-padding: 14;
+}
+
+.piste-emoji-bg {
+    -fx-font-size: 22px;
+    -fx-background-color: rgba(124,58,237,0.12);
+    -fx-background-radius: 10;
+    -fx-padding: 6 8 6 8;
+}
+
+.piste-nom   { -fx-font-size: 13px; -fx-font-weight: 800; -fx-text-fill: #1F2937; }
+.piste-duree { -fx-font-size: 11px; -fx-text-fill: #9CA3AF; }
+
+.etat-lecture { -fx-font-size: 18px; -fx-text-fill: #7C3AED; }
+
+/* Boutons lecteur */
+.btn-play-pause {
+    -fx-background-color: #7C3AED;
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-background-radius: 50;
+    -fx-min-width: 50; -fx-min-height: 50;
+    -fx-cursor: hand;
+}
+.btn-play-pause:hover { -fx-background-color: #6D28D9; }
+
+.btn-nav-piste {
+    -fx-background-color: rgba(124,58,237,0.12);
+    -fx-text-fill: #7C3AED;
+    -fx-font-size: 16px;
+    -fx-background-radius: 50;
+    -fx-min-width: 40; -fx-min-height: 40;
+    -fx-cursor: hand;
+}
+.btn-nav-piste:hover { -fx-background-color: rgba(124,58,237,0.22); }
+
+.btn-stop-piste {
+    -fx-background-color: rgba(239,68,68,0.12);
+    -fx-text-fill: #EF4444;
+    -fx-font-size: 16px;
+    -fx-background-radius: 50;
+    -fx-min-width: 40; -fx-min-height: 40;
+    -fx-cursor: hand;
+}
+.btn-stop-piste:hover { -fx-background-color: rgba(239,68,68,0.22); }
+
+.volume-icon    { -fx-font-size: 14px; -fx-text-fill: #6B7280; }
+.slider-volume  { -fx-control-inner-background: #A78BFA; }
+
+.pistes-liste-titre { -fx-font-size: 12px; -fx-font-weight: 800; -fx-text-fill: #6B7280; }
+.pistes-hint {
+    -fx-font-size: 12px; -fx-text-fill: #9CA3AF;
+    -fx-font-style: italic; -fx-padding: 8 0;
+}
+
+/* ── 7. CONSEILS ───────────────────────────────────────────────── */
+.conseils-titre { -fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #1F2937; }
+
+.conseil-principal {
+    -fx-font-size: 13px; -fx-text-fill: #374151; -fx-font-weight: 600;
+    -fx-background-color: rgba(167,139,250,0.08);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(167,139,250,0.2);
+    -fx-border-radius: 12;
+    -fx-padding: 12;
+}
+
+.conseil-emoji-bienetre {
+    -fx-font-size: 18px;
+    -fx-background-color: rgba(167,139,250,0.12);
+    -fx-background-radius: 10; -fx-padding: 6 8 6 8;
+}
+.conseil-emoji-stress {
+    -fx-font-size: 18px;
+    -fx-background-color: rgba(255,107,157,0.12);
+    -fx-background-radius: 10; -fx-padding: 6 8 6 8;
+}
+.conseil-emoji-humeur {
+    -fx-font-size: 18px;
+    -fx-background-color: rgba(79,172,254,0.12);
+    -fx-background-radius: 10; -fx-padding: 6 8 6 8;
+}
+
+.conseil-item-titre { -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #1F2937; }
+.conseil-item-desc  { -fx-font-size: 11px; -fx-text-fill: #6B7280; }
+
+/* ── 8. HISTORIQUE ─────────────────────────────────────────────── */
+.historique-titre { -fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #1F2937; }
+
+.history-label {
+    -fx-font-size: 12px; -fx-text-fill: #374151;
+    -fx-font-weight: 600; -fx-padding: 6 0;
+}
+.history-label-ok   { -fx-font-size: 12px; -fx-text-fill: #065F46; -fx-font-weight: 600; -fx-padding: 6 0; }
+.history-label-warn { -fx-font-size: 12px; -fx-text-fill: #92400E; -fx-font-weight: 600; -fx-padding: 6 0; }
+.history-label-bad  { -fx-font-size: 12px; -fx-text-fill: #991B1B; -fx-font-weight: 600; -fx-padding: 6 0; }
+.history-hint       { -fx-font-size: 12px; -fx-text-fill: #9CA3AF; }
+
+/* ── 9. RÉSULTAT TEST ──────────────────────────────────────────── */
+.test-resultat      { -fx-font-size: 11px; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 10; }
+.test-resultat-ok   { -fx-text-fill: #065F46; -fx-background-color: #ECFDF5; }
+.test-resultat-warn { -fx-text-fill: #78350F; -fx-background-color: #FEF3C7; }
+.test-resultat-err  { -fx-text-fill: #991B1B; -fx-background-color: #FEF2F2; }
+
+/* ── Piste item (état injecté dynamiquement) ───────────────────── */
+.piste-item        { -fx-background-color: transparent;                   -fx-background-radius: 10; -fx-cursor: hand; -fx-padding: 8 12; }
+.piste-item-active { -fx-background-color: rgba(124,58,237,0.10);         -fx-background-radius: 10; -fx-cursor: hand; -fx-padding: 8 12; }
+.piste-item:hover  { -fx-background-color: rgba(124,58,237,0.08); }
+.piste-indicateur  { -fx-font-size: 14px; -fx-text-fill: #7C3AED; }
+.piste-nom-list    { -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #1F2937; }
+.piste-duree-list  { -fx-font-size: 10px; -fx-text-fill: #9CA3AF; }
