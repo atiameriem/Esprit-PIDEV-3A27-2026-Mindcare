@@ -10,6 +10,7 @@ import java.sql.SQLException;
 
 public class AuthService {
 
+
     // ✅ Plus de connexion stockée comme champ
     public boolean login(String email, String password) throws SQLException {
         String sql = "SELECT id_users, nom, prenom, role FROM users " +

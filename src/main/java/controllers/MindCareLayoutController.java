@@ -5,11 +5,13 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import utils.Session;
 
 import java.io.IOException;
+import java.net.URL;
 
 public class MindCareLayoutController {
 
@@ -27,8 +29,8 @@ public class MindCareLayoutController {
     @FXML private Button btnLocaux;
 
     @FXML private ComboBox<String> sortCombo;
-    @FXML private TextField searchField;
-    @FXML private VBox contentArea;
+    @FXML private TextField        searchField;
+    @FXML private VBox             contentArea;
 
     @FXML
     public void initialize() {
@@ -37,7 +39,7 @@ public class MindCareLayoutController {
             sortCombo.getSelectionModel().selectFirst();
         }
         appliquerPermissions();
-        chargerVueParDefaut(); // ✅ Vue par défaut selon rôle
+        chargerVueParDefaut();
     }
 
     private void appliquerPermissions() {
@@ -45,37 +47,34 @@ public class MindCareLayoutController {
         if (role == null) return;
 
         switch (role) {
-            case USER:
-                masquerBoutons(btnCompteRendu, btnLocaux,
-                        btnReserverFormation, btnReclamation);
-                break;
+            case USER ->
+                    masquerBoutons(btnCompteRendu, btnLocaux,
+                            btnReserverFormation, btnReclamation);
 
-            case RESPONSABLE_CENTRE:
-                masquerBoutons(btnPasserTests, btnChatbot,
-                        btnCompteRendu, btnSuivie);
-                break;
+            case RESPONSABLE_CENTRE ->
+                    masquerBoutons(btnPasserTests, btnChatbot,
+                            btnCompteRendu, btnSuivie);
 
-            case PSYCHOLOGUE:
-                // ✅ Ajout de btnChatbot et btnSuivie
-                masquerBoutons(btnPasserTests, btnChatbot,
-                        btnSuivie, btnReserverFormation, btnLocaux);
-                break;
+            case PSYCHOLOGUE ->
+                    masquerBoutons(btnPasserTests, btnChatbot,
+                            btnSuivie, btnReserverFormation, btnLocaux);
 
-            case ADMIN:
-                break;
+            case ADMIN -> { /* tout visible */ }
         }
     }
 
-    // ✅ Vue par défaut selon le rôle connecté
+    // ══════════════════════════════════════════════════════════════
+    // Vue par défaut selon le rôle connecté
+    // ══════════════════════════════════════════════════════════════
     private void chargerVueParDefaut() {
         var role = Session.getRoleConnecte();
         if (role == null) { loadAccueil(); return; }
 
         switch (role) {
-            case USER              -> loadView("Suivie.fxml");
-            case PSYCHOLOGUE       -> loadView("EspacePraticien.fxml");
-            case RESPONSABLE_CENTRE-> loadView("Accueil.fxml");
-            case ADMIN             -> loadView("Accueil.fxml");
+            case USER               -> loadView("Suivie.fxml");
+            case PSYCHOLOGUE        -> loadView("EspacePraticienQuiz.fxml");
+            case RESPONSABLE_CENTRE -> loadView("Accueil.fxml");
+            case ADMIN              -> loadView("Accueil.fxml");
         }
     }
 
@@ -88,27 +87,62 @@ public class MindCareLayoutController {
         }
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // Chargement FXML — avec null-check et message d'erreur clair
+    // ══════════════════════════════════════════════════════════════
     private void loadView(String fxmlFile) {
+        // ── 1. Résoudre l'URL ─────────────────────────────────────
+        URL url = getClass().getResource("/views/" + fxmlFile);
+
+        // ── 2. Null-check — fichier introuvable dans le classpath ──
+        if (url == null) {
+            System.err.println("╔══════════════════════════════════════════╗");
+            System.err.println("║ ❌ FXML introuvable : /views/" + fxmlFile);
+            System.err.println("║ Vérifiez que le fichier est dans :       ");
+            System.err.println("║   src/main/resources/views/" + fxmlFile);
+            System.err.println("║ Et relancez : Build → Rebuild Project    ");
+            System.err.println("╚══════════════════════════════════════════╝");
+
+            // ── Afficher message d'erreur dans l'UI au lieu de crasher
+            if (contentArea != null) {
+                Label lblErr = new Label(
+                        "⚠️ Vue introuvable : " + fxmlFile
+                                + "\nVérifiez src/main/resources/views/");
+                lblErr.setStyle(
+                        "-fx-font-size:13px; -fx-text-fill:#ef4444;"
+                                + "-fx-padding:24; -fx-font-weight:600;");
+                lblErr.setWrapText(true);
+                contentArea.getChildren().setAll(lblErr);
+            }
+            return;
+        }
+
+        // ── 3. Chargement normal ───────────────────────────────────
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/views/" + fxmlFile)
-            );
+            FXMLLoader loader = new FXMLLoader(url);
             Node view = loader.load();
 
             Object controller = loader.getController();
-            if (controller instanceof SuivieQuizController) {
-                ((SuivieQuizController) controller).setParentController(this);
+            // ✅ Injecter le parent si le controller le supporte
+            if (controller instanceof SuivieQuizController sqc) {
+                sqc.setParentController(this);
             }
 
-            contentArea.getChildren().clear();
-            contentArea.getChildren().add(view);
+            if (contentArea != null) {
+                contentArea.getChildren().setAll(view);
+            }
+
+            System.out.println("✅ Vue chargée : " + fxmlFile);
 
         } catch (IOException e) {
-            System.err.println("Erreur lors du chargement de la vue: " + fxmlFile);
+            System.err.println("❌ Erreur chargement : " + fxmlFile);
             e.printStackTrace();
         }
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // Actions navigation
+    // ══════════════════════════════════════════════════════════════
     @FXML public void loadAccueil()            { loadView("Accueil.fxml"); }
     @FXML private void loadRendezVous()        { loadView("RendezVous.fxml"); }
     @FXML private void loadCompteRendu()       { loadView("CompteRendu.fxml"); }
