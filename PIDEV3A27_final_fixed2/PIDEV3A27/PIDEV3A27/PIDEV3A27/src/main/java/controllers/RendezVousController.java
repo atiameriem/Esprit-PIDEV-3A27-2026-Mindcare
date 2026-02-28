@@ -72,6 +72,8 @@ public class RendezVousController {
     // ===================== UX Annulation "Smart" =====================
     private void openSmartCancelDialog(RendezVousView rv) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        stylePopup1(alert.getDialogPane());
+
         alert.setTitle("Annuler la demande ?");
         alert.setHeaderText("Annuler la demande ?");
         alert.setContentText(
@@ -107,6 +109,8 @@ public class RendezVousController {
                 if (options.isEmpty()) return;
 
                 ChoiceDialog<String> cd = new ChoiceDialog<>(options.get(0), options);
+                stylePopup1(alert.getDialogPane());
+
                 cd.setTitle("Modifier l’heure");
                 cd.setHeaderText("Choisissez une nouvelle heure (±2h)");
                 cd.setContentText("Nouvelle heure :");
@@ -687,6 +691,23 @@ public class RendezVousController {
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+    //pour css du popup de fonction annuler
+    private void stylePopup1(DialogPane pane) {
+        if (pane == null) return;
+
+        // Classe CSS commune (comme tes autres popups)
+        pane.getStyleClass().add("mc-dialog");
+
+        // Charger popup.css depuis resources
+        var css = getClass().getResource("/popup.css");
+        if (css != null) {
+            if (!pane.getStylesheets().contains(css.toExternalForm())) {
+                pane.getStylesheets().add(css.toExternalForm());
+            }
+        } else {
+            System.out.println("[WARN] popup.css introuvable dans resources !");
         }
     }
 }
