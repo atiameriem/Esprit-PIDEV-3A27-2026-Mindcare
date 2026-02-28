@@ -11,7 +11,7 @@ public class ServiceGroqQuiz {
 
     // ✅ Coller ta clé ici — format : gsk_xxxxx
     private static final String API_KEY =
-            "PROTECTED_GROQ";
+            "g";
     private static final String API_URL =
             "https://api.groq.com/openai/v1/chat/completions";
 
