@@ -96,8 +96,8 @@ public class MindCareLayoutController {
             Node view = loader.load();
 
             Object controller = loader.getController();
-            if (controller instanceof SuivieController) {
-                ((SuivieController) controller).setParentController(this);
+            if (controller instanceof SuivieQuizController) {
+                ((SuivieQuizController) controller).setParentController(this);
             }
 
             contentArea.getChildren().clear();

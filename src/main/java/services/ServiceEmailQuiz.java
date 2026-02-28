@@ -4,7 +4,7 @@ import jakarta.mail.*;
 import jakarta.mail.internet.*;
 import java.util.Properties;
 
-public class ServiceEmail {
+public class ServiceEmailQuiz {
 
     // ⚠️ Remplacez par votre Gmail + App Password
     private static final String EXPEDITEUR   = "mindcare563@gmail.com";

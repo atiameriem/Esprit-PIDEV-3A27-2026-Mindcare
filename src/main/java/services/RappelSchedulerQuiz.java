@@ -4,7 +4,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class RappelScheduler {
+public class RappelSchedulerQuiz {
 
     private static ScheduledExecutorService scheduler;
 
@@ -17,13 +17,13 @@ public class RappelScheduler {
             return t;
         });
 
-        ServiceRappel serviceRappel = new ServiceRappel();
+        ServiceRappelQuiz serviceRappelQuiz = new ServiceRappelQuiz();
 
         // ✅ Délai initial 30s — laisse l'interface et la connexion principale
         //    se stabiliser avant le premier envoi
         scheduler.scheduleAtFixedRate(() -> {
             System.out.println("🔔 Vérification rappels patients...");
-            serviceRappel.verifierEtEnvoyerRappels();
+            serviceRappelQuiz.verifierEtEnvoyerRappels();
         }, 30, 24 * 60 * 60, TimeUnit.SECONDS);
 
         System.out.println("✅ RappelScheduler démarré — premier envoi dans 30s");

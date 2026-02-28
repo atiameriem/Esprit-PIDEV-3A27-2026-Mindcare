@@ -21,7 +21,7 @@
 
 <ScrollPane xmlns:fx="http://javafx.com/fxml/1"
             xmlns="http://javafx.com/javafx/21"
-            fx:controller="controllers.SuivieController"
+            fx:controller="controllers.SuivieQuizController"
             fitToWidth="true"
             style="-fx-background:#F0F9FF; -fx-background-color:#F0F9FF;
                    -fx-border-color:transparent;">

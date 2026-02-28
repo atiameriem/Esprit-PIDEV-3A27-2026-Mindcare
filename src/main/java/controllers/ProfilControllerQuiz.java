@@ -11,7 +11,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
 import javafx.scene.shape.StrokeLineCap;
-import javafx.stage.Stage;
 import services.ServiceReponse;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -49,7 +48,7 @@ public class ProfilControllerQuiz {
     private void handleRetour() {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/views/EspacePraticien.fxml")
+                    getClass().getResource("/views/EspacepraticienQuiz.fxml")
             );
             Node vue = loader.load();
 

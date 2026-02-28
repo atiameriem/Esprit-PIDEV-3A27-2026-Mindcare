@@ -7,9 +7,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ServiceAlertes {
+public class ServiceAlertesQuiz {
 
-    private final ServiceEmail serviceEmail = new ServiceEmail();
+    private final ServiceEmailQuiz serviceEmailQuiz = new ServiceEmailQuiz();
 
     // ══════════════════════════════════════════════════════════════
     // Vérifie scores critiques → email psychologue
@@ -138,7 +138,7 @@ public class ServiceAlertes {
                 + "MindCare — Système d'alerte automatique 🧠</p>"
                 + "</div></div></body></html>";
 
-        serviceEmail.envoyerEmail(
+        serviceEmailQuiz.envoyerEmail(
                 emailPsy,
                 "🚨 MindCare — Score critique : " + nomPatient,
                 html

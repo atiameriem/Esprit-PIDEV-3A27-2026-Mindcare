@@ -9,8 +9,7 @@ import java.util.concurrent.Executors;
  *
  *  Utilise les commandes système natives selon l'OS :
  *   • Windows  → PowerShell  (voix FR intégrée si installée)
- *   • macOS    → say -v      (Thomas = voix française)
- *   • Linux    → espeak-ng   (apt install espeak-ng)
+
  *
  *  Usage :
  *   ServiceVoix.parler("Bonjour !");
@@ -18,7 +17,7 @@ import java.util.concurrent.Executors;
  *   ServiceVoix.arreter();
  * ══════════════════════════════════════════════════════════════
  */
-public class ServiceVoix {
+public class ServiceVoixQuiz {
 
     // Thread unique — une seule voix à la fois
     private static final ExecutorService executor =

@@ -5,7 +5,7 @@
 <?import javafx.geometry.*?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="controllers.NouveauTestController"
+      fx:controller="controllers.NouveauTestQuizController"
       spacing="16"
       style="-fx-background-color: #dce8f0;">
 

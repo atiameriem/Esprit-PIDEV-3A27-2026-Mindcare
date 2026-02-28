@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 
-public class EspacePraticienController {
+public class EspacePraticienQuizController {
 
     @FXML private Label           lblTotalPatients;
     @FXML private Label           lblTestsSemaine;
@@ -393,9 +393,9 @@ public class EspacePraticienController {
 
     private void ouvrirNouveauTest(int idPatient) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/NouveauTest.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/NouveauTestQuiz.fxml"));
             Node vue = loader.load();
-            NouveauTestController ctrl = loader.getController();
+            NouveauTestQuizController ctrl = loader.getController();
             ctrl.setIdPatientCible(idPatient);
             VBox contentArea = (VBox) listePatients.getScene().lookup("#contentArea");
             if (contentArea != null) contentArea.getChildren().setAll(vue);

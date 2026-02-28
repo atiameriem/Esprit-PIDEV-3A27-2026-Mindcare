@@ -12,22 +12,22 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import services.ServiceChat;
-import services.ServiceVoix;
+import services.ServiceChatQuiz;
+import services.ServiceVoixQuiz;
 import utils.Session;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChatController {
+public class ChatQuizController {
 
     @FXML private VBox       chatBox;
     @FXML private ScrollPane scrollPane;
     @FXML private TextField  champMessage;
     @FXML private Button     btnVoix;   // bouton 🔊/🔇 dans le FXML
 
-    private final ServiceChat serviceChat = new ServiceChat();
+    private final ServiceChatQuiz serviceChat = new ServiceChatQuiz();
     private final List<String> historique = new ArrayList<>();
 
     @FXML
@@ -87,14 +87,14 @@ public class ChatController {
     // ══════════════════════════════════════════════════════════
     @FXML
     public void toggleVoix() {
-        ServiceVoix.setVoixActive(!ServiceVoix.isVoixActive());
+        ServiceVoixQuiz.setVoixActive(!ServiceVoixQuiz.isVoixActive());
         mettreAJourBoutonVoix();
-        if (!ServiceVoix.isVoixActive()) ServiceVoix.arreter();
+        if (!ServiceVoixQuiz.isVoixActive()) ServiceVoixQuiz.arreter();
     }
 
     private void mettreAJourBoutonVoix() {
         if (btnVoix == null) return;
-        if (ServiceVoix.isVoixActive()) {
+        if (ServiceVoixQuiz.isVoixActive()) {
             btnVoix.setText("🔊");
             btnVoix.setStyle(
                     "-fx-background-color:#ede9fe; -fx-text-fill:#7c3aed;"
@@ -120,7 +120,7 @@ public class ChatController {
     // ══════════════════════════════════════════════════════════
     @FXML
     public void retourSuivie() {
-        ServiceVoix.arreter(); // coupe la voix avant de quitter
+        ServiceVoixQuiz.arreter(); // coupe la voix avant de quitter
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/views/Suivie.fxml"));
@@ -161,7 +161,7 @@ public class ChatController {
             );
             // L'avatar parle — petit délai pour laisser l'UI s'afficher d'abord
             if (lireVoix) {
-                ServiceVoix.parler(texte);
+                ServiceVoixQuiz.parler(texte);
             }
         }
 

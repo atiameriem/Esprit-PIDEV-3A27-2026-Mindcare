@@ -13,13 +13,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.util.Duration;
-import services.AvatarService;
+import services.*;
 import services.AvatarService.*;
-import services.ServiceGroq;
-import services.ServiceMusique;
-import services.ServiceQuiz;
-import services.ServiceRappel;
-import services.ServiceVoix;
 import utils.Session;
 
 import java.io.IOException;
@@ -28,10 +23,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-public class SuivieController {
+public class SuivieQuizController {
 
     private MindCareLayoutController parentController;
-    private static SuivieController  instance;
+    private static SuivieQuizController instance;
     private int currentPatientId = -1;
 
     // ── Scores ─────────────────────────────────────────────────
@@ -86,8 +81,8 @@ public class SuivieController {
 
     // ── Services ───────────────────────────────────────────────
     private final ServiceQuiz    serviceQuiz    = new ServiceQuiz();
-    private final ServiceGroq    serviceGroq    = new ServiceGroq();
-    private final ServiceMusique serviceMusique = new ServiceMusique();
+    private final ServiceGroqQuiz serviceGroqQuiz = new ServiceGroqQuiz();
+    private final ServiceMusiqueQuiz serviceMusiqueQuiz = new ServiceMusiqueQuiz();
     private final AvatarService  avatarService  = new AvatarService();
 
     // ── État ───────────────────────────────────────────────────
@@ -102,7 +97,7 @@ public class SuivieController {
 
     // ── Musique ────────────────────────────────────────────────
     private javafx.scene.media.MediaPlayer mediaPlayer;
-    private List<ServiceMusique.Piste>     pistesChargees = new ArrayList<>();
+    private List<ServiceMusiqueQuiz.Piste>     pistesChargees = new ArrayList<>();
     private int     pisteActuelle = 0;
     private boolean enLecture     = false;
 
@@ -151,7 +146,7 @@ public class SuivieController {
         if (!rappelDejaVerifie) {
             rappelDejaVerifie = true;
             new Thread(() -> {
-                try { new ServiceRappel().verifierEtEnvoyerRappels(); }
+                try { new ServiceRappelQuiz().verifierEtEnvoyerRappels(); }
                 catch (Exception e) { System.err.println("Rappels : " + e.getMessage()); }
             }).start();
         }
@@ -164,13 +159,13 @@ public class SuivieController {
     // ══════════════════════════════════════════════════════════════
     @FXML
     public void toggleVoixAvatar() {
-        ServiceVoix.setVoixActive(!ServiceVoix.isVoixActive());
+        ServiceVoixQuiz.setVoixActive(!ServiceVoixQuiz.isVoixActive());
         mettreAJourBoutonVoix();
     }
 
     private void mettreAJourBoutonVoix() {
         if (btnVoixAvatar == null) return;
-        if (ServiceVoix.isVoixActive()) {
+        if (ServiceVoixQuiz.isVoixActive()) {
             btnVoixAvatar.setText("🔊");
             btnVoixAvatar.setStyle(
                     "-fx-background-color:#ede9fe; -fx-text-fill:#7c3aed;"
@@ -329,7 +324,7 @@ public class SuivieController {
         // ── VOIX DE L'AVATAR ─────────────────────────────────
         if (etat != dernierEtatPrononce) {
             dernierEtatPrononce = etat;
-            ServiceVoix.parlerAvatar(expr.messageReaction);
+            ServiceVoixQuiz.parlerAvatar(expr.messageReaction);
         }
     }
 
@@ -527,8 +522,8 @@ public class SuivieController {
         if (lblConseil == null) return;
         lblConseil.setText("🤖 Conseil personnalisé en cours...");
         new Thread(() -> {
-            String c = serviceGroq.genererConseil(be, st, hu, nb);
-            List<String[]> t = serviceGroq.genererTroisConseils(be, st, hu);
+            String c = serviceGroqQuiz.genererConseil(be, st, hu, nb);
+            List<String[]> t = serviceGroqQuiz.genererTroisConseils(be, st, hu);
             Platform.runLater(() -> {
                 if (lblConseil != null) lblConseil.setText(c != null ? c : "Continuez vos efforts !");
                 if (t!=null&&t.size()>0&&t.get(0).length>=3) { if(lblEmoji1!=null)lblEmoji1.setText(t.get(0)[0]); if(lblTitre1!=null)lblTitre1.setText(t.get(0)[1]); if(lblDesc1!=null)lblDesc1.setText(t.get(0)[2]); }
@@ -583,8 +578,8 @@ public class SuivieController {
         setResultat("⏳ Test Groq...", "#78350F", "#FEF3C7");
         new Thread(() -> {
             try {
-                String c = serviceGroq.genererConseil(scoreBE,scoreST,scoreHU,5);
-                String t = serviceGroq.recommanderProchainTest(scoreBE,scoreST,scoreHU);
+                String c = serviceGroqQuiz.genererConseil(scoreBE,scoreST,scoreHU,5);
+                String t = serviceGroqQuiz.recommanderProchainTest(scoreBE,scoreST,scoreHU);
                 Platform.runLater(()->setResultat(c!=null&&!c.isEmpty()?"✅ GROQ OK !\n💬 "+c+"\n🎯 "+t:"❌ Réponse vide",c!=null?"#065F46":"#991B1B",c!=null?"#ECFDF5":"#FEF2F2"));
             } catch(Exception e){Platform.runLater(()->setResultat("❌ "+e.getMessage(),"#991B1B","#FEF2F2"));}
         }).start();
@@ -593,7 +588,7 @@ public class SuivieController {
     @FXML private void testerEmail() {
         setResultat("⏳ Envoi email...", "#78350F", "#FEF3C7");
         new Thread(() -> {
-            try { new services.ServiceEmail().envoyerEmail("mindcare.notifications@gmail.com","🧪 Test MindCare","<h2>✅ Email OK !</h2>"); Platform.runLater(()->setResultat("✅ EMAIL OK ! 📬","#065F46","#ECFDF5")); }
+            try { new ServiceEmailQuiz().envoyerEmail("mindcare.notifications@gmail.com","🧪 Test MindCare","<h2>✅ Email OK !</h2>"); Platform.runLater(()->setResultat("✅ EMAIL OK ! 📬","#065F46","#ECFDF5")); }
             catch(Exception e){Platform.runLater(()->setResultat("❌ "+e.getMessage(),"#991B1B","#FEF2F2"));}
         }).start();
     }
@@ -605,15 +600,15 @@ public class SuivieController {
     }
 
     @FXML private void ouvrirChat() {
-        ServiceVoix.arreter();
+        ServiceVoixQuiz.arreter();
         try { FXMLLoader l=new FXMLLoader(getClass().getResource("/views/chatquiz.fxml")); Node v=l.load(); VBox ca=(VBox)lblBienvenue.getScene().lookup("#contentArea"); if(ca!=null)ca.getChildren().setAll(v); } catch(IOException e){e.printStackTrace();}
     }
 
     @FXML private void ouvrirEspacePraticien() {
         Session.Role r = Session.getRoleConnecte();
         if (r!=Session.Role.PSYCHOLOGUE && r!=Session.Role.ADMIN) return;
-        ServiceVoix.arreter();
-        try { FXMLLoader l=new FXMLLoader(getClass().getResource("/views/EspacePraticien.fxml")); Node v=l.load(); VBox ca=(VBox)lblBienvenue.getScene().lookup("#contentArea"); if(ca!=null)ca.getChildren().setAll(v); } catch(IOException e){e.printStackTrace();}
+        ServiceVoixQuiz.arreter();
+        try { FXMLLoader l=new FXMLLoader(getClass().getResource("/views/EspacepraticienQuiz.fxml")); Node v=l.load(); VBox ca=(VBox)lblBienvenue.getScene().lookup("#contentArea"); if(ca!=null)ca.getChildren().setAll(v); } catch(IOException e){e.printStackTrace();}
     }
 
     @FXML public void retourSuivie() { if (parentController!=null) parentController.loadAccueil(); }
@@ -680,8 +675,8 @@ public class SuivieController {
         if(lblChargementPistes!=null)lblChargementPistes.setText("🤖 IA analyse votre état...");
         String nom = Session.getFullName()!=null?Session.getFullName():"Patient";
         new Thread(()->{
-            ServiceMusique.MusiqueParams params=serviceMusique.calculerParams(scoreBE,scoreST,scoreHU,nom);
-            List<ServiceMusique.Piste> pistes=serviceMusique.chercherPistes(params);
+            ServiceMusiqueQuiz.MusiqueParams params= serviceMusiqueQuiz.calculerParams(scoreBE,scoreST,scoreHU,nom);
+            List<ServiceMusiqueQuiz.Piste> pistes= serviceMusiqueQuiz.chercherPistes(params);
             pistesChargees=pistes; pisteActuelle=0;
             Platform.runLater(()->{
                 if(lblMusiqueMessage!=null)lblMusiqueMessage.setText(params.message+" • BPM: "+params.bpm);
@@ -692,12 +687,12 @@ public class SuivieController {
         }).start();
     }
 
-    private void afficherListePistes(List<ServiceMusique.Piste> pistes) {
+    private void afficherListePistes(List<ServiceMusiqueQuiz.Piste> pistes) {
         if(listePistesBox==null)return;
         listePistesBox.getChildren().removeIf(n->n.getUserData()!=null&&n.getUserData().equals("piste"));
         if(lblChargementPistes!=null)lblChargementPistes.setVisible(false);
         for(int i=0;i<pistes.size();i++){
-            ServiceMusique.Piste piste=pistes.get(i); final int idx=i; final ServiceMusique.Piste pf=piste;
+            ServiceMusiqueQuiz.Piste piste=pistes.get(i); final int idx=i; final ServiceMusiqueQuiz.Piste pf=piste;
             HBox ligne=new HBox(10); ligne.setAlignment(javafx.geometry.Pos.CENTER_LEFT); ligne.setPadding(new javafx.geometry.Insets(8,12,8,12)); ligne.setUserData("piste");
             ligne.setStyle("-fx-background-color:"+(i==pisteActuelle?"rgba(124,58,237,0.10)":"transparent")+"; -fx-background-radius:10; -fx-cursor:hand;");
             Label em=new Label(piste.emoji); em.setStyle("-fx-font-size:16px;");
@@ -714,7 +709,7 @@ public class SuivieController {
         }
     }
 
-    private void jouerPiste(ServiceMusique.Piste p) {
+    private void jouerPiste(ServiceMusiqueQuiz.Piste p) {
         if(lblPisteNom!=null)lblPisteNom.setText(p.nom); if(lblPisteDuree!=null)lblPisteDuree.setText(p.duree);
         if(lblPisteEmoji!=null)lblPisteEmoji.setText(p.emoji); if(lblEtatLecture!=null)lblEtatLecture.setText("▶"); if(btnPlayPause!=null)btnPlayPause.setText("⏸");
         if(p.url==null){if(lblPisteNom!=null)lblPisteNom.setText(p.nom+" (aperçu non dispo)");enLecture=false;return;}

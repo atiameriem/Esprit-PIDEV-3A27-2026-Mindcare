@@ -7,11 +7,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServiceGroq {
+public class ServiceGroqQuiz {
 
     // ✅ Coller ta clé ici — format : gsk_xxxxx
     private static final String API_KEY =
-            "";
+            "g";
     private static final String API_URL =
             "https://api.groq.com/openai/v1/chat/completions";
 
@@ -67,7 +67,7 @@ public class ServiceGroq {
                 + "\"model\":\"llama-3.3-70b-versatile\","
                 + "\"messages\":[{\"role\":\"user\","
                 + "\"content\":\"" + promptEscape + "\"}],"
-                + "\"max_tokens\":200,"
+                + "\"max_tokens\":1024,"    // ✅ FIX : 200 → 1024
                 + "\"temperature\":0.7"
                 + "}";
 
@@ -221,13 +221,13 @@ public class ServiceGroq {
             return "Votre bien-etre necessite une attention particuliere.";
         return "Votre humeur montre des signes qui meritent un suivi.";
     }
+
     // ══════════════════════════════════════════════════════════════
-    // 🔹 Nouvelle méthode : analyse de l'émotion à partir d'un texte
+    // 🔹 Analyse de l'émotion à partir d'un texte
     // ══════════════════════════════════════════════════════════════
     public String analyserEmotion(String texte) {
         if (texte == null || texte.isEmpty()) return "Non détectée";
 
-        // Prompt pour l'IA : détecter l'émotion principale
         String prompt = "Analyse l'émotion principale du texte suivant "
                 + "et renvoie un mot ou emoji décrivant l'état émotionnel : "
                 + texte + " Répond uniquement par 1 mot ou un emoji, en français.";
@@ -239,7 +239,6 @@ public class ServiceGroq {
             System.err.println("❌ Erreur analyse émotion : " + e.getMessage());
         }
 
-        // Fallback si IA ne renvoie rien
         if (emotion == null || emotion.trim().isEmpty()) {
             texte = texte.toLowerCase();
             if (texte.contains("heureux") || texte.contains("bien") || texte.contains("positif"))
@@ -256,5 +255,4 @@ public class ServiceGroq {
 
         return emotion;
     }
-
 }

@@ -361,6 +361,31 @@ public class ServiceReponse implements IService<Reponse> {
             default           -> "#94a3b8";
         };
     }
+    // ── Méthode manquante utilisée dans le test ──
+    public List<Reponse> getReponsesParQuestionEtUser(int idQuestion, int idUser) throws SQLException {
+        List<Reponse> list = new ArrayList<>();
+        String req = "SELECT * FROM reponse WHERE id_question=? AND id_users=?";
+        try (PreparedStatement pst = cnx.prepareStatement(req)) {
+            pst.setInt(1, idQuestion);
+            pst.setInt(2, idUser);
+            try (ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    Reponse r = new Reponse();
+                    r.setIdReponse(rs.getInt("id_reponse"));
+                    r.setIdQuiz(rs.getInt("id_quiz"));
+                    r.setIdQuestion(rs.getInt("id_question"));
+                    r.setIdUsers(rs.getInt("id_users"));
+                    r.setTexteReponse(rs.getString("texte_reponse"));
+                    r.setValeur(rs.getInt("valeur"));
+                    list.add(r);
+                }
+            }
+        }
+        return list;
+    }
+
+
+
 
 
 }

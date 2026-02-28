@@ -8,7 +8,6 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
-import models.Question;
 import models.Quiz;
 import services.ServiceQuestion;
 import services.ServiceQuiz;
@@ -18,7 +17,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-public class PasserTestsController {
+public class listQuizController {
 
     @FXML private VBox   listeTests;
     @FXML private Button btnNouveauTest;
@@ -191,9 +190,9 @@ public class PasserTestsController {
     private void ouvrirEditionQuiz(Quiz quiz) {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/views/NouveauTest.fxml"));
+                    getClass().getResource("/views/NouveauTestQuiz.fxml"));
             Node vue = loader.load();
-            NouveauTestController ctrl = loader.getController();
+            NouveauTestQuizController ctrl = loader.getController();
             ctrl.setQuizPourEdition(quiz);
             VBox parent = (VBox) listeTests.getScene()
                     .lookup("#contentArea");
@@ -218,7 +217,7 @@ public class PasserTestsController {
     private void ouvrirNouveauTest() {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/views/NouveauTest.fxml"));
+                    getClass().getResource("/views/NouveauTestQuiz.fxml"));
             Node vue = loader.load();
             VBox parent = (VBox) listeTests.getScene()
                     .lookup("#contentArea");

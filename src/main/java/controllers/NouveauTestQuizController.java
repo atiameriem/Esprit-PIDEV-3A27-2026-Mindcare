@@ -1,6 +1,6 @@
 package controllers;
 
-import services.ServiceEmail;
+import services.ServiceEmailQuiz;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -26,7 +26,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NouveauTestController {
+public class NouveauTestQuizController {
 
     @FXML private Label            labelTitrePage;
     @FXML private Label            labelSousTitrePage;
@@ -236,7 +236,7 @@ public class NouveauTestController {
                  PreparedStatement ps = conn.prepareStatement(sql);
                  ResultSet rs = ps.executeQuery()) {
 
-                ServiceEmail se = new ServiceEmail();
+                ServiceEmailQuiz se = new ServiceEmailQuiz();
                 int nbEnvoyes = 0;
 
                 while (rs.next()) {

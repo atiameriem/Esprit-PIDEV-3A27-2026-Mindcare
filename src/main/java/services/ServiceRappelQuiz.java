@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import utils.MyDatabase;
 
-public class ServiceRappel {
+public class ServiceRappelQuiz {
 
-    private final ServiceEmail serviceEmail = new ServiceEmail();
+    private final ServiceEmailQuiz serviceEmailQuiz = new ServiceEmailQuiz();
 
     // ════════════════════════════════════════════════════════
     // Vérifier tous les patients inactifs > 7 jours
@@ -19,8 +19,8 @@ public class ServiceRappel {
                 System.out.println("🔍 " + inactifs.size() + " patient(s) inactif(s) trouvé(s)");
 
                 for (PatientInactif p : inactifs) {
-                    String html = serviceEmail.templateRappelQuiz(p.nom, p.joursInactif);
-                    boolean ok  = serviceEmail.envoyerEmail(p.email,
+                    String html = serviceEmailQuiz.templateRappelQuiz(p.nom, p.joursInactif);
+                    boolean ok  = serviceEmailQuiz.envoyerEmail(p.email,
                             "🧠 MindCare — Votre suivi vous manque !", html);
                     if (ok) marquerRappelEnvoye(p.idUsers);
                 }
@@ -41,10 +41,10 @@ public class ServiceRappel {
                 String[] infos = getInfosPatient(idUsers);
                 if (infos == null) return;
 
-                String html = serviceEmail.templateResultatQuiz(
+                String html = serviceEmailQuiz.templateResultatQuiz(
                         infos[0], titreQuiz, score, pourcentage, conseil
                 );
-                serviceEmail.envoyerEmail(infos[1],
+                serviceEmailQuiz.envoyerEmail(infos[1],
                         "✅ Résultat de votre test — " + titreQuiz, html);
 
             } catch (Exception e) {

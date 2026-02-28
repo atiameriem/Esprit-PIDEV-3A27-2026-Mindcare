@@ -6,10 +6,10 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public class ServiceChat {
+public class ServiceChatQuiz {
 
     private static final String API_KEY = ""; // même clé que ServiceGemini
-    private static final String API_URL = "";
+    private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 
 

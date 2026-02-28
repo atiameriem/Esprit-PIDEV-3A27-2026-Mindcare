@@ -5,10 +5,10 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class ServiceMusique {
+public class ServiceMusiqueQuiz {
 
     // ✅ COLLER TES CLÉS ICI
-    private static final String FREESOUND_KEY = "s";
+    private static final String FREESOUND_KEY = "Is";
     private static final String GROQ_KEY      = "";
 
 

@@ -9,8 +9,7 @@ import javafx.scene.layout.*;
 import models.Question;
 import models.Quiz;
 import models.Reponse;
-import services.ResultFusionService;
-import services.ServiceGroq;
+import services.ServiceGroqQuiz;
 import services.ServiceQuestion;
 import services.ServiceQuiz;
 import services.ServiceReponse;
@@ -32,9 +31,7 @@ public class PassageQuizController {
     private final ServiceQuestion serviceQuestion = new ServiceQuestion();
     private final ServiceReponse  serviceReponse  = new ServiceReponse();
     private final ServiceQuiz     serviceQuiz     = new ServiceQuiz();
-    private final ServiceGroq         serviceGroq   = new ServiceGroq();
-    // ✅ ResultFusionService — HuggingFace NLP + Groq enrichi
-    private final ResultFusionService fusionService = new ResultFusionService();
+    private final ServiceGroqQuiz serviceGroqQuiz = new ServiceGroqQuiz();
 
     private int  idPatient = -1;
     private Quiz quiz;
@@ -125,16 +122,13 @@ public class PassageQuizController {
                     + idPatient + " score=" + scoreTotal);
             String resultat = serviceQuiz.calculerEtSauvegarderScore(
                     quiz.getIdQuiz(), idPatient);
-            SuivieController.rafraichir();
+            SuivieQuizController.rafraichir();
             afficherResultat(resultat, scoreTotal, nbQuestions);
         } catch (SQLException e) {
             System.err.println("❌ Soumission : " + e.getMessage());
         }
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ✅ CALCUL MAX RÉEL depuis les réponses de la DB
-    // ══════════════════════════════════════════════════════════════
     private int calculerScoreMax(int nbQuestionsDefault) {
         int scoreMaxReel = 0;
         try {
@@ -152,36 +146,19 @@ public class PassageQuizController {
         return scoreMaxReel > 0 ? scoreMaxReel : nbQuestionsDefault * 6;
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ✅ DOUBLE VARIABLE — logique complète
-    //
-    //  pctReel      = score brut / max   (jamais inversé)
-    //                 → utilisé par IA + niveau (logique clinique)
-    //
-    //  pctAffichage = inversion si stress
-    //                 → utilisé par UI (barre, couleur, emoji)
-    //
-    //  Exemple stress élevé (score=80%) :
-    //    pctReel      = 80%  → Niveau "Critique"  ✅
-    //    pctAffichage = 20%  → barre rouge        ✅
-    //    IA = "stress élevé, difficultés présentes" ✅
-    // ══════════════════════════════════════════════════════════════
     private void afficherResultat(String resultat, int score, int nbQuestions) {
 
         int scoreMax    = calculerScoreMax(nbQuestions);
         String titreLow = quiz.getTitre().toLowerCase();
 
-        // ✅ Grand score = bien pour TOUS les tests → pas d'inversion
-        int pctReel = (int) Math.min(100, Math.max(0, (score * 100.0) / scoreMax));
+        int pctReel      = (int) Math.min(100, Math.max(0, (score * 100.0) / scoreMax));
         int pctAffichage = pctReel;
 
         System.out.println("📊 score=" + score + " / max=" + scoreMax
                 + " | pct=" + pctReel + "% | quiz=" + quiz.getTitre());
 
-        // ── Niveau basé sur pctReel (logique clinique) ─────────────
         String niveau = calculerNiveau(pctReel, titreLow);
 
-        // ── Score affiché ───────────────────────────────────────────
         String scoreTexte = String.valueOf(score);
         try {
             for (String p : resultat.split("\\|")) {
@@ -191,7 +168,6 @@ public class PassageQuizController {
             }
         } catch (Exception ignored) {}
 
-        // ── Couleurs/emoji basés sur pctAffichage (visuel) ─────────
         String couleurScore, couleurBg, emoji, messageMotiv;
         if (pctAffichage >= 70) {
             couleurScore = "#27ae60"; couleurBg = "#eafaf1";
@@ -205,7 +181,7 @@ public class PassageQuizController {
         }
 
         final int    pctDisplay = pctAffichage;
-        final int    pctIA      = pctReel;       // ← IA voit le vrai score
+        final int    pctIA      = pctReel;
         final String cF         = couleurScore;
         final String bgF        = couleurBg;
         final String niveauF    = niveau;
@@ -215,21 +191,22 @@ public class PassageQuizController {
         VBox root = new VBox(16);
         root.setAlignment(javafx.geometry.Pos.TOP_CENTER);
         root.setPadding(new Insets(24, 20, 24, 20));
-        root.setStyle("-fx-background-color:#dce8f0;");
+        root.setStyle("-fx-background-color:linear-gradient(to bottom, #dce8f0, #eaf2f8);");
 
         // ── CARTE HERO ─────────────────────────────────────────────
         VBox carteHero = new VBox(14);
         carteHero.setAlignment(javafx.geometry.Pos.CENTER);
         carteHero.setPadding(new Insets(30, 30, 24, 30));
         carteHero.setMaxWidth(380);
-        carteHero.setStyle("-fx-background-color:#2c4a6e;"
+        carteHero.setStyle("-fx-background-color:linear-gradient(to bottom right, #2c4a6e, #1a3a5c);"
                 + "-fx-background-radius:20;"
-                + "-fx-effect:dropshadow(gaussian,rgba(44,74,110,0.35),18,0,0,6);");
+                + "-fx-effect:dropshadow(gaussian,rgba(44,74,110,0.45),22,0,0,8);");
 
         javafx.scene.layout.StackPane emojiPane = new javafx.scene.layout.StackPane();
         emojiPane.setMinSize(80, 80); emojiPane.setMaxSize(80, 80);
         emojiPane.setStyle("-fx-background-color:rgba(255,255,255,0.15); -fx-background-radius:40;");
-        Label lblEmoji = new Label(emoji); lblEmoji.setStyle("-fx-font-size:34px;");
+        Label lblEmoji = new Label(emoji);
+        lblEmoji.setStyle("-fx-font-size:34px;");
         emojiPane.getChildren().add(lblEmoji);
 
         Label lblNomQuiz = new Label(quiz.getTitre());
@@ -237,7 +214,6 @@ public class PassageQuizController {
                 + "-fx-font-weight:bold; -fx-background-color:rgba(255,255,255,0.1);"
                 + "-fx-background-radius:20; -fx-padding:4 14 4 14;");
 
-        // ✅ Affiche pctAffichage (rouge pour stress élevé)
         Label lblPct = new Label("0%");
         lblPct.setStyle("-fx-font-size:60px; -fx-font-weight:900; -fx-text-fill:white;");
 
@@ -257,7 +233,6 @@ public class PassageQuizController {
         barreContainer.setStyle("-fx-background-color:rgba(255,255,255,0.2); -fx-background-radius:5;");
         javafx.scene.layout.Pane barreFill = new javafx.scene.layout.Pane();
         barreFill.setPrefHeight(10); barreFill.setPrefWidth(0);
-        // ✅ Couleur barre basée sur pctAffichage
         String couleurBarre = pctDisplay >= 70 ? "#10B981" : pctDisplay >= 40 ? "#F59E0B" : "#EF4444";
         barreFill.setStyle("-fx-background-color:" + couleurBarre + "; -fx-background-radius:5;");
         javafx.scene.layout.StackPane.setAlignment(barreFill, javafx.geometry.Pos.CENTER_LEFT);
@@ -279,7 +254,6 @@ public class PassageQuizController {
         VBox carteScore = creerCarteInfo("🎯", "Score obtenu", scoreF + " pts",
                 "#6c5ce7", "rgba(108,92,231,0.08)");
         HBox.setHgrow(carteScore, Priority.ALWAYS);
-        // ✅ Niveau basé sur pctReel (logique clinique correcte)
         VBox carteNiveau = creerCarteInfo("📊", "Niveau", niveauF, cF, bgF);
         HBox.setHgrow(carteNiveau, Priority.ALWAYS);
         ligneStats.getChildren().addAll(carteScore, carteNiveau);
@@ -288,22 +262,27 @@ public class PassageQuizController {
         VBox carteConseil = new VBox(10);
         carteConseil.setMaxWidth(380); carteConseil.setPadding(new Insets(20));
         carteConseil.setStyle("-fx-background-color:white; -fx-background-radius:16;"
-                + "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.06),10,0,0,3);");
+                + "-fx-border-color:#e8edf5; -fx-border-width:1.5; -fx-border-radius:16;"
+                + "-fx-effect:dropshadow(gaussian,rgba(44,74,110,0.10),14,0,0,4);");
 
         HBox titreConseil = new HBox(8);
         titreConseil.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        Label iconeConseil = new Label("🧠"); iconeConseil.setStyle("-fx-font-size:18px;");
+        titreConseil.setPadding(new Insets(0, 0, 8, 0));
+        titreConseil.setStyle("-fx-border-color:transparent transparent #e8edf5 transparent; -fx-border-width:0 0 1 0;");
+        Label iconeConseil = new Label("⚡");
+        iconeConseil.setStyle("-fx-font-size:16px; -fx-text-fill:#2c4a6e;");
         Label lblTitreConseil = new Label("Analyse & Plan IA");
-        lblTitreConseil.setStyle("-fx-font-size:14px; -fx-font-weight:900; -fx-text-fill:#2c3e50;");
+        lblTitreConseil.setStyle("-fx-font-size:15px; -fx-font-weight:900; -fx-text-fill:#2c3e50; -fx-font-style:italic;");
         titreConseil.getChildren().addAll(iconeConseil, lblTitreConseil);
 
-        Label lblConseilIA = new Label("🤖 Génération de votre plan personnalisé...");
+        Label lblConseilIA = new Label("  Génération de votre plan personnalisé...");
         lblConseilIA.setWrapText(true); lblConseilIA.setMaxWidth(340);
-        lblConseilIA.setStyle("-fx-font-size:12px; -fx-text-fill:#7f8c8d; -fx-font-style:italic;");
+        lblConseilIA.setPadding(new Insets(6, 10, 6, 10));
+        lblConseilIA.setStyle("-fx-font-size:12px; -fx-text-fill:#6b7280;"
+                + "-fx-font-style:italic; -fx-background-color:#f8fafc;"
+                + "-fx-background-radius:8;");
 
-        VBox blocEmotion    = creerBlocTraitement(
-                "🎭", "Émotion détectée (NLP)",
-                "Analyse HuggingFace en cours...", "#FFF0F0", "#FF6B6B");
+        // ✅ 3 blocs uniquement — "Émotion détectée" supprimé
         VBox blocAnalyse    = creerBlocTraitement("🔍", "Analyse psychologique",
                 "Analyse en cours...", "#EDE9FE", "#7C3AED");
         VBox blocTraitement = creerBlocTraitement("💊", "Plan de traitement",
@@ -312,36 +291,44 @@ public class PassageQuizController {
                 "Exercices en cours...", "#ECFDF5", "#059669");
 
         carteConseil.getChildren().addAll(titreConseil, lblConseilIA, new Separator(),
-                blocEmotion, blocAnalyse, blocTraitement, blocExercices);
+                blocAnalyse, blocTraitement, blocExercices);
 
-        // ✅ Architecture hybride :
-        //    Controller → ResultFusionService
-        //                   → EmotionAnalyzer (HuggingFace NLP)
-        //                   → ServiceGroq (LLM enrichi émotion)
+        // ✅ Appel direct ServiceGroq — sans ResultFusionService ni HuggingFace
         new Thread(() -> {
             try {
-                ResultFusionService.ResultatFusionne res =
-                        fusionService.analyser(quiz.getTitre(), pctIA);
+                String prompt = construirePrompt(quiz.getTitre(), pctIA);
+                String reponseGroq = serviceGroqQuiz.appellerGroq(prompt);
 
-                String emotionDetail = res.emotionLabel
-                        + "  —  confiance " + (int)(res.emotionScore * 100) + "%";
+                String analyse    = extraireSection(reponseGroq, "ANALYSE");
+                String traitement = extraireSection(reponseGroq, "TRAITEMENT");
+                String exercices  = extraireSection(reponseGroq, "EXERCICES");
+
+                if (analyse == null || analyse.isBlank())
+                    analyse = reponseGroq != null ? reponseGroq
+                            : "Continuez à pratiquer et consultez un professionnel.";
+                if (traitement == null || traitement.isBlank())
+                    traitement = "Consultez un professionnel de santé.";
+                if (exercices == null || exercices.isBlank())
+                    exercices = "Pratiquez la respiration profonde 10 min/jour.";
+
+                final String a = analyse, t = traitement, ex = exercices;
 
                 javafx.application.Platform.runLater(() -> {
-                    // ✅ Émotion affichée en premier
-                    mettreAJourBloc(blocEmotion, emotionDetail);
-
-                    lblConseilIA.setText(res.analyse);
-                    lblConseilIA.setStyle("-fx-font-size:12px; -fx-text-fill:#374151;"
-                            + "-fx-font-style:normal; -fx-line-spacing:3;");
-                    mettreAJourBloc(blocAnalyse,    res.analyse);
-                    mettreAJourBloc(blocTraitement, res.traitement);
-                    mettreAJourBloc(blocExercices,  res.exercices);
+                    lblConseilIA.setText(a);
+                    lblConseilIA.setStyle("-fx-font-size:12.5px; -fx-text-fill:#374151;"
+                            + "-fx-font-style:normal; -fx-line-spacing:4;"
+                            + "-fx-background-color:#f0f4ff; -fx-background-radius:8;"
+                            + "-fx-padding:8 10 8 10;");
+                    mettreAJourBloc(blocAnalyse,    a);
+                    mettreAJourBloc(blocTraitement, t);
+                    mettreAJourBloc(blocExercices,  ex);
                 });
+
             } catch (Exception e) {
-                javafx.application.Platform.runLater(() -> {
-                    mettreAJourBloc(blocEmotion, "😐 Neutre — analyse indisponible");
-                    lblConseilIA.setText("Continuez à pratiquer et consultez un professionnel.");
-                });
+                javafx.application.Platform.runLater(() ->
+                        lblConseilIA.setText(
+                                "Continuez à pratiquer et consultez un professionnel.")
+                );
             }
         }).start();
 
@@ -387,7 +374,7 @@ public class PassageQuizController {
         stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
         stage.setResizable(false);
 
-        btnOk.setOnAction(e -> { stage.close(); SuivieController.rafraichir(); retourListe(); });
+        btnOk.setOnAction(e -> { stage.close(); SuivieQuizController.rafraichir(); retourListe(); });
 
         stage.setOnShown(e -> {
             scaleHero.play();
@@ -403,7 +390,39 @@ public class PassageQuizController {
     }
 
     // ══════════════════════════════════════════════════════════════
-    // ✅ Grand score = patient va bien — pour TOUS les tests
+    // Prompt Groq — court et structuré (évite la coupure)
+    // ══════════════════════════════════════════════════════════════
+    private String construirePrompt(String titreQuiz, int pctScore) {
+        return "Tu es un psychologue clinicien expert et bienveillant. Reponds en francais.\n"
+                + "Un patient vient de passer le test '" + titreQuiz + "' avec un score de " + pctScore + "%.\n"
+                + "Fournis une analyse detaillee en utilisant EXACTEMENT ce format (3 sections):\n"
+                + "ANALYSE: [3 a 4 phrases : analyse psychologique approfondie du score et de l etat du patient]\n"
+                + "TRAITEMENT: [3 a 4 phrases : plan de traitement concret avec des recommandations therapeutiques]\n"
+                + "EXERCICES: [3 exercices pratiques numerotes, chacun avec une description claire]\n"
+                + "Respecte strictement ce format. Ne rajoute rien avant ou apres.";
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // Extraction des sections ANALYSE / TRAITEMENT / EXERCICES
+    // ══════════════════════════════════════════════════════════════
+    private String extraireSection(String texte, String section) {
+        if (texte == null) return null;
+        try {
+            String prefixe = section + ":";
+            int idx = texte.indexOf(prefixe);
+            if (idx < 0) return null;
+            int debut = idx + prefixe.length();
+            int fin   = texte.length();
+            for (String s : new String[]{"ANALYSE:", "TRAITEMENT:", "EXERCICES:"}) {
+                int pos = texte.indexOf(s, debut);
+                if (pos > debut && pos < fin) fin = pos;
+            }
+            return texte.substring(debut, fin).trim();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private String calculerNiveau(int pctReel, String titreLow) {
         if (titreLow.contains("stress")) {
             if      (pctReel >= 70) return "Bien géré";
@@ -433,77 +452,74 @@ public class PassageQuizController {
                         + "-fx-effect:dropshadow(gaussian,"
                         + "rgba(0,0,0,0.05),6,0,0,2);");
 
-        // ── Entête avec emoji dans cercle ──────────────────────────
         HBox entete = new HBox(12);
         entete.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         entete.setPadding(new Insets(14, 16, 10, 16));
 
-        // Cercle emoji
-        javafx.scene.layout.StackPane cercleEmoji =
-                new javafx.scene.layout.StackPane();
-        cercleEmoji.setMinSize(46, 46);
-        cercleEmoji.setMaxSize(46, 46);
-        cercleEmoji.setStyle(
-                "-fx-background-color:" + couleurBord + ";"
-                        + "-fx-background-radius:23;");
-
+        javafx.scene.layout.StackPane cercleEmoji = new javafx.scene.layout.StackPane();
+        cercleEmoji.setMinSize(46, 46); cercleEmoji.setMaxSize(46, 46);
+        cercleEmoji.setStyle("-fx-background-color:" + couleurBord + "; -fx-background-radius:23;");
         Label lblIcone = new Label(icone);
         lblIcone.setStyle("-fx-font-size:22px;");
         cercleEmoji.getChildren().add(lblIcone);
 
-        // Titre + sous-titre
         VBox textBloc = new VBox(2);
         Label lblTitre = new Label(titre);
-        lblTitre.setStyle(
-                "-fx-font-size:13px; -fx-font-weight:900;"
-                        + "-fx-text-fill:" + couleurBord + ";");
+        lblTitre.setStyle("-fx-font-size:13px; -fx-font-weight:900; -fx-text-fill:" + couleurBord + ";");
         Label lblStatus = new Label("En attente...");
-        lblStatus.setStyle(
-                "-fx-font-size:10px; -fx-text-fill:#94a3b8;"
-                        + "-fx-font-style:italic;");
-        textBloc.setUserData(lblStatus);
+        lblStatus.setStyle("-fx-font-size:10px; -fx-text-fill:#94a3b8; -fx-font-style:italic;");
         textBloc.getChildren().addAll(lblTitre, lblStatus);
-
         entete.getChildren().addAll(cercleEmoji, textBloc);
 
-        // ── Séparateur fin ─────────────────────────────────────────
-        javafx.scene.layout.Pane ligne =
-                new javafx.scene.layout.Pane();
+        javafx.scene.layout.Pane ligne = new javafx.scene.layout.Pane();
         ligne.setPrefHeight(1);
-        ligne.setStyle("-fx-background-color:" + couleurBord
-                + "33;");
+        ligne.setStyle("-fx-background-color:" + couleurBord + "33;");
 
-        // ── Contenu ────────────────────────────────────────────────
         Label lblContenu = new Label(contenu);
         lblContenu.setWrapText(true);
         lblContenu.setMaxWidth(Double.MAX_VALUE);
         lblContenu.setPadding(new Insets(10, 16, 14, 16));
-        lblContenu.setStyle(
-                "-fx-font-size:12px; -fx-text-fill:#374151;"
-                        + "-fx-line-spacing:4;");
+        lblContenu.setStyle("-fx-font-size:12px; -fx-text-fill:#374151; -fx-line-spacing:4;");
 
-        bloc.setUserData(lblContenu);
+        // ✅ Map pour mettre à jour contenu ET status "✅ Complété"
+        Map<String, Label> dataMap = new HashMap<>();
+        dataMap.put("contenu", lblContenu);
+        dataMap.put("status",  lblStatus);
+        bloc.setUserData(dataMap);
+
         bloc.getChildren().addAll(entete, ligne, lblContenu);
         return bloc;
     }
 
+    @SuppressWarnings("unchecked")
     private void mettreAJourBloc(VBox bloc, String contenu) {
-        if (bloc.getUserData() instanceof Label) ((Label) bloc.getUserData()).setText(contenu);
+        Object data = bloc.getUserData();
+        if (data instanceof Map) {
+            Map<String, Label> map = (Map<String, Label>) data;
+            if (map.get("contenu") != null) map.get("contenu").setText(contenu);
+            if (map.get("status")  != null) map.get("status").setText("✅ Complété");
+        } else if (data instanceof Label) {
+            ((Label) data).setText(contenu);
+        }
     }
 
     private VBox creerCarteInfo(String icone, String label,
                                 String valeur, String couleur, String couleurBg) {
-        VBox carte = new VBox(6); carte.setAlignment(javafx.geometry.Pos.CENTER);
+        VBox carte = new VBox(6);
+        carte.setAlignment(javafx.geometry.Pos.CENTER);
         carte.setPadding(new Insets(16, 12, 16, 12));
         carte.setStyle("-fx-background-color:white; -fx-background-radius:14;"
                 + "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.06),8,0,0,2);");
         javafx.scene.layout.StackPane iconePane = new javafx.scene.layout.StackPane();
         iconePane.setMinSize(44, 44); iconePane.setMaxSize(44, 44);
         iconePane.setStyle("-fx-background-color:" + couleurBg + "; -fx-background-radius:22;");
-        Label lblIcone = new Label(icone); lblIcone.setStyle("-fx-font-size:18px;");
+        Label lblIcone = new Label(icone);
+        lblIcone.setStyle("-fx-font-size:18px;");
         iconePane.getChildren().add(lblIcone);
-        Label lblLabel = new Label(label); lblLabel.setStyle("-fx-font-size:10px; -fx-text-fill:#95a5a6; -fx-font-weight:bold;");
-        Label lblValeur = new Label(valeur); lblValeur.setStyle("-fx-font-size:15px; -fx-font-weight:900; -fx-text-fill:" + couleur + ";");
+        Label lblLabel = new Label(label);
+        lblLabel.setStyle("-fx-font-size:10px; -fx-text-fill:#95a5a6; -fx-font-weight:bold;");
+        Label lblValeur = new Label(valeur);
+        lblValeur.setStyle("-fx-font-size:15px; -fx-font-weight:900; -fx-text-fill:" + couleur + ";");
         carte.getChildren().addAll(iconePane, lblLabel, lblValeur);
         return carte;
     }
