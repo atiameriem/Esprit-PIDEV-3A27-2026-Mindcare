@@ -1,4 +1,5 @@
-package services;
+
+        package services;
 
 import models.RendezVous;
 import models.RendezVousView;
@@ -301,18 +302,111 @@ public class ServiceRendezVous {
 
     // ====================== ACTIONS PSY ======================
 
+    /**
+     * ✅ Reprogrammer un rendez-vous côté psychologue (uniquement si encore EN ATTENTE).
+     * On garde confirmation_status='en_attente' (car le rendez-vous n'est pas confirmé).
+     */
+    public void rescheduleForPsychologist(int idRv, int idPsychologist,
+                                          java.sql.Date newDate, java.sql.Time newTime) throws SQLException {
+        String sql = """
+        UPDATE rendez_vous
+        SET appointment_date = ?,
+            appointment_timerv = ?,
+            confirmation_status = 'confirme'
+        WHERE id_rv = ?
+          AND id_psychologist = ?
+          AND confirmation_status = 'en_attente'
+    """;
+
+        try (PreparedStatement pst = cnx.prepareStatement(sql)) {
+            pst.setDate(1, newDate);
+            pst.setTime(2, newTime);
+            pst.setInt(3, idRv);
+            pst.setInt(4, idPsychologist);
+
+            int updated = pst.executeUpdate();
+            if (updated == 0) {
+                throw new SQLException("Modification impossible: RDV non en_attente ou pas à ce psychologue.");
+            }
+        }
+    }
+    /** Déplacer à la semaine suivante (+7 jours), même heure */
+    // ✅ +7 jours (avec DEBUG + check DB si ça échoue)
+    public void moveToNextWeekSameTimeForPsychologist(int idRv, int idPsychologist) throws SQLException {
+
+        // ✅ 1) Vérifier que le RDV appartient bien à ce psy + voir ses valeurs
+        String check = """
+        SELECT id_psychologist, confirmation_status, appointment_date
+        FROM rendez_vous
+        WHERE id_rv = ?
+    """;
+
+        int psyDb;
+        String csDb;
+        java.sql.Date dateDb;
+
+        try (PreparedStatement ps = cnx.prepareStatement(check)) {
+            ps.setInt(1, idRv);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) throw new SQLException("RDV introuvable id_rv=" + idRv);
+
+                psyDb = rs.getInt("id_psychologist");
+                csDb = rs.getString("confirmation_status");
+                dateDb = rs.getDate("appointment_date");
+            }
+        }
+
+        if (psyDb != idPsychologist) {
+            throw new SQLException("MOVE +7 refusé: psy DB=" + psyDb + " ≠ psy session=" + idPsychologist);
+        }
+        if (dateDb == null) {
+            throw new SQLException("MOVE +7 impossible: appointment_date est NULL dans DB (id_rv=" + idRv + ")");
+        }
+        if (csDb == null || !(csDb.equals("en_attente") || csDb.equals("confirme"))) {
+            throw new SQLException("MOVE +7 refusé: confirmation_status=" + csDb + " (doit être en_attente/confirme)");
+        }
+
+        // ✅ 2) Update +7 jours
+        String upd = """
+        UPDATE rendez_vous
+        SET appointment_date = DATE_ADD(appointment_date, INTERVAL 7 DAY)
+        WHERE id_rv = ?
+          AND id_psychologist = ?
+          AND confirmation_status IN ('en_attente','confirme')
+    """;
+
+        try (PreparedStatement pst = cnx.prepareStatement(upd)) {
+            pst.setInt(1, idRv);
+            pst.setInt(2, idPsychologist);
+
+            int updated = pst.executeUpdate();
+            System.out.println("[DEBUG MOVE+7] updated=" + updated);
+
+            if (updated == 0) {
+                throw new SQLException("MOVE +7 échoué: aucune ligne modifiée (WHERE ne matche pas).");
+            }
+        }
+    }
+
     public void updateConfirmationStatusForPsychologist(int idRv, int idPsychologist,
                                                         RendezVous.ConfirmationStatus status) throws SQLException {
         String sql = """
-            UPDATE rendez_vous
-            SET confirmation_status=?
-            WHERE id_rv=? AND id_psychologist=?
-        """;
+        UPDATE rendez_vous
+        SET confirmation_status=?
+        WHERE id_rv=? AND id_psychologist=?
+    """;
+
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
             pst.setString(1, status.name());
             pst.setInt(2, idRv);
             pst.setInt(3, idPsychologist);
-            pst.executeUpdate();
+
+            int updated = pst.executeUpdate();
+            System.out.println("[DEBUG CONFIRM] updated=" + updated);
+
+            if (updated == 0) {
+                throw new SQLException("UPDATE STATUS échoué ❌ (id_psy incorrect)");
+            }
         }
     }
 

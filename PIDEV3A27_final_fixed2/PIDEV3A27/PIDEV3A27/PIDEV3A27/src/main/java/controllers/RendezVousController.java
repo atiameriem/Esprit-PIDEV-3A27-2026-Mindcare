@@ -1,4 +1,5 @@
-package controllers;
+
+        package controllers;
 
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
@@ -22,6 +23,10 @@ import utils.Session;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,7 +56,7 @@ public class RendezVousController {
     // ===================== TWILIO =====================
     private static final String ACCOUNT_SID = ""; // TODO: fill
     private static final String AUTH_TOKEN  = ""; // TODO: fill
-    private static final String TWILIO_FROM = "+12693903908";
+    private static final String TWILIO_FROM = "";
 
     private void sendSmsTwilio(String to, String body) {
         Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
@@ -64,8 +69,166 @@ public class RendezVousController {
     }
     // ================================================
 
+    // ===================== UX Annulation "Smart" =====================
+    private void openSmartCancelDialog(RendezVousView rv) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Annuler la demande ?");
+        alert.setHeaderText("Annuler la demande ?");
+        alert.setContentText(
+                "Ce rendez-vous n’est pas encore confirmé. Vous pouvez modifier l’heure, " +
+                        "le déplacer à la même heure la semaine prochaine, ou l’annuler définitivement."
+        );
+
+        ButtonType btModify = new ButtonType("Modifier l’heure (±2h)");
+        ButtonType btNextWeek = new ButtonType("Même jour semaine suivante (+7 jours)");
+        ButtonType btCancelDef = new ButtonType("Annuler définitivement", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btBack = new ButtonType("Retour", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        alert.getButtonTypes().setAll(btModify, btNextWeek, btCancelDef, btBack);
+
+        Optional<ButtonType> choice = alert.showAndWait();
+        if (choice.isEmpty() || choice.get() == btBack) return;
+
+        try {
+            String patientPhone = service.getPatientPhoneByRdvId(rv.getIdRv());
+            if (patientPhone == null || patientPhone.isBlank()) {
+                showError("Téléphone manquant", new Exception("Le patient n'a pas de numéro dans users.telephone"));
+                return;
+            }
+
+            LocalDate oldDate = rv.getAppointmentDate().toLocalDate();
+            LocalTime oldTime = rv.getAppointmentTimeRv().toLocalTime();
+
+            DateTimeFormatter tf = DateTimeFormatter.ofPattern("HH:mm");
+
+            // 1) Modifier l'heure (±2h)
+            if (choice.get() == btModify) {
+                List<String> options = buildTimeOptionsPlusMinus2h(oldTime);
+                if (options.isEmpty()) return;
+
+                ChoiceDialog<String> cd = new ChoiceDialog<>(options.get(0), options);
+                cd.setTitle("Modifier l’heure");
+                cd.setHeaderText("Choisissez une nouvelle heure (±2h)");
+                cd.setContentText("Nouvelle heure :");
+
+                Optional<String> picked = cd.showAndWait();
+                if (picked.isEmpty()) return;
+
+                LocalTime newTime = LocalTime.parse(picked.get(), tf);
+
+                service.rescheduleForPsychologist(
+                        rv.getIdRv(),
+                        Session.getUserId(),
+                        java.sql.Date.valueOf(oldDate),
+                        Time.valueOf(newTime)
+                );
+
+                String msg = "Bonjour, votre rendez-vous a été MODIFIÉ ⏰\n" +
+                        "Ancien: " + oldDate + " à " + oldTime.format(tf) + "\n" +
+                        "Nouveau: " + oldDate + " à " + newTime.format(tf) + "\n" +
+                        "Psychologue: " + Session.getFullName();
+                sendSmsTwilio(patientPhone, msg);
+
+                loadRendezVous();
+                return;
+            }
+
+            // 2) Même jour semaine suivante (+7 jours)
+            // 2) +7 jours
+            if (choice.get() == btNextWeek) {
+
+                int sessionPsy = Session.getUserId();
+                int psyFromRv  = rv.getIdPsychologist();
+
+                // ✅ garde-fou
+                if (sessionPsy != psyFromRv) {
+                    throw new SQLException(
+                            "Session psy (" + sessionPsy + ") ≠ RDV psy (" + psyFromRv + "). " +
+                                    "Ton login/Session ou tes données DB ne correspondent pas."
+                    );
+                }
+
+                // ✅ move +7
+                service.moveToNextWeekSameTimeForPsychologist(rv.getIdRv(), psyFromRv);
+
+                // ✅ puis confirmer
+                service.updateConfirmationStatusForPsychologist(
+                        rv.getIdRv(),
+                        psyFromRv,
+                        RendezVous.ConfirmationStatus.confirme
+                );
+
+                LocalDate newDate = oldDate.plusDays(7);
+
+                String msg = "Bonjour, votre rendez-vous a été DÉPLACÉ 📅\n" +
+                        "Ancien: " + oldDate + " à " + oldTime.format(tf) + "\n" +
+                        "Nouveau: " + newDate + " à " + oldTime.format(tf) + "\n" +
+                        "Psychologue: " + Session.getFullName();
+
+                sendSmsTwilio(patientPhone, msg);
+                loadRendezVous();
+                return;
+            }
+            // 3) Annuler définitivement
+            if (choice.get() == btCancelDef) {
+                service.updateConfirmationStatusForPsychologist(
+                        rv.getIdRv(),
+                        Session.getUserId(),
+                        RendezVous.ConfirmationStatus.annule
+                );
+
+                String msg = "Bonjour, votre rendez-vous a été ANNULÉ ❌\n" +
+                        "Date: " + oldDate + " à " + oldTime.format(tf) + "\n" +
+                        "Psychologue: " + Session.getFullName();
+                sendSmsTwilio(patientPhone, msg);
+
+                loadRendezVous();
+            }
+
+        } catch (Exception ex) {
+            showError("Erreur annulation / reprogrammation / SMS", ex);
+        }
+    }
+
+    /**
+     * Construit des choix d'heure autour de l'heure actuelle (±2h) par pas de 30 min,
+     * en restant dans une plage raisonnable (08:00 à 17:00).
+     */
+    private List<String> buildTimeOptionsPlusMinus2h(LocalTime base) {
+        DateTimeFormatter tf = DateTimeFormatter.ofPattern("HH:mm");
+        LocalTime min = base.minusHours(2);
+        LocalTime max = base.plusHours(2);
+
+        // clamp dans 08:00 - 17:00
+        LocalTime dayStart = LocalTime.of(8, 0);
+        LocalTime dayEnd = LocalTime.of(17, 0);
+        if (min.isBefore(dayStart)) min = dayStart;
+        if (max.isAfter(dayEnd)) max = dayEnd;
+
+        List<String> opts = new ArrayList<>();
+        // Arrondir min au prochain pas de 30 minutes
+        int minute = min.getMinute();
+        int rounded = (minute % 30 == 0) ? minute : (minute < 30 ? 30 : 0);
+        LocalTime t = min.withMinute(rounded).withSecond(0).withNano(0);
+        if (minute > 30) t = t.plusHours(1); // ex: 10:40 -> 11:00
+
+        while (!t.isAfter(max)) {
+            opts.add(t.format(tf));
+            t = t.plusMinutes(30);
+        }
+
+        // si base est valide et absent (rare), l'ajouter en tête
+        String baseStr = base.format(tf);
+        if (!opts.contains(baseStr)) {
+            opts.add(0, baseStr);
+        }
+        return opts;
+    }
+    // =========================================================
+
     @FXML
     public void initialize() {
+
         service = new ServiceRendezVous(cnx);
 
         if (searchField != null) searchField.setText("");
@@ -384,16 +547,8 @@ public class RendezVousController {
             Button cancelBtn = new Button("❌ Annuler");
             cancelBtn.setStyle("-fx-background-color:#DC2626; -fx-text-fill:white; -fx-background-radius:8; -fx-cursor:hand;");
             cancelBtn.setOnAction(e -> {
-                try {
-                    service.updateConfirmationStatusForPsychologist(
-                            rv.getIdRv(),
-                            Session.getUserId(),
-                            RendezVous.ConfirmationStatus.annule
-                    );
-                    loadRendezVous();
-                } catch (SQLException ex) {
-                    showError("Erreur annulation", ex);
-                }
+                // ✅ Variante "smart" : 3 choix (modifier l'heure / +7 jours / annuler)
+                openSmartCancelDialog(rv);
             });
 
             box.getChildren().addAll(confirmBtn, cancelBtn);

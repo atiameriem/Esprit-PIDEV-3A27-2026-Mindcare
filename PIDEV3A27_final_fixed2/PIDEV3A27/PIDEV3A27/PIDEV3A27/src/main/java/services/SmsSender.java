@@ -17,7 +17,7 @@ SmsSender {
 
         Message message = Message.creator(
                 new PhoneNumber(to),               // Numéro patient
-                new PhoneNumber("+12693903908"),   // TON numéro Twilio
+                new PhoneNumber(""),   // TON numéro Twilio
                 body
         ).create();
 
