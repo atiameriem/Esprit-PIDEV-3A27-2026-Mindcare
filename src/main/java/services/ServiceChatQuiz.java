@@ -8,7 +8,7 @@ import java.util.List;
 
 public class ServiceChatQuiz {
 
-    private static final String API_KEY = ""; // même clé que ServiceGemini
+    private static final String API_KEY = "PROTECTED_GROQ"; // même clé que ServiceGemini
     private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 

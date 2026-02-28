@@ -8,8 +8,8 @@ import java.util.*;
 public class ServiceMusiqueQuiz {
 
     // ✅ COLLER TES CLÉS ICI
-    private static final String FREESOUND_KEY = "Is";
-    private static final String GROQ_KEY      = "oI";
+    private static final String FREESOUND_KEY = "PROTECTED_FREESOUND";
+    private static final String GROQ_KEY      = "PROTECTED_GROQ";
 
 
     // ══════════════════════════════════════════════════════════════
