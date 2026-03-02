@@ -43,13 +43,17 @@ public class RendezVousCrudController {
     private int pageSize = 4;
 
     // ===================== BUSINESS RULES =====================
+    //Définit l’heure de début de la journée de rendez-vous.
+    //Ici : 08:00.
     private static final LocalTime SLOT_START = LocalTime.of(8, 0);
     private static final LocalTime SLOT_END = LocalTime.of(17, 0);
     private static final int SLOT_STEP_MIN = 15;
     private static final int APPOINTMENT_DURATION_MIN = 30;
 
     private static boolean overlaps(LocalTime start, LocalTime busyStart) {
+        //Calcule l’heure de fin du nouveau RDV.
         LocalTime end = start.plusMinutes(APPOINTMENT_DURATION_MIN);
+        //Calcule l’heure de fin du rendez-vous existant
         LocalTime busyEnd = busyStart.plusMinutes(APPOINTMENT_DURATION_MIN);
         return start.isBefore(busyEnd) && end.isAfter(busyStart);
     }

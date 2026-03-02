@@ -16,7 +16,7 @@ import java.util.List;
  * - Les méthodes findViews* retournent CompteRenduView (JOIN users) pour afficher nom/prénom.
  */
 public class ServiceCompteRenduSeance {
-    // //la connexion JDBC vers ta base (MySQL).
+
     private final Connection cnx;
 
     public ServiceCompteRenduSeance(Connection cnx) {
@@ -27,7 +27,8 @@ public class ServiceCompteRenduSeance {
 
     public List<CompteRenduSeance> findAll() throws SQLException {
         String sql = """
-            SELECT id_compterendu, id_appointment, date_creationcr, progrescr, resumeseancecr, prochainesactioncr
+            SELECT id_compterendu, id_appointment, date_creationcr, progrescr, resumeseancecr, prochainesactioncr,
+                   ai_resumecr, ai_resume_canceled
             FROM compte_rendu_seance
             ORDER BY date_creationcr DESC
         """;
@@ -37,7 +38,8 @@ public class ServiceCompteRenduSeance {
     /** Patient : voir ses CR (via rendez_vous) */
     public List<CompteRenduSeance> findByPatient(int idPatient) throws SQLException {
         String sql = """
-            SELECT cr.id_compterendu, cr.id_appointment, cr.date_creationcr, cr.progrescr, cr.resumeseancecr, cr.prochainesactioncr
+            SELECT cr.id_compterendu, cr.id_appointment, cr.date_creationcr, cr.progrescr, cr.resumeseancecr, cr.prochainesactioncr,
+                   cr.ai_resumecr, cr.ai_resume_canceled
             FROM compte_rendu_seance cr
             JOIN rendez_vous rv ON rv.id_rv = cr.id_appointment
             WHERE rv.id_patient = ?
@@ -49,7 +51,8 @@ public class ServiceCompteRenduSeance {
     /** Psychologue : voir les CR de ses rendez-vous */
     public List<CompteRenduSeance> findByPsychologist(int idPsychologist) throws SQLException {
         String sql = """
-            SELECT cr.id_compterendu, cr.id_appointment, cr.date_creationcr, cr.progrescr, cr.resumeseancecr, cr.prochainesactioncr
+            SELECT cr.id_compterendu, cr.id_appointment, cr.date_creationcr, cr.progrescr, cr.resumeseancecr, cr.prochainesactioncr,
+                   cr.ai_resumecr, cr.ai_resume_canceled
             FROM compte_rendu_seance cr
             JOIN rendez_vous rv ON rv.id_rv = cr.id_appointment
             WHERE rv.id_psychologist = ?
@@ -59,9 +62,7 @@ public class ServiceCompteRenduSeance {
     }
 
     // ===================== sécurité =====================
-    //retroutne true ou false
-    //vérifier que le rendez-vous idAppointment appartient au psychologue
-    //SELECT 1 = “je veux juste savoir si une ligne existe”.
+
     public boolean appointmentBelongsToPsychologist(int idAppointment, int idPsychologist) throws SQLException {
         String sql = "SELECT 1 FROM rendez_vous WHERE id_rv=? AND id_psychologist=?";
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
@@ -72,7 +73,7 @@ public class ServiceCompteRenduSeance {
             }
         }
     }
-    //true si le rendez-vous appartient au patient, sinon false.
+
     public boolean appointmentBelongsToPatient(int idAppointment, int idPatient) throws SQLException {
         String sql = "SELECT 1 FROM rendez_vous WHERE id_rv=? AND id_patient=?";
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
@@ -88,20 +89,22 @@ public class ServiceCompteRenduSeance {
 
     public int addAndReturnId(CompteRenduSeance cr) throws SQLException {
         String sql = """
-            INSERT INTO compte_rendu_seance (id_appointment, date_creationcr, progrescr, resumeseancecr, prochainesactioncr)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO compte_rendu_seance
+            (id_appointment, date_creationcr, progrescr, resumeseancecr, prochainesactioncr, ai_resumecr, ai_resume_canceled)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """;
-        //PreparedStatement avec RETURN_GENERATED_KEYS
-        // permet de récupérer l’ID auto-incrémenté.
+
         try (PreparedStatement pst = cnx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            //            //Remplir paramètres
             pst.setInt(1, cr.getIdAppointment());
             pst.setTimestamp(2, cr.getDateCreationCr());
-            pst.setString(3, cr.getProgresCr().name());
+            pst.setString(3, cr.getProgresCr() == null ? null : cr.getProgresCr().name());
             pst.setString(4, cr.getResumeSeanceCr());
             pst.setString(5, cr.getProchainesActionCr());
+            pst.setString(6, cr.getAiResumeCr()); // ✅ getter exact
+            pst.setInt(7, cr.isAiResumeCanceled() ? 1 : 0);
+
             pst.executeUpdate();
-            //Récupérer l’ID généré
+
             try (ResultSet rs = pst.getGeneratedKeys()) {
                 if (rs.next()) return rs.getInt(1);
             }
@@ -112,17 +115,26 @@ public class ServiceCompteRenduSeance {
     public void update(CompteRenduSeance cr) throws SQLException {
         String sql = """
             UPDATE compte_rendu_seance
-            SET id_appointment=?, date_creationcr=?, progrescr=?, resumeseancecr=?, prochainesactioncr=?
+            SET id_appointment=?,
+                date_creationcr=?,
+                progrescr=?,
+                resumeseancecr=?,
+                prochainesactioncr=?,
+                ai_resumecr=?,
+                ai_resume_canceled=?
             WHERE id_compterendu=?
         """;
 
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
             pst.setInt(1, cr.getIdAppointment());
             pst.setTimestamp(2, cr.getDateCreationCr());
-            pst.setString(3, cr.getProgresCr().name());
+            pst.setString(3, cr.getProgresCr() == null ? null : cr.getProgresCr().name());
             pst.setString(4, cr.getResumeSeanceCr());
             pst.setString(5, cr.getProchainesActionCr());
-            pst.setInt(6, cr.getIdCompteRendu());
+            pst.setString(6, cr.getAiResumeCr()); // ✅ getter exact
+            pst.setInt(7, cr.isAiResumeCanceled() ? 1 : 0);
+            pst.setInt(8, cr.getIdCompteRendu());
+
             pst.executeUpdate();
         }
     }
@@ -135,11 +147,33 @@ public class ServiceCompteRenduSeance {
         }
     }
 
+    // ✅ Actions IA : annuler affichage / supprimer résumé IA
+    public void cancelAiResume(int idCompteRendu) throws SQLException {
+        String sql = "UPDATE compte_rendu_seance SET ai_resume_canceled=1 WHERE id_compterendu=?";
+        try (PreparedStatement pst = cnx.prepareStatement(sql)) {
+            pst.setInt(1, idCompteRendu);
+            pst.executeUpdate();
+        }
+    }
+
+    public void deleteAiResume(int idCompteRendu) throws SQLException {
+        String sql = "UPDATE compte_rendu_seance SET ai_resumecr=NULL, ai_resume_canceled=0 WHERE id_compterendu=?";
+        try (PreparedStatement pst = cnx.prepareStatement(sql)) {
+            pst.setInt(1, idCompteRendu);
+            pst.executeUpdate();
+        }
+    }
+
+    public void restoreAiResume(int idCompteRendu) throws SQLException {
+        String sql = "UPDATE compte_rendu_seance SET ai_resume_canceled=0 WHERE id_compterendu=?";
+        try (PreparedStatement pst = cnx.prepareStatement(sql)) {
+            pst.setInt(1, idCompteRendu);
+            pst.executeUpdate();
+        }
+    }
+
     // ===================== RATING (PATIENT) =====================
 
-    /**
-     * Patient : noter une séance (1..5). Sécurisé : le CR doit appartenir au patient.
-     */
     public void updateRatingForPatient(int idCompteRendu, int idPatient, int rating) throws SQLException {
         if (rating < 1 || rating > 5) {
             throw new IllegalArgumentException("Le rating doit être entre 1 et 5");
@@ -162,11 +196,7 @@ public class ServiceCompteRenduSeance {
     }
 
     // ===================== VIEWS (JOIN users) =====================
-//Ici tu veux afficher :
-//le compte rendu
-//infos du RDV (date/heure/type/statut)
-//noms patient / psy
-    //affich compte rendu du psy connecté
+
     public List<CompteRenduView> findViewsByPsychologist(int idPsychologist) throws SQLException {
         String sql = """
             SELECT cr.*,
@@ -180,12 +210,9 @@ public class ServiceCompteRenduSeance {
             WHERE rv.id_psychologist = ?
             ORDER BY cr.date_creationcr DESC
         """;
-        //Au lieu de répéter le code PreparedStatement/ResultSet,
-        // tu utilises une méthode commune fetchViews
-
         return fetchViews(sql, idPsychologist);
     }
-    //ecture uniquement des comptes rendus du patient.
+
     public List<CompteRenduView> findViewsByPatient(int idPatient) throws SQLException {
         String sql = """
             SELECT cr.*,
@@ -202,24 +229,9 @@ public class ServiceCompteRenduSeance {
         return fetchViews(sql, idPatient);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // ===================== internal mappers =====================
 
-//au lieu de preparedstatement
-
+    //ramène une List<CompteRenduview>
     private List<CompteRenduView> fetchViews(String sql, int id) throws SQLException {
         List<CompteRenduView> out = new ArrayList<>();
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
@@ -230,41 +242,38 @@ public class ServiceCompteRenduSeance {
         }
         return out;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    //ramène une List<CompteRenduSeance>
     private List<CompteRenduSeance> fetchList(String sql, Object... params) throws SQLException {
         List<CompteRenduSeance> list = new ArrayList<>();
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) pst.setObject(i + 1, params[i]);
             try (ResultSet rs = pst.executeQuery()) {
                 while (rs.next()) {
-                    list.add(new CompteRenduSeance(
+                    CompteRenduSeance cr = new CompteRenduSeance(
                             rs.getInt("id_compterendu"),
                             rs.getInt("id_appointment"),
                             rs.getTimestamp("date_creationcr"),
-                            CompteRenduSeance.ProgresCR.valueOf(rs.getString("progrescr")),
+                            rs.getString("progrescr") == null ? null : CompteRenduSeance.ProgresCR.valueOf(rs.getString("progrescr")),
                             rs.getString("resumeseancecr"),
                             rs.getString("prochainesactioncr")
-                    ));
+                    );
+
+                    // ✅ champs IA
+                    cr.setAiResumeCr(rs.getString("ai_resumecr"));
+                    cr.setAiResumeCanceled(rs.getBoolean("ai_resume_canceled"));
+
+                    // rating (peut être null)
+                    try {
+                        Object r = rs.getObject("rating");
+                        if (r != null) cr.setRating(((Number) r).intValue());
+                    } catch (SQLException ignored) {}
+
+                    list.add(cr);
                 }
             }
         }
         return list;
     }
-
-
 
     private CompteRenduView mapView(ResultSet rs) throws SQLException {
         CompteRenduView v = new CompteRenduView();
@@ -273,10 +282,16 @@ public class ServiceCompteRenduSeance {
         v.setDateCreationCr(rs.getTimestamp("date_creationcr"));
 
         String prog = rs.getString("progrescr");
-        if (prog != null && !prog.isEmpty()) v.setProgresCr(CompteRenduSeance.ProgresCR.valueOf(prog));
+        if (prog != null && !prog.isEmpty()) {
+            v.setProgresCr(CompteRenduSeance.ProgresCR.valueOf(prog));
+        }
 
         v.setResumeSeanceCr(rs.getString("resumeseancecr"));
         v.setProchainesActionCr(rs.getString("prochainesactioncr"));
+
+        // ✅ champs IA
+        v.setAiResumeCr(rs.getString("ai_resumecr"));
+        v.setAiResumeCanceled(rs.getBoolean("ai_resume_canceled"));
 
         v.setRvDate(rs.getDate("appointment_date"));
         v.setRvTime(rs.getTime("appointment_timerv"));
@@ -294,9 +309,8 @@ public class ServiceCompteRenduSeance {
         try {
             Object r = rs.getObject("rating");
             if (r != null) v.setRating(((Number) r).intValue());
-        } catch (SQLException ignored) {
-            // si la colonne n'existe pas encore dans la DB
-        }
+        } catch (SQLException ignored) {}
+
         return v;
     }
 

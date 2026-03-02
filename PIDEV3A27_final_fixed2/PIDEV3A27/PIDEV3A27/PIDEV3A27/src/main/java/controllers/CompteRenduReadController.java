@@ -10,8 +10,8 @@ import javafx.stage.FileChooser;
 import models.CompteRenduSeance;
 import models.CompteRenduView;
 import services.PdfCompteRenduService;
-import services.ServiceCompteRenduSeance;
 import services.Paginator;
+import services.ServiceCompteRenduSeance;
 import utils.MyDatabase;
 import utils.Session;
 
@@ -21,9 +21,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * ROLE PATIENT : lecture seulement des comptes-rendus de SES rendez-vous.
- */
 public class CompteRenduReadController {
 
     @FXML private TextField searchField;
@@ -43,7 +40,7 @@ public class CompteRenduReadController {
     @FXML
     public void initialize() {
         crService = new ServiceCompteRenduSeance(cnx);
-        // ✅ Pagination setup (4,6,8,10)
+
         if (pageSizeCombo != null) {
             pageSizeCombo.setItems(FXCollections.observableArrayList(4, 6, 8, 10));
             pageSizeCombo.setValue(4);
@@ -59,11 +56,13 @@ public class CompteRenduReadController {
         loadCompteRendus();
 
         if (searchField != null) {
-            searchField.textProperty().addListener((obs, o, n) -> { paginator.first(); loadCompteRendus(); });
+            searchField.textProperty().addListener((obs, o, n) -> {
+                paginator.first();
+                loadCompteRendus();
+            });
         }
     }
 
-    // ── Pagination actions ───────────────────────────────────────────────
     @FXML
     private void prevPage() {
         if (paginator.canPrev()) {
@@ -110,8 +109,6 @@ public class CompteRenduReadController {
                 ).toList();
             }
 
-
-            // ✅ Pagination (après filtre)
             paginator.setTotalItems(list.size());
             int from = paginator.getOffset();
             if (from >= list.size() && paginator.getTotalPages() > 0) {
@@ -122,9 +119,7 @@ public class CompteRenduReadController {
             List<CompteRenduView> pageList = (from < to) ? list.subList(from, to) : java.util.Collections.emptyList();
 
             updatePaginationUI();
-
             compteRenduContainer.getChildren().clear();
-
 
             if (pageList.isEmpty()) {
                 Label empty = new Label("Aucun compte-rendu trouvé.");
@@ -133,13 +128,8 @@ public class CompteRenduReadController {
                 return;
             }
 
-            HBox row = null;
-            for (int i = 0; i < pageList.size(); i++) {
-                if (i % 2 == 0) {
-                    row = new HBox(15);
-                    compteRenduContainer.getChildren().add(row);
-                }
-                row.getChildren().add(buildCard(pageList.get(i)));
+            for (CompteRenduView item : pageList) {
+                compteRenduContainer.getChildren().add(buildCard(item));
             }
 
         } catch (SQLException e) {
@@ -149,7 +139,7 @@ public class CompteRenduReadController {
 
     private VBox buildCard(CompteRenduView cr) {
         VBox card = new VBox(12);
-        HBox.setHgrow(card, Priority.ALWAYS);
+        card.setMaxWidth(Double.MAX_VALUE);
 
         card.setStyle("""
                 -fx-background-color: #FFFFFF;
@@ -193,10 +183,20 @@ public class CompteRenduReadController {
         Label badge = buildProgressBadge(cr.getProgresCr());
         HBox ratingRow = buildRatingRow(cr);
 
-        VBox resumeBox = buildSection("RÉSUMÉ DE SÉANCE", cr.getResumeSeanceCr());
-        VBox actionsBox = buildSection("PROCHAINES ACTIONS", cr.getProchainesActionCr());
+        boolean hasAi = cr.getAiResumeCr() != null && !cr.getAiResumeCr().isBlank() && !cr.isAiResumeCanceled();
 
-        // ✅ Icône export PDF (comme psy)
+        VBox resumeBox = null;
+        VBox actionsBox = null;
+        VBox aiBox = null;
+
+        if (hasAi) {
+            // ✅ Patient : afficher uniquement le résumé IA
+            aiBox = buildSection("RÉSUMÉ PSYCHOLOGUE", cr.getAiResumeCr());
+        } else {
+            resumeBox = buildSection("RÉSUMÉ DE SÉANCE", cr.getResumeSeanceCr());
+            actionsBox = buildSection("PROCHAINES ACTIONS", cr.getProchainesActionCr());
+        }
+
         HBox actionRow = new HBox(10);
         actionRow.setAlignment(Pos.CENTER_LEFT);
 
@@ -209,11 +209,15 @@ public class CompteRenduReadController {
 
         actionRow.getChildren().add(pdfBtn);
 
-        card.getChildren().addAll(dateRow, title, psyRow, badge, ratingRow, resumeBox, actionsBox, actionRow);
+        if (hasAi) {
+            card.getChildren().addAll(dateRow, title, psyRow, badge, ratingRow, aiBox, actionRow);
+        } else {
+            card.getChildren().addAll(dateRow, title, psyRow, badge, ratingRow, resumeBox, actionsBox, actionRow);
+        }
         return card;
     }
 
-    // ✅ EXPORT PDF
+    // ✅ EXPORT PDF (PATIENT) => export exactement ce qui est affiché
     private void handleExportPdf(CompteRenduView cr) {
         try {
             FileChooser fc = new FileChooser();
@@ -225,14 +229,19 @@ public class CompteRenduReadController {
 
             String fileName = "CompteRendu_" + psyName + "_" +
                     (cr.getRvDate() == null ? "" : cr.getRvDate().toString()) + ".pdf";
-
             fc.setInitialFileName(fileName);
 
             File file = fc.showSaveDialog(compteRenduContainer.getScene().getWindow());
             if (file == null) return;
 
             Path out = file.toPath();
-            PdfCompteRenduService.exportCompteRendu(cr, out, "Patient");
+
+            boolean hasAi = cr.getAiResumeCr() != null && !cr.getAiResumeCr().isBlank() && !cr.isAiResumeCanceled();
+
+            // ✅ إذا Patient يعرض فقط IA -> نخبي résumé/actions في export
+            CompteRenduView exportView = prepareForPatientExport(cr, hasAi);
+
+            PdfCompteRenduService.exportCompteRendu(exportView, out, "Patient");
 
             Alert success = new Alert(Alert.AlertType.INFORMATION);
             stylePopup(success.getDialogPane());
@@ -247,7 +256,45 @@ public class CompteRenduReadController {
         }
     }
 
-    // ─────────────── Rating (garder comme ton code) ───────────────
+    // ✅ create a safe copy for export (patient)
+    private CompteRenduView prepareForPatientExport(CompteRenduView cr, boolean hasAi) {
+        CompteRenduView v = new CompteRenduView();
+
+        v.setIdCompteRendu(cr.getIdCompteRendu());
+        v.setIdAppointment(cr.getIdAppointment());
+        v.setDateCreationCr(cr.getDateCreationCr());
+        v.setProgresCr(cr.getProgresCr());
+
+        v.setRvDate(cr.getRvDate());
+        v.setRvTime(cr.getRvTime());
+        v.setRvType(cr.getRvType());
+        v.setRvStatut(cr.getRvStatut());
+
+        v.setPatientFullName(cr.getPatientFullName());
+        v.setPsychologistFullName(cr.getPsychologistFullName());
+
+        v.setRating(cr.getRating());
+
+        if (hasAi) {
+            // patient UI shows only AI text
+            v.setAiResumeCr(cr.getAiResumeCr());
+            v.setAiResumeCanceled(false);
+
+            // hide psychologue written fields in export
+            v.setResumeSeanceCr(null);
+            v.setProchainesActionCr(null);
+        } else {
+            v.setResumeSeanceCr(cr.getResumeSeanceCr());
+            v.setProchainesActionCr(cr.getProchainesActionCr());
+
+            v.setAiResumeCr(null);
+            v.setAiResumeCanceled(true);
+        }
+
+        return v;
+    }
+
+    // Rating UI
     private HBox buildRatingRow(CompteRenduView cr) {
         HBox row = new HBox(10);
         row.setAlignment(Pos.CENTER_LEFT);
@@ -364,6 +411,7 @@ public class CompteRenduReadController {
 
     private VBox buildSection(String sectionTitle, String content) {
         VBox box = new VBox(4);
+
         Label title = new Label(sectionTitle);
         title.setStyle("-fx-font-size: 11px; -fx-font-weight: 800; -fx-text-fill: #111;");
 
@@ -406,7 +454,6 @@ public class CompteRenduReadController {
         a.showAndWait();
     }
 
-    // ===================== Popup theme helper =====================
     private void stylePopup(DialogPane pane) {
         try {
             if (pane == null) return;

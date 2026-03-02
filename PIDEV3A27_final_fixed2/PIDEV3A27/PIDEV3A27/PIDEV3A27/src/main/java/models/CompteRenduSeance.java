@@ -10,6 +10,11 @@ public class CompteRenduSeance {
     private String resumeSeanceCr;
     private String prochainesActionCr;
 
+    // ✅ Résumé généré par IA (LIA/ - optionnel
+    private String aiResumeCr;
+    // ✅ Si true => le résumé IA est annulé (ne doit pas s'afficher)
+    private boolean aiResumeCanceled;
+
     // rating saisi par le patient (1..5), null si pas encore noté
     private Integer rating;
     //pour le crud ce class
@@ -83,6 +88,23 @@ public class CompteRenduSeance {
         this.prochainesActionCr = prochainesActionCr;
     }
 
+
+    public String getAiResumeCr() {
+        return aiResumeCr;
+    }
+
+    public void setAiResumeCr(String aiResumeCr) {
+        this.aiResumeCr = aiResumeCr;
+    }
+
+    public boolean isAiResumeCanceled() {
+        return aiResumeCanceled;
+    }
+
+    public void setAiResumeCanceled(boolean aiResumeCanceled) {
+        this.aiResumeCanceled = aiResumeCanceled;
+    }
+
     public Integer getRating() {
         return rating;
     }
@@ -92,7 +114,7 @@ public class CompteRenduSeance {
     }
 
     public String toString() {
-        return "Compte rendu | Progrès=" + this.progresCr + " | Date=" + this.dateCreationCr + " | Résumé=\"" + this.resumeSeanceCr + "\"";
+        return "Compte rendu | Progrès=" + this.progresCr + " | Date=" + this.dateCreationCr + " | Résumé=\"" + this.resumeSeanceCr + "\"" + (this.aiResumeCr != null && !this.aiResumeCr.isBlank() && !this.aiResumeCanceled ? " | IA=oui" : "");
     }
 
     public static enum ProgresCR {

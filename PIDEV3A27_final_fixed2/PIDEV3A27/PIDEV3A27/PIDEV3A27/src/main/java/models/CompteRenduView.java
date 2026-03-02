@@ -27,6 +27,11 @@ public class CompteRenduView {
     private String resumeSeanceCr;
     private String prochainesActionCr;
 
+    // ✅ Résumé IA sauvegardé (si généré et ajouté)
+    private String aiResumeCr;
+    // ✅ Annulé ? (1 => ne pas afficher)
+    private boolean aiResumeCanceled;
+
     // infos RV
     private Date rvDate;
     private Time rvTime;
@@ -58,6 +63,14 @@ public class CompteRenduView {
 
     public String getProchainesActionCr() { return prochainesActionCr; }
     public void setProchainesActionCr(String prochainesActionCr) { this.prochainesActionCr = prochainesActionCr; }
+
+
+    public String getAiResumeCr() { return aiResumeCr; }
+    public void setAiResumeCr(String aiResumeCr) { this.aiResumeCr = aiResumeCr; }
+
+    public boolean isAiResumeCanceled() { return aiResumeCanceled; }
+    public void setAiResumeCanceled(boolean aiResumeCanceled) { this.aiResumeCanceled = aiResumeCanceled; }
+
 
     public Date getRvDate() { return rvDate; }
     public void setRvDate(Date rvDate) { this.rvDate = rvDate; }

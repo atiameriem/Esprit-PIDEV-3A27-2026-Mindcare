@@ -58,13 +58,17 @@ public class RendezVousController {
     private static final String AUTH_TOKEN  = ""; // TODO: fill
     private static final String TWILIO_FROM = "";
 
+    //to num ptient
+    //body = contenu du SMS
     private void sendSmsTwilio(String to, String body) {
+        //Initialise Twilio avec tes identifiants (clé + token).
         Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
+        //Prépare et envoie réellement le SMS.
         Message message = Message.creator(
                 new PhoneNumber(to),
                 new PhoneNumber(TWILIO_FROM),
                 body
-        ).create();
+        ).create ();
         System.out.println("SMS sent! SID: " + message.getSid());
     }
     // ================================================
@@ -105,9 +109,10 @@ public class RendezVousController {
 
             // 1) Modifier l'heure (±2h)
             if (choice.get() == btModify) {
+                //Génère une liste d’heures possibles autour de oldTime (±2h
                 List<String> options = buildTimeOptionsPlusMinus2h(oldTime);
                 if (options.isEmpty()) return;
-
+                //Ouvre un ChoiceDialog pour choisir la nouvelle heure
                 ChoiceDialog<String> cd = new ChoiceDialog<>(options.get(0), options);
                 stylePopup1(alert.getDialogPane());
 
@@ -119,7 +124,7 @@ public class RendezVousController {
                 if (picked.isEmpty()) return;
 
                 LocalTime newTime = LocalTime.parse(picked.get(), tf);
-
+//Met à jour la DB
                 service.rescheduleForPsychologist(
                         rv.getIdRv(),
                         Session.getUserId(),
@@ -140,7 +145,7 @@ public class RendezVousController {
             // 2) Même jour semaine suivante (+7 jours)
             // 2) +7 jours
             if (choice.get() == btNextWeek) {
-
+    //le psy connecté doit être le psy du RDV
                 int sessionPsy = Session.getUserId();
                 int psyFromRv  = rv.getIdPsychologist();
 
@@ -152,7 +157,7 @@ public class RendezVousController {
                     );
                 }
 
-                // ✅ move +7
+                // Déplace le RDV à oldDate + 7 jours (même heure)
                 service.moveToNextWeekSameTimeForPsychologist(rv.getIdRv(), psyFromRv);
 
                 // ✅ puis confirmer
@@ -174,6 +179,9 @@ public class RendezVousController {
                 return;
             }
             // 3) Annuler définitivement
+            //Met le statut à annulé
+            //Envoie SMS “ANNULÉ”
+            //Recharge l’UI
             if (choice.get() == btCancelDef) {
                 service.updateConfirmationStatusForPsychologist(
                         rv.getIdRv(),

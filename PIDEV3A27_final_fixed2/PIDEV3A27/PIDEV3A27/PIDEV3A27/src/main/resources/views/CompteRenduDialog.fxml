@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.CompteRenduDialogController"
+      spacing="14"
+      style="-fx-background-color: white;">
+
+    <padding>
+        <Insets top="18" right="18" bottom="18" left="18"/>
+    </padding>
+
+    <Label text="Compte-rendu"
+           style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+    <GridPane hgap="10" vgap="10">
+        <columnConstraints>
+            <ColumnConstraints prefWidth="140"/>
+            <ColumnConstraints hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <!-- Progrès -->
+        <Label text="Progrès :" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="progresCombo"
+                  maxWidth="Infinity"
+                  GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <!-- Résumé séance -->
+        <Label text="Résumé séance :" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextArea fx:id="resumeArea"
+                  wrapText="true"
+                  prefRowCount="4"
+                  maxWidth="Infinity"
+                  GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <!-- Prochaines actions -->
+        <Label text="Prochaines actions :" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextArea fx:id="actionsArea"
+                  wrapText="true"
+                  prefRowCount="5"
+                  maxWidth="Infinity"
+                  promptText="Ex: Exercices à faire, objectifs avant la prochaine séance..."
+                  GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <!-- Synthèse IA -->
+        <Label text="Synthèse IA :" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+
+        <VBox spacing="6" GridPane.rowIndex="3" GridPane.columnIndex="1">
+            <!-- Petit statut (tu mets: Génération en cours...) -->
+            <Label fx:id="aiStatusLabel"
+                   text=""
+                   style="-fx-text-fill: #666; -fx-font-size: 12px;"/>
+
+            <TextArea fx:id="aiSummaryArea"
+                      wrapText="true"
+                      prefRowCount="6"
+                      maxWidth="Infinity"
+                      promptText="Résumé généré par LIA (modifiable)"/>
+        </VBox>
+
+    </GridPane>
+
+</VBox>

@@ -171,7 +171,12 @@ public class ServiceRendezVous {
      * NB: on bloque les créneaux même si le RDV est en_attente, car il est déjà réservé.
      * @param excludeRvId optionnel : permet d'exclure un rendez-vous (utile en mode édition)
      */
+    //Retourne un Set (ensemble) d’heures LocalTime déjà prises.
     public Set<LocalTime> getReservedTimes(int idPsychologist, LocalDate date, Integer excludeRvId) throws SQLException {
+        //Tu demandes à la DB tous les rendez-vous du psy à cette date.
+        //uniquement ceux qui ont une heure.
+        //confirme ou en_attente
+        //✅ donc même si c’est “en attente”, tu considères le créneau réservé
         String sql = """
             SELECT id_rv, appointment_timerv
             FROM rendez_vous
@@ -184,6 +189,7 @@ public class ServiceRendezVous {
                   )
         """;
 
+//Tu crées un ensemble (pas de doublons).
         Set<LocalTime> out = new HashSet<>();
         try (PreparedStatement pst = cnx.prepareStatement(sql)) {
             pst.setInt(1, idPsychologist);
@@ -192,6 +198,8 @@ public class ServiceRendezVous {
                 while (rs.next()) {
                     int idRv = rs.getInt("id_rv");
                     if (excludeRvId != null && excludeRvId == idRv) continue;
+                    //Tu récupères l’heure SQL.
+                    //Tu la convertis en LocalTime et tu l’ajoutes dans le Set.
                     Time t = rs.getTime("appointment_timerv");
                     if (t != null) out.add(t.toLocalTime());
                 }
@@ -300,14 +308,20 @@ public class ServiceRendezVous {
         );
     }
 
-    // ====================== ACTIONS PSY ======================
+    // ====================== ACTIONS PSY  Annulation======================
 
     /**
      * ✅ Reprogrammer un rendez-vous côté psychologue (uniquement si encore EN ATTENTE).
      * On garde confirmation_status='en_attente' (car le rendez-vous n'est pas confirmé).
      */
+    //Méthode appelée quand le psy veut changer le rdv
+    // : nouvelle date + nouvelle heure.
     public void rescheduleForPsychologist(int idRv, int idPsychologist,
                                           java.sql.Date newDate, java.sql.Time newTime) throws SQLException {
+        //Tu modifies :
+        //la date
+        //l’heure
+        //ET tu passes le statut confirmation_status à confirme sil est en attente
         String sql = """
         UPDATE rendez_vous
         SET appointment_date = ?,
@@ -325,6 +339,7 @@ public class ServiceRendezVous {
             pst.setInt(4, idPsychologist);
 
             int updated = pst.executeUpdate();
+            //Si aucune ligne n’a été modifiée
             if (updated == 0) {
                 throw new SQLException("Modification impossible: RDV non en_attente ou pas à ce psychologue.");
             }
@@ -332,6 +347,7 @@ public class ServiceRendezVous {
     }
     /** Déplacer à la semaine suivante (+7 jours), même heure */
     // ✅ +7 jours (avec DEBUG + check DB si ça échoue)
+    //Ici tu ne changes que la date (+7 jours), l’heure reste la même.
     public void moveToNextWeekSameTimeForPsychologist(int idRv, int idPsychologist) throws SQLException {
 
         // ✅ 1) Vérifier que le RDV appartient bien à ce psy + voir ses valeurs
@@ -341,15 +357,18 @@ public class ServiceRendezVous {
         WHERE id_rv = ?
     """;
 
+        //Variables pour stocker les valeurs DB.
         int psyDb;
         String csDb;
         java.sql.Date dateDb;
 
+        //Si pas trouvé → erreur.
         try (PreparedStatement ps = cnx.prepareStatement(check)) {
             ps.setInt(1, idRv);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) throw new SQLException("RDV introuvable id_rv=" + idRv);
 
+                //Tu récupères les valeurs.
                 psyDb = rs.getInt("id_psychologist");
                 csDb = rs.getString("confirmation_status");
                 dateDb = rs.getDate("appointment_date");
@@ -362,6 +381,8 @@ public class ServiceRendezVous {
         if (dateDb == null) {
             throw new SQLException("MOVE +7 impossible: appointment_date est NULL dans DB (id_rv=" + idRv + ")");
         }
+        //Tu autorises le +7 seulement si :
+        //en_attente e
         if (csDb == null || !(csDb.equals("en_attente") || csDb.equals("confirme"))) {
             throw new SQLException("MOVE +7 refusé: confirmation_status=" + csDb + " (doit être en_attente/confirme)");
         }
@@ -388,6 +409,7 @@ public class ServiceRendezVous {
         }
     }
 
+    //Tu changes juste confirmation_status pour lannulation
     public void updateConfirmationStatusForPsychologist(int idRv, int idPsychologist,
                                                         RendezVous.ConfirmationStatus status) throws SQLException {
         String sql = """
@@ -409,7 +431,7 @@ public class ServiceRendezVous {
             }
         }
     }
-
+//en_cours / termine
     public void updateStatutForPsychologist(int idRv, int idPsychologist,
                                             RendezVous.StatutRV statut) throws SQLException {
         String sql = """
@@ -436,9 +458,10 @@ public class ServiceRendezVous {
     }
 
     public RendezVousStats getStatsForPsychologist(int psyId) throws SQLException {
+        //Tu crées l’objet stats.
         RendezVousStats s = new RendezVousStats();
 
-        // total
+        // Compte tous les rdv du psy
         try (PreparedStatement pst = cnx.prepareStatement(
                 "SELECT COUNT(*) FROM rendez_vous WHERE id_psychologist=?")) {
             pst.setInt(1, psyId);
@@ -448,6 +471,7 @@ public class ServiceRendezVous {
         }
 
         // confirmation_status
+        //Tu récupères une ligne par statut (confirme, en_attente, annule)
         try (PreparedStatement pst = cnx.prepareStatement(
                 "SELECT confirmation_status, COUNT(*) FROM rendez_vous WHERE id_psychologist=? GROUP BY confirmation_status")) {
             pst.setInt(1, psyId);
@@ -457,6 +481,7 @@ public class ServiceRendezVous {
                     int count = rs.getInt(2);
                     if (status == null) continue;
 
+                    //Tu ranges dans les bons champs.
                     if ("confirme".equalsIgnoreCase(status)) s.confirmed = count;
                     else if ("en_attente".equalsIgnoreCase(status)) s.pending = count;
                     else if ("annule".equalsIgnoreCase(status)) s.cancelled = count;
@@ -464,7 +489,7 @@ public class ServiceRendezVous {
             }
         }
 
-        // terminés
+        // Nombre de séances terminées.
         try (PreparedStatement pst = cnx.prepareStatement(
                 "SELECT COUNT(*) FROM rendez_vous WHERE id_psychologist=? AND statutrv='termine'")) {
             pst.setInt(1, psyId);
@@ -478,6 +503,7 @@ public class ServiceRendezVous {
 
     // ====================== STAT 6 DERNIERS MOIS (BarChart) ======================
 
+    //Convertit les valeurs DB en labels jolis
     private String prettyTypeLabel(String raw) {
         if (raw == null) return "Inconnu";
         raw = raw.trim().toLowerCase();
@@ -495,6 +521,7 @@ public class ServiceRendezVous {
         public final String typeLabel;  // "Suivi", ...
         public final int count;
 
+        //mois + type + count
         public MonthTypeCount(String monthLabel, String typeLabel, int count) {
             this.monthLabel = monthLabel;
             this.typeLabel = typeLabel;
@@ -502,6 +529,7 @@ public class ServiceRendezVous {
         }
     }
 
+    //regroupe par année, mois, type
     public List<MonthTypeCount> countByTypeLast6Months(int psyId) throws SQLException {
         String sql =
                 "SELECT YEAR(appointment_date) as y, MONTH(appointment_date) as m, type_rendez_vous, COUNT(*) as c " +
@@ -532,6 +560,7 @@ public class ServiceRendezVous {
         return out;
     }
 
+    //transforme 1..12 en Jan, Fév, Mar...
     private String monthToFrShort(int m) {
         return switch (m) {
             case 1 -> "Jan";
@@ -552,6 +581,8 @@ public class ServiceRendezVous {
 
     // ====================== COMPAT: si ton controller appelle encore cette méthode ======================
     // Map<typeLabel, Map<monthIndex(1..6), count>>
+
+
     public Map<String, Map<Integer, Integer>> getStatsByTypeForJanToJun(int psyId, int year) {
         Map<String, Map<Integer, Integer>> result = new LinkedHashMap<>();
 
@@ -587,7 +618,8 @@ public class ServiceRendezVous {
 
         return result;
     }
-
+//Tu récupères le numéro du patient associé au rdv.
+//✅ typiquement utilisé avant d’envoyer SMS Twilio.
     public String getPatientPhoneByRdvId(int idRv) throws SQLException {
         String sql = """
         SELECT u.telephone
