@@ -13,7 +13,7 @@ public class ServiceGroqQuiz {
     private static final String API_KEY =
             "g";
     private static final String API_URL =
-            "https://api.groq.com/openai/v1/chat/completions";
+            "";
 
     // ══════════════════════════════════════════════════════════════
     // Conseil principal

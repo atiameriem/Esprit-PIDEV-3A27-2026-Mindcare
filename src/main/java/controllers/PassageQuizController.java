@@ -39,12 +39,12 @@ public class PassageQuizController {
 
     public void setQuiz(Quiz quiz) {
         this.idPatient = Session.getUserId();
-        System.out.println("👤 PassageQuiz — patient ID=" + idPatient
+        System.out.println("PassageQuiz — patient ID=" + idPatient
                 + " | quiz=" + quiz.getTitre());
         if (this.idPatient <= 0) {
-            System.err.println("❌ Aucun patient connecté !");
+            System.err.println("Aucun patient connecte !");
             if (labelTitreQuiz != null)
-                labelTitreQuiz.setText("⛔ Veuillez vous connecter.");
+                labelTitreQuiz.setText("Veuillez vous connecter.");
             return;
         }
         this.quiz = quiz;
@@ -64,7 +64,7 @@ public class PassageQuizController {
                 listeQuestions.getChildren().add(
                         creerCarteQuestion(questions.get(i), i + 1));
         } catch (SQLException e) {
-            System.err.println("❌ Questions : " + e.getMessage());
+            System.err.println("Questions : " + e.getMessage());
         }
     }
 
@@ -98,11 +98,11 @@ public class PassageQuizController {
     @FXML
     private void soumettreTest() {
         if (idPatient <= 0) {
-            afficherAlerte("Erreur", "Aucun patient connecté."); return;
+            afficherAlerte("Erreur", "Aucun patient connecte."); return;
         }
         for (Map.Entry<Integer, ToggleGroup> entry : toggleGroups.entrySet()) {
             if (entry.getValue().getSelectedToggle() == null) {
-                afficherAlerte("Attention", "Veuillez répondre à toutes les questions.");
+                afficherAlerte("Attention", "Veuillez repondre a toutes les questions.");
                 return;
             }
         }
@@ -118,14 +118,14 @@ public class PassageQuizController {
                         quiz.getIdQuiz(), idQuestion, idPatient,
                         choix.getTexteReponse(), choix.getValeur()));
             }
-            System.out.println("✅ Score soumis — patient ID="
+            System.out.println("Score soumis — patient ID="
                     + idPatient + " score=" + scoreTotal);
             String resultat = serviceQuiz.calculerEtSauvegarderScore(
                     quiz.getIdQuiz(), idPatient);
             SuivieQuizController.rafraichir();
             afficherResultat(resultat, scoreTotal, nbQuestions);
         } catch (SQLException e) {
-            System.err.println("❌ Soumission : " + e.getMessage());
+            System.err.println("Soumission : " + e.getMessage());
         }
     }
 
@@ -154,7 +154,7 @@ public class PassageQuizController {
         int pctReel      = (int) Math.min(100, Math.max(0, (score * 100.0) / scoreMax));
         int pctAffichage = pctReel;
 
-        System.out.println("📊 score=" + score + " / max=" + scoreMax
+        System.out.println("score=" + score + " / max=" + scoreMax
                 + " | pct=" + pctReel + "% | quiz=" + quiz.getTitre());
 
         String niveau = calculerNiveau(pctReel, titreLow);
@@ -171,13 +171,13 @@ public class PassageQuizController {
         String couleurScore, couleurBg, emoji, messageMotiv;
         if (pctAffichage >= 70) {
             couleurScore = "#27ae60"; couleurBg = "#eafaf1";
-            emoji = "🏆"; messageMotiv = "Excellent résultat ! 🎉";
+            emoji = "\u2605"; messageMotiv = "Excellent resultat !";
         } else if (pctAffichage >= 40) {
             couleurScore = "#f39c12"; couleurBg = "#fef9e7";
-            emoji = "⭐"; messageMotiv = "Bon effort, continue ! 💪";
+            emoji = "\u2606"; messageMotiv = "Bon effort, continue !";
         } else {
             couleurScore = "#e74c3c"; couleurBg = "#fdedec";
-            emoji = "💪"; messageMotiv = "N'abandonne pas ! 🌱";
+            emoji = "\u2665"; messageMotiv = "N'abandonne pas !";
         }
 
         final int    pctDisplay = pctAffichage;
@@ -251,10 +251,10 @@ public class PassageQuizController {
         // ── STATS ──────────────────────────────────────────────────
         HBox ligneStats = new HBox(12);
         ligneStats.setMaxWidth(380); ligneStats.setAlignment(javafx.geometry.Pos.CENTER);
-        VBox carteScore = creerCarteInfo("🎯", "Score obtenu", scoreF + " pts",
+        VBox carteScore = creerCarteInfo("\u25CE", "Score obtenu", scoreF + " pts",
                 "#6c5ce7", "rgba(108,92,231,0.08)");
         HBox.setHgrow(carteScore, Priority.ALWAYS);
-        VBox carteNiveau = creerCarteInfo("📊", "Niveau", niveauF, cF, bgF);
+        VBox carteNiveau = creerCarteInfo("\u25A0", "Niveau", niveauF, cF, bgF);
         HBox.setHgrow(carteNiveau, Priority.ALWAYS);
         ligneStats.getChildren().addAll(carteScore, carteNiveau);
 
@@ -269,71 +269,73 @@ public class PassageQuizController {
         titreConseil.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         titreConseil.setPadding(new Insets(0, 0, 8, 0));
         titreConseil.setStyle("-fx-border-color:transparent transparent #e8edf5 transparent; -fx-border-width:0 0 1 0;");
-        Label iconeConseil = new Label("⚡");
+        Label iconeConseil = new Label("\u26A1");
         iconeConseil.setStyle("-fx-font-size:16px; -fx-text-fill:#2c4a6e;");
         Label lblTitreConseil = new Label("Analyse & Plan IA");
         lblTitreConseil.setStyle("-fx-font-size:15px; -fx-font-weight:900; -fx-text-fill:#2c3e50; -fx-font-style:italic;");
         titreConseil.getChildren().addAll(iconeConseil, lblTitreConseil);
 
-        Label lblConseilIA = new Label("  Génération de votre plan personnalisé...");
-        lblConseilIA.setWrapText(true); lblConseilIA.setMaxWidth(340);
-        lblConseilIA.setPadding(new Insets(6, 10, 6, 10));
-        lblConseilIA.setStyle("-fx-font-size:12px; -fx-text-fill:#6b7280;"
-                + "-fx-font-style:italic; -fx-background-color:#f8fafc;"
-                + "-fx-background-radius:8;");
-
-        // ✅ 3 blocs uniquement — "Émotion détectée" supprimé
-        VBox blocAnalyse    = creerBlocTraitement("🔍", "Analyse psychologique",
+        // 3 blocs séparés — chacun recevra sa propre section
+        VBox blocAnalyse    = creerBlocTraitement("\u26B2", "Analyse psychologique",
                 "Analyse en cours...", "#EDE9FE", "#7C3AED");
-        VBox blocTraitement = creerBlocTraitement("💊", "Plan de traitement",
+        VBox blocTraitement = creerBlocTraitement("\u2665", "Plan de traitement",
                 "Traitement en cours...", "#FEF3C7", "#D97706");
-        VBox blocExercices  = creerBlocTraitement("🏃", "Exercices recommandés",
+        VBox blocExercices  = creerBlocTraitement("\u25B6", "Exercices recommandes",
                 "Exercices en cours...", "#ECFDF5", "#059669");
 
-        carteConseil.getChildren().addAll(titreConseil, lblConseilIA, new Separator(),
+        carteConseil.getChildren().addAll(titreConseil, new Separator(),
                 blocAnalyse, blocTraitement, blocExercices);
 
-        // ✅ Appel direct ServiceGroq — sans ResultFusionService ni HuggingFace
+        // ── APPEL GROQ ─────────────────────────────────────────────
         new Thread(() -> {
             try {
-                String prompt = construirePrompt(quiz.getTitre(), pctIA);
+                String prompt      = construirePrompt(quiz.getTitre(), pctIA);
                 String reponseGroq = serviceGroqQuiz.appellerGroq(prompt);
 
+                System.out.println("=== REPONSE GROQ RAW ===\n" + reponseGroq + "\n========================");
+
+                // ── Parsing robuste : accepte "SECTION:" ET "SECTION :" ──
                 String analyse    = extraireSection(reponseGroq, "ANALYSE");
                 String traitement = extraireSection(reponseGroq, "TRAITEMENT");
                 String exercices  = extraireSection(reponseGroq, "EXERCICES");
 
+                // ── Nettoyage des guillemets échappés (\") ───────────
+                if (analyse    != null) analyse    = nettoyer(analyse);
+                if (traitement != null) traitement = nettoyer(traitement);
+                if (exercices  != null) exercices  = nettoyer(exercices);
+
+                // ── Fallbacks si parsing rate ──────────────────────
                 if (analyse == null || analyse.isBlank())
-                    analyse = reponseGroq != null ? reponseGroq
-                            : "Continuez à pratiquer et consultez un professionnel.";
+                    analyse = reponseGroq != null ? nettoyer(reponseGroq)
+                            : "Continuez a pratiquer et consultez un professionnel.";
                 if (traitement == null || traitement.isBlank())
-                    traitement = "Consultez un professionnel de santé.";
+                    traitement = "Consultez un professionnel de sante pour un suivi personnalise.";
                 if (exercices == null || exercices.isBlank())
-                    exercices = "Pratiquez la respiration profonde 10 min/jour.";
+                    exercices = "1. Respiration profonde 10 min/jour.\n2. Journal de bord quotidien.\n3. Marche de 20 minutes en plein air.";
 
                 final String a = analyse, t = traitement, ex = exercices;
 
                 javafx.application.Platform.runLater(() -> {
-                    lblConseilIA.setText(a);
-                    lblConseilIA.setStyle("-fx-font-size:12.5px; -fx-text-fill:#374151;"
-                            + "-fx-font-style:normal; -fx-line-spacing:4;"
-                            + "-fx-background-color:#f0f4ff; -fx-background-radius:8;"
-                            + "-fx-padding:8 10 8 10;");
                     mettreAJourBloc(blocAnalyse,    a);
                     mettreAJourBloc(blocTraitement, t);
                     mettreAJourBloc(blocExercices,  ex);
                 });
 
             } catch (Exception e) {
-                javafx.application.Platform.runLater(() ->
-                        lblConseilIA.setText(
-                                "Continuez à pratiquer et consultez un professionnel.")
-                );
+                System.err.println("Groq erreur : " + e.getMessage());
+                javafx.application.Platform.runLater(() -> {
+                    mettreAJourBloc(blocAnalyse,
+                            "Continuez a pratiquer et consultez un professionnel.");
+                    mettreAJourBloc(blocTraitement,
+                            "Consultez un professionnel de sante.");
+                    mettreAJourBloc(blocExercices,
+                            "Pratiquez la respiration profonde 10 min/jour.");
+                });
             }
         }).start();
 
         // ── BOUTON RETOUR ──────────────────────────────────────────
-        Button btnOk = new Button("← Retour aux tests");
+        Button btnOk = new Button("\u2190 Retour aux tests");
         btnOk.setMaxWidth(380); btnOk.setPrefHeight(46);
         btnOk.setStyle("-fx-background-color:#2c4a6e; -fx-text-fill:white;"
                 + "-fx-font-size:14px; -fx-font-weight:bold;"
@@ -370,7 +372,7 @@ public class PassageQuizController {
 
         javafx.scene.Scene scene = new javafx.scene.Scene(scroll, 420, 600);
         javafx.stage.Stage stage = new javafx.stage.Stage();
-        stage.setScene(scene); stage.setTitle("Résultat du test");
+        stage.setScene(scene); stage.setTitle("Resultat du test");
         stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
         stage.setResizable(false);
 
@@ -390,43 +392,68 @@ public class PassageQuizController {
     }
 
     // ══════════════════════════════════════════════════════════════
-    // Prompt Groq — court et structuré (évite la coupure)
+    // PROMPT — structure stricte pour forcer le format
     // ══════════════════════════════════════════════════════════════
     private String construirePrompt(String titreQuiz, int pctScore) {
-        return "Tu es un psychologue clinicien expert et bienveillant. Reponds en francais.\n"
-                + "Un patient vient de passer le test '" + titreQuiz + "' avec un score de " + pctScore + "%.\n"
-                + "Fournis une analyse detaillee en utilisant EXACTEMENT ce format (3 sections):\n"
-                + "ANALYSE: [3 a 4 phrases : analyse psychologique approfondie du score et de l etat du patient]\n"
-                + "TRAITEMENT: [3 a 4 phrases : plan de traitement concret avec des recommandations therapeutiques]\n"
-                + "EXERCICES: [3 exercices pratiques numerotes, chacun avec une description claire]\n"
-                + "Respecte strictement ce format. Ne rajoute rien avant ou apres.";
+        return "Tu es un psychologue clinicien expert. Reponds UNIQUEMENT en francais.\n"
+                + "Un patient a obtenu " + pctScore + "% au test psychologique '" + titreQuiz + "'.\n\n"
+                + "Reponds en respectant EXACTEMENT ce format avec ces 3 labels en majuscules :\n\n"
+                + "ANALYSE: [Ton analyse psychologique du score en 3 phrases.]\n\n"
+                + "TRAITEMENT: [Ton plan de traitement concret en 3 phrases.]\n\n"
+                + "EXERCICES: [3 exercices pratiques numerotes 1. 2. 3. avec description courte.]\n\n"
+                + "IMPORTANT: utilise exactement ANALYSE: TRAITEMENT: EXERCICES: sans espace avant les deux-points.";
     }
 
     // ══════════════════════════════════════════════════════════════
-    // Extraction des sections ANALYSE / TRAITEMENT / EXERCICES
+    // PARSING ROBUSTE — accepte "SECTION:" et "SECTION :"
     // ══════════════════════════════════════════════════════════════
     private String extraireSection(String texte, String section) {
-        if (texte == null) return null;
+        if (texte == null || texte.isBlank()) return null;
         try {
+            // Normaliser : remplacer "SECTION :" par "SECTION:"
+            String normalise = texte
+                    .replace("ANALYSE :",    "ANALYSE:")
+                    .replace("TRAITEMENT :", "TRAITEMENT:")
+                    .replace("EXERCICES :",  "EXERCICES:");
+
             String prefixe = section + ":";
-            int idx = texte.indexOf(prefixe);
+            int idx = normalise.indexOf(prefixe);
             if (idx < 0) return null;
+
             int debut = idx + prefixe.length();
-            int fin   = texte.length();
+            int fin   = normalise.length();
+
+            // Trouver la prochaine section pour couper
             for (String s : new String[]{"ANALYSE:", "TRAITEMENT:", "EXERCICES:"}) {
-                int pos = texte.indexOf(s, debut);
+                if (s.equals(prefixe)) continue;
+                int pos = normalise.indexOf(s, debut);
                 if (pos > debut && pos < fin) fin = pos;
             }
-            return texte.substring(debut, fin).trim();
+
+            return normalise.substring(debut, fin).trim();
         } catch (Exception e) {
             return null;
         }
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // NETTOYAGE — supprime \" et autres artefacts Groq
+    // ══════════════════════════════════════════════════════════════
+    private String nettoyer(String texte) {
+        if (texte == null) return null;
+        return texte
+                .replace("\\\"", "\"")   // \" → "
+                .replace("\\'",  "'")    // \' → '
+                .replace("\\n",  "\n")   // \n littéral → saut de ligne
+                .replace("**",   "")     // bold markdown
+                .replace("##",   "")     // heading markdown
+                .trim();
+    }
+
     private String calculerNiveau(int pctReel, String titreLow) {
         if (titreLow.contains("stress")) {
-            if      (pctReel >= 70) return "Bien géré";
-            else if (pctReel >= 40) return "Modéré";
+            if      (pctReel >= 70) return "Bien gere";
+            else if (pctReel >= 40) return "Modere";
             else                    return "Critique";
         } else if (titreLow.contains("humeur")) {
             if      (pctReel >= 70) return "Bonne humeur";
@@ -449,8 +476,7 @@ public class PassageQuizController {
                         + "-fx-border-color:" + couleurBord + ";"
                         + "-fx-border-radius:16;"
                         + "-fx-border-width:1.5;"
-                        + "-fx-effect:dropshadow(gaussian,"
-                        + "rgba(0,0,0,0.05),6,0,0,2);");
+                        + "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.05),6,0,0,2);");
 
         HBox entete = new HBox(12);
         entete.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -479,9 +505,8 @@ public class PassageQuizController {
         lblContenu.setWrapText(true);
         lblContenu.setMaxWidth(Double.MAX_VALUE);
         lblContenu.setPadding(new Insets(10, 16, 14, 16));
-        lblContenu.setStyle("-fx-font-size:12px; -fx-text-fill:#374151; -fx-line-spacing:4;");
+        lblContenu.setStyle("-fx-font-size:12.5px; -fx-text-fill:#374151; -fx-line-spacing:4;");
 
-        // ✅ Map pour mettre à jour contenu ET status "✅ Complété"
         Map<String, Label> dataMap = new HashMap<>();
         dataMap.put("contenu", lblContenu);
         dataMap.put("status",  lblStatus);
@@ -497,9 +522,7 @@ public class PassageQuizController {
         if (data instanceof Map) {
             Map<String, Label> map = (Map<String, Label>) data;
             if (map.get("contenu") != null) map.get("contenu").setText(contenu);
-            if (map.get("status")  != null) map.get("status").setText("✅ Complété");
-        } else if (data instanceof Label) {
-            ((Label) data).setText(contenu);
+            if (map.get("status")  != null) map.get("status").setText("Termine");
         }
     }
 
@@ -536,6 +559,6 @@ public class PassageQuizController {
             Node vue = loader.load();
             VBox parent = (VBox) listeQuestions.getScene().lookup("#contentArea");
             if (parent != null) parent.getChildren().setAll(vue);
-        } catch (IOException e) { System.err.println("❌ Retour : " + e.getMessage()); }
+        } catch (IOException e) { System.err.println("Retour : " + e.getMessage()); }
     }
 }

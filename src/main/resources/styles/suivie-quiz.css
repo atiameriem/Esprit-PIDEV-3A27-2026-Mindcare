@@ -178,7 +178,7 @@
 .score-titre-stress   { -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #FF6B9D; }
 .score-titre-humeur   { -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #4FACFE; }
 
-/* Tendances — couleur injectée dynamiquement en Java */
+/* Tendances */
 .trend-positive {
     -fx-font-size: 11px; -fx-font-weight: 700;
     -fx-text-fill: #065F46;
@@ -216,7 +216,6 @@
     -fx-padding: 6 8 6 8;
 }
 
-/* Icônes paliers */
 .palier-emoji    { -fx-font-size: 22px; -fx-opacity: 0.3; }
 .palier-label    { -fx-font-size: 9px; -fx-font-weight: 700; -fx-text-fill: #94a3b8; }
 .palier-separateur { -fx-background-color: #e2e8f0; -fx-pref-height: 3; -fx-background-radius: 2; }
@@ -226,7 +225,6 @@
     -fx-font-style: italic; -fx-padding: 4 0;
 }
 
-/* Items badges (état injecté dynamiquement) */
 .badge-item-locked {
     -fx-background-color: #f8fafc;
     -fx-background-radius: 14; -fx-border-radius: 14;
@@ -310,7 +308,6 @@
 
 .etat-lecture { -fx-font-size: 18px; -fx-text-fill: #7C3AED; }
 
-/* Boutons lecteur */
 .btn-play-pause {
     -fx-background-color: #7C3AED;
     -fx-text-fill: white;
@@ -399,10 +396,310 @@
 .test-resultat-warn { -fx-text-fill: #78350F; -fx-background-color: #FEF3C7; }
 .test-resultat-err  { -fx-text-fill: #991B1B; -fx-background-color: #FEF2F2; }
 
-/* ── Piste item (état injecté dynamiquement) ───────────────────── */
-.piste-item        { -fx-background-color: transparent;                   -fx-background-radius: 10; -fx-cursor: hand; -fx-padding: 8 12; }
-.piste-item-active { -fx-background-color: rgba(124,58,237,0.10);         -fx-background-radius: 10; -fx-cursor: hand; -fx-padding: 8 12; }
+/* ── Piste item ────────────────────────────────────────────────── */
+.piste-item        { -fx-background-color: transparent; -fx-background-radius: 10; -fx-cursor: hand; -fx-padding: 8 12; }
+.piste-item-active { -fx-background-color: rgba(124,58,237,0.10); -fx-background-radius: 10; -fx-cursor: hand; -fx-padding: 8 12; }
 .piste-item:hover  { -fx-background-color: rgba(124,58,237,0.08); }
 .piste-indicateur  { -fx-font-size: 14px; -fx-text-fill: #7C3AED; }
 .piste-nom-list    { -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #1F2937; }
 .piste-duree-list  { -fx-font-size: 10px; -fx-text-fill: #9CA3AF; }
+
+/* ══════════════════════════════════════════════════════════════════
+   10. IMAGE THÉRAPEUTIQUE IA  ←  NOUVEAU BLOC
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Carte conteneur */
+.image-therapeutique-card {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.10), 14, 0, 0, 3);
+}
+
+/* L'ImageView elle-même */
+.image-therapeutique {
+    -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.20), 12, 0, 0, 3);
+    -fx-background-radius: 14;
+}
+
+/* Overlay de chargement (StackPane par-dessus l'ImageView) */
+.image-loading-overlay {
+    -fx-background-color: rgba(240,249,255,0.92);
+    -fx-background-radius: 14;
+    -fx-min-width: 340;
+    -fx-min-height: 200;
+    -fx-border-color: rgba(167,139,250,0.20);
+    -fx-border-radius: 14;
+    -fx-border-width: 1.5;
+}
+
+/* Message thérapeutique sous l'image */
+.image-message {
+    -fx-font-size: 12px;
+    -fx-text-fill: #475569;
+    -fx-font-style: italic;
+    -fx-line-spacing: 3;
+    -fx-wrap-text: true;
+    -fx-padding: 4 0 0 0;
+}
+
+/* Badge thème (EPANOUISSEMENT, EQUILIBRE…) — couleur injectée dynamiquement en Java */
+.image-theme-badge {
+    -fx-font-size: 10px;
+    -fx-font-weight: 700;
+    -fx-letter-spacing: 0.5;
+    -fx-background-radius: 20;
+    -fx-padding: 3 10 3 10;
+    -fx-text-fill: #7C3AED;
+    -fx-background-color: rgba(124,58,237,0.10);
+}
+
+/* Bouton "✨ Nouvelle image" */
+.btn-regenere-image {
+    -fx-background-color: rgba(124,58,237,0.10);
+    -fx-text-fill: #7C3AED;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-padding: 10 18 10 18;
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(124,58,237,0.20);
+    -fx-border-radius: 12;
+    -fx-border-width: 1.5;
+    -fx-cursor: hand;
+}
+
+.btn-regenere-image:hover {
+    -fx-background-color: rgba(124,58,237,0.18);
+    -fx-border-color: rgba(124,58,237,0.40);
+}
+
+.btn-regenere-image:disabled {
+    -fx-opacity: 0.45;
+    -fx-cursor: default;
+}
+
+/* Titre section image */
+.image-section-titre {
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1F2937;
+}
+/* ══════════════════════════════════════════════════════════════════
+   PATCH IMAGE THÉRAPEUTIQUE — ajouter à la fin de suivie-quiz.css
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Carte conteneur ───────────────────────────────────────────── */
+.card-image-therapeutique {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.12), 16, 0, 0, 4);
+    -fx-padding: 0;
+}
+
+/* ── En-tête (titre + bouton) ──────────────────────────────────── */
+.image-header {
+    -fx-padding: 16 18 12 18;
+    -fx-background-color: white;
+    -fx-background-radius: 20 20 0 0;
+}
+
+.image-section-titre {
+    -fx-font-size: 15px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #1F2937;
+}
+
+.image-message {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+    -fx-font-style: italic;
+    -fx-wrap-text: true;
+}
+
+/* ── Zone image pleine largeur ────────────────────────────────── */
+.image-zone {
+    -fx-background-color: #f1f5f9;
+    -fx-pref-height: 260;
+    -fx-min-height: 200;
+    -fx-max-height: 320;
+    /* Pas de border-radius ici pour que l'image touche bien les bords */
+}
+
+/* L'ImageView elle-même — preserveRatio=true, fitHeight=260 */
+/* La largeur s'ajuste automatiquement */
+.img-therapeutique-view {
+    -fx-smooth: true;
+}
+
+/* ── Overlay de chargement ─────────────────────────────────────── */
+.image-loading-pane {
+    -fx-background-color: rgba(241,245,249,0.96);
+}
+
+.loading-titre {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #7C3AED;
+}
+
+.loading-sous {
+    -fx-font-size: 11px;
+    -fx-text-fill: #94a3b8;
+}
+
+/* ── Pied de carte ────────────────────────────────────────────── */
+.image-footer {
+    -fx-padding: 10 18 14 18;
+    -fx-background-color: white;
+    -fx-background-radius: 0 0 20 20;
+}
+
+.image-theme-badge {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-border-width: 1.5;
+    -fx-padding: 4 14 4 14;
+    -fx-text-fill: #7C3AED;
+    -fx-background-color: rgba(124,58,237,0.08);
+    -fx-border-color: rgba(124,58,237,0.25);
+}
+
+.image-footer-hint {
+    -fx-font-size: 10px;
+    -fx-text-fill: #94a3b8;
+    -fx-font-style: italic;
+}
+
+/* ── Bouton Nouvelle image ─────────────────────────────────────── */
+.btn-regenere-image {
+    -fx-background-color: rgba(124,58,237,0.10);
+    -fx-text-fill: #7C3AED;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-padding: 10 20 10 20;
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(124,58,237,0.30);
+    -fx-border-radius: 14;
+    -fx-border-width: 1.5;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.15), 6, 0, 0, 2);
+}
+
+.btn-regenere-image:hover {
+    -fx-background-color: rgba(124,58,237,0.20);
+    -fx-border-color: rgba(124,58,237,0.55);
+    -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.25), 10, 0, 0, 3);
+}
+
+.btn-regenere-image:disabled {
+    -fx-opacity: 0.38;
+    -fx-cursor: default;
+    -fx-effect: none;
+}
+/* ══════════════════════════════════════════════════════════════════
+   PATCH IMAGE THÉRAPEUTIQUE — ajouter à la fin de suivie-quiz.css
+   ══════════════════════════════════════════════════════════════════ */
+
+.card-image-therapeutique {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-effect: dropshadow(gaussian, rgba(124,58,237,0.12), 16, 0, 0, 4);
+    -fx-padding: 0;
+}
+
+.image-header {
+    -fx-padding: 16 18 12 18;
+    -fx-background-color: white;
+    -fx-background-radius: 20 20 0 0;
+}
+
+.image-section-titre {
+    -fx-font-size: 15px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #1F2937;
+}
+
+.image-message {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+    -fx-font-style: italic;
+    -fx-wrap-text: true;
+}
+
+/* Zone image : fond sombre pour que l'image ressorte bien */
+.image-zone {
+    -fx-background-color: #0f172a;
+    -fx-min-height: 280;
+    -fx-pref-height: 280;
+    -fx-max-height: 280;
+}
+
+/* L'ImageView remplit tout le StackPane parent */
+.img-therapeutique-view {
+    -fx-smooth: true;
+}
+
+.image-loading-pane {
+    -fx-background-color: rgba(15,23,42,0.85);
+    -fx-min-height: 280;
+}
+
+.loading-titre {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #a5b4fc;
+}
+
+.loading-sous {
+    -fx-font-size: 11px;
+    -fx-text-fill: #64748b;
+}
+
+.image-footer {
+    -fx-padding: 10 18 14 18;
+    -fx-background-color: white;
+    -fx-background-radius: 0 0 20 20;
+}
+
+.image-theme-badge {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-border-width: 1.5;
+    -fx-padding: 4 14 4 14;
+    -fx-text-fill: #7C3AED;
+    -fx-background-color: rgba(124,58,237,0.08);
+    -fx-border-color: rgba(124,58,237,0.25);
+}
+
+.image-footer-hint {
+    -fx-font-size: 10px;
+    -fx-text-fill: #94a3b8;
+    -fx-font-style: italic;
+}
+
+.btn-regenere-image {
+    -fx-background-color: rgba(124,58,237,0.10);
+    -fx-text-fill: #7C3AED;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-padding: 10 20 10 20;
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(124,58,237,0.30);
+    -fx-border-radius: 14;
+    -fx-border-width: 1.5;
+    -fx-cursor: hand;
+}
+
+.btn-regenere-image:hover {
+    -fx-background-color: rgba(124,58,237,0.20);
+    -fx-border-color: rgba(124,58,237,0.55);
+}
+
+.btn-regenere-image:disabled {
+    -fx-opacity: 0.38;
+    -fx-cursor: default;
+}

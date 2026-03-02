@@ -214,6 +214,61 @@
                    styleClass="badges-hint"/>
         </VBox>
 
+        <!-- ═══════ 2.7  🖼️ IMAGE THÉRAPEUTIQUE IA ════════════════ -->
+        <VBox spacing="14" styleClass="image-therapeutique-card">
+
+            <!-- En-tête -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <VBox spacing="2" HBox.hgrow="ALWAYS">
+                    <Label text="Image Thérapeutique IA"
+                           styleClass="image-section-titre"/>
+                    <Label fx:id="lblImageMessage"
+                           text="Génération en cours selon votre état émotionnel..."
+                           wrapText="true"
+                           styleClass="image-message"/>
+                </VBox>
+                <Button fx:id="btnRegeneImage"
+                        text="✨ Nouvelle image"
+                        onAction="#regenererImage"
+                        styleClass="btn-regenere-image"/>
+            </HBox>
+
+            <Separator/>
+
+            <!-- Image + overlay chargement -->
+            <StackPane alignment="CENTER">
+
+                <!-- L'image générée par IA -->
+                <ImageView fx:id="imgTherapeutique"
+                           fitWidth="340" fitHeight="210"
+                           preserveRatio="true"
+                           styleClass="image-therapeutique"/>
+
+                <!-- Overlay affiché pendant la génération -->
+                <StackPane fx:id="paneImageLoading"
+                           prefWidth="340" prefHeight="210"
+                           visible="true"
+                           styleClass="image-loading-overlay">
+                    <VBox alignment="CENTER" spacing="10">
+                        <Label text="🌸" style="-fx-font-size:32px;"/>
+                        <Label text="Génération en cours..."
+                               style="-fx-font-size:13px; -fx-font-weight:700;
+                                      -fx-text-fill:#7C3AED;"/>
+                        <Label text="Image thérapeutique IA"
+                               style="-fx-font-size:11px; -fx-text-fill:#94a3b8;"/>
+                    </VBox>
+                </StackPane>
+            </StackPane>
+
+            <!-- Badge thème (couleur injectée dynamiquement) -->
+            <HBox alignment="CENTER_LEFT">
+                <Label fx:id="lblImageTheme"
+                       text=""
+                       styleClass="image-theme-badge"/>
+            </HBox>
+
+        </VBox>
+
         <!-- ═══════ 3. GRAPHIQUE ═════════════════════════════════════ -->
         <VBox spacing="12" styleClass="card">
             <HBox alignment="CENTER_LEFT">
