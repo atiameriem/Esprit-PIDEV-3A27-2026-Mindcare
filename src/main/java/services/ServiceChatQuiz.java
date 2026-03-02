@@ -8,7 +8,7 @@ import java.util.List;
 
 public class ServiceChatQuiz {
 
-    private static final String API_KEY = ""; // même clé que ServiceGemini
+   // même clé que ServiceGemini
     private static final String API_URL = "";
 
 

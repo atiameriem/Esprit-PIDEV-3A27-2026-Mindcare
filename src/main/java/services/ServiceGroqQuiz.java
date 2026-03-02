@@ -12,7 +12,7 @@ public class ServiceGroqQuiz {
     // ✅ Coller ta clé ici — format : gsk_xxxxx
     private static final String API_KEY =
             "g";
-    private static final String API_URL =
+
             "";
 
     // ══════════════════════════════════════════════════════════════
