@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.HistoriqueController"
+      spacing="16"
+      alignment="TOP_CENTER"
+      styleClass="page">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="section">
+        <Label text="📜 Historique" styleClass="h1"/>
+        <Pane HBox.hgrow="ALWAYS"/>
+        <Button text="🔄 Rafraîchir" onAction="#onRefresh" styleClass="btn-secondary"/>
+    </HBox>
+
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="section">
+        <TextField fx:id="searchField" promptText="Rechercher dans l'historique..." styleClass="searchField"/>
+    </HBox>
+
+    <ScrollPane fitToWidth="true" styleClass="section">
+        <content>
+            <TilePane fx:id="historyContainer" prefColumns="2" hgap="18" vgap="18"/>
+        </content>
+    </ScrollPane>
+
+</VBox>

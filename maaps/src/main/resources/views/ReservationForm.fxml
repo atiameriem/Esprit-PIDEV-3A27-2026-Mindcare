@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.ReservationFormController"
+      spacing="14"
+      style="-fx-background-color: #F5F5F5;"
+      alignment="TOP_LEFT">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label fx:id="titleLabel" text="➕ Ajouter une réservation" style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+
+    <GridPane hgap="12" vgap="12">
+        <columnConstraints>
+            <ColumnConstraints prefWidth="160"/>
+            <ColumnConstraints hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <Label text="Local :" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <Label fx:id="localLabel" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Date :" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <DatePicker fx:id="datePicker" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <!-- Heure début -->
+        <Label text="Heure début :" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <HBox spacing="8" alignment="CENTER_LEFT" GridPane.rowIndex="2" GridPane.columnIndex="1">
+            <TextField fx:id="heureDebutField" promptText="HH:mm" prefWidth="120"/>
+            <Button fx:id="btnHeureDebut" text="⏰" onAction="#showHeureDebutMenu" />
+        </HBox>
+
+        <!-- Heure fin -->
+        <Label text="Heure fin :" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <HBox spacing="8" alignment="CENTER_LEFT" GridPane.rowIndex="3" GridPane.columnIndex="1">
+            <TextField fx:id="heureFinField" promptText="HH:mm" prefWidth="120"/>
+            <Button fx:id="btnHeureFin" text="⏰" onAction="#showHeureFinMenu" />
+        </HBox>
+
+        <Label text="Type session :" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="typeSessionCombo" promptText="Choisir" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <Label text="Motif :" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextField fx:id="motifField" promptText="ex: Stress" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+        <Label text="Suggestion AI :" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+        <HBox spacing="10" alignment="CENTER_LEFT" GridPane.rowIndex="6" GridPane.columnIndex="1">
+            <Label fx:id="aiSuggestionLabel" text="-" wrapText="true" maxWidth="420"/>
+            <Button fx:id="applyAiButton" text="Appliquer" onAction="#applyAiRecommendation" />
+        </HBox>
+
+        <Label text="Pourquoi ?" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+        <TextArea fx:id="aiWhyArea" editable="false" wrapText="true" prefRowCount="4"
+                  promptText="Explication de la recommandation" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Label fx:id="errorLabel" text="" style="-fx-text-fill: #D32F2F;"/>
+        <Pane HBox.hgrow="ALWAYS"/>
+        <Button text="Annuler" onAction="#cancel"/>
+        <Button text="Enregistrer" style="-fx-background-color: #2E7D32; -fx-text-fill: white;" onAction="#save"/>
+    </HBox>
+</VBox>

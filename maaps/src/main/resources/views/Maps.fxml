@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.web.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.MapsController"
+            styleClass="page">
+    <top>
+        <VBox spacing="10" BorderPane.alignment="CENTER" styleClass="section">
+            <Label text="Centre de Location Interface" styleClass="h1"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Adresse :" styleClass="muted"/>
+                <TextField fx:id="addressField" promptText="Ex: 123 Avenue Charles de Gaulle, Paris" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnSearch" text="Rechercher" styleClass="btn-primary"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Label fx:id="infoLabel" text="" styleClass="muted"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <left>
+        <VBox spacing="10" BorderPane.alignment="TOP_LEFT" styleClass="section" prefWidth="310">
+            <Label text="Locaux" styleClass="h2"/>
+            <ListView fx:id="locauxList" VBox.vgrow="ALWAYS"/>
+            <Label text="Cliquez un local pour le localiser par son nom (demo)."
+                   wrapText="true" styleClass="muted"/>
+        </VBox>
+    </left>
+
+    <center>
+        <VBox spacing="10" styleClass="section" BorderPane.alignment="CENTER">
+            <Label text="Carte" styleClass="h2"/>
+            <WebView fx:id="mapWeb" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </center>
+</BorderPane>

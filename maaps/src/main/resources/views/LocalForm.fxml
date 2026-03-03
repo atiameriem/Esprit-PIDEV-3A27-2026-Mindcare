@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.*?>
+
+<ScrollPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.LocalFormController"
+            fitToWidth="true"
+            pannable="true"
+            hbarPolicy="NEVER"
+            vbarPolicy="AS_NEEDED"
+            style="-fx-background: #F5F5F5; -fx-background-color: #F5F5F5;">
+
+    <content>
+        <VBox spacing="14"
+              style="-fx-background-color: #F5F5F5;"
+              alignment="TOP_LEFT"
+              prefWidth="900">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <Label fx:id="titleLabel" text="➕ Ajouter un local"
+                   style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+
+            <GridPane hgap="12" vgap="12">
+                <columnConstraints>
+                    <ColumnConstraints prefWidth="160"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+
+                <Label text="Nom :" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <TextField fx:id="nomField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Description :" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <TextArea fx:id="descriptionArea" prefRowCount="3" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Image :" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <HBox spacing="10" alignment="CENTER_LEFT" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                    <Button fx:id="btnChooseImage" text="📷 Choisir une image" onAction="#chooseImage"/>
+                    <Label fx:id="imageNameLabel" text="" style="-fx-text-fill:#546E7A;"/>
+                </HBox>
+
+                <Label text="" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <ImageView fx:id="imagePreview"
+                           fitHeight="120"
+                           fitWidth="220"
+                           preserveRatio="true"
+                           GridPane.rowIndex="3"
+                           GridPane.columnIndex="1"/>
+
+                <Label text="Type :" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <ComboBox fx:id="typeCombo" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                <Label text="Capacité :" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                <TextField fx:id="capaciteField" promptText="ex: 10" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+                <Label text="Équipements :" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                <TextArea fx:id="equipementsArea" prefRowCount="2" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+                <Label text="Étage :" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+                <TextField fx:id="etageField" promptText="ex: 2" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+
+                <Label text="Durée max (min) :" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+                <TextField fx:id="dureeField" promptText="ex: 120" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+
+                <Label text="Tarif horaire :" GridPane.rowIndex="9" GridPane.columnIndex="0"/>
+                <TextField fx:id="tarifField" promptText="ex: 40" GridPane.rowIndex="9" GridPane.columnIndex="1"/>
+
+                <Label text="État :" GridPane.rowIndex="10" GridPane.columnIndex="0"/>
+                <ComboBox fx:id="etatCombo" GridPane.rowIndex="10" GridPane.columnIndex="1"/>
+
+                <Label text="Disponible :" GridPane.rowIndex="11" GridPane.columnIndex="0"/>
+                <CheckBox fx:id="disponibleCheck" GridPane.rowIndex="11" GridPane.columnIndex="1"/>
+            </GridPane>
+
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Label fx:id="errorLabel" text="" style="-fx-text-fill: #D32F2F;"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Button text="Annuler" onAction="#cancel"/>
+                <Button text="Enregistrer"
+                        style="-fx-background-color: #2E7D32; -fx-text-fill: white;"
+                        onAction="#save"/>
+            </HBox>
+        </VBox>
+    </content>
+</ScrollPane>

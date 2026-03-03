@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.ReservationsController"
+      spacing="20"
+      alignment="TOP_CENTER"
+      styleClass="page">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="section">
+        <Label text="📅 Mes réservations" styleClass="h1"/>
+        <Pane HBox.hgrow="ALWAYS"/>
+
+        <Button text="📅 Calendrier"
+                onAction="#openCalendar"
+                styleClass="btn-secondary"/>
+
+        <Button fx:id="btnHistorique" text="📜 Historique"
+                onAction="#openHistorique"
+                styleClass="btn-secondary"/>
+
+        <Button fx:id="btnCheckIn" text="✅ Check-in (QR)"
+                styleClass="btn-primary"
+                onAction="#openCheckIn"/>
+        <Button fx:id="btnAddReservation"
+                text="+ Nouvelle réservation"
+                onAction="#openAddReservation"
+                styleClass="btn-primary"/>
+    </HBox>
+
+    <Label text="Consultez et gérez vos réservations" styleClass="muted"/>
+
+    <!-- Filters -->
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="section">
+
+        <TextField fx:id="searchField" promptText="Rechercher..." styleClass="searchField"/>
+
+        <ComboBox fx:id="sortCombo" prefWidth="220"/>
+
+        <Button text="Réinitialiser" onAction="#onResetFilters" styleClass="btn-secondary"/>
+    </HBox>
+
+    <!-- List -->
+    <ScrollPane fitToWidth="true" styleClass="section">
+        <content>
+            <TilePane fx:id="reservationsContainer" prefColumns="2" hgap="18" vgap="18"/>
+        </content>
+    </ScrollPane>
+
+</VBox>

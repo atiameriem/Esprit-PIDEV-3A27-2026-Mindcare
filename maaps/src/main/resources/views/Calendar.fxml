@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.web.WebView?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.CalendarController"
+      spacing="12"
+      styleClass="page">
+    <Label text="📅 Calendrier des réservations" styleClass="h1"/>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Date :" styleClass="muted"/>
+        <DatePicker fx:id="datePicker"/>
+        <Button fx:id="btnRefresh" text="Rafraîchir" styleClass="btn-secondary"/>
+        <Pane HBox.hgrow="ALWAYS"/>
+        <Label fx:id="infoLabel" text="" styleClass="muted"/>
+    </HBox>
+
+
+    <SplitPane orientation="HORIZONTAL" VBox.vgrow="ALWAYS" dividerPositions="0.70">
+        <WebView fx:id="calendarWeb" />
+
+
+
+    </SplitPane>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="btnExportIcs" text="⬇ Exporter (.ics)" styleClass="btn-primary"/>
+        <Button fx:id="btnCancelReservation" text="❌ Annuler réservation" styleClass="btn-danger"/>
+    </HBox>
+
+    <Label text="Astuce: exportez en .ics pour l'import dans Google Calendar/Outlook/Apple Calendar. (Rappel J-3 inclus)"
+           styleClass="muted"/>
+</VBox>

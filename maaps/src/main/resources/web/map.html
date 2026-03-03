@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        html, body { height: 100%; margin: 0; }
+        #map { height: 100%; width: 100%; }
+    </style>
+</head>
+
+<body>
+<div id="map"></div>
+
+<script>
+    let map;
+    let userMarker = null;
+    let userPos = null;       // {lat,lng}
+    let locals = [];          // [{id,name,type,lat,lng}]
+    let markers = [];         // Leaflet markers
+    let routeLine = null;
+    let lastTarget = null;    // {lat,lng,name}
+
+    // -----------------------
+    // Utils
+    // -----------------------
+    function haversineKm(lat1, lng1, lat2, lng2) {
+        const R = 6371, toRad = v => v * Math.PI / 180;
+        const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+        const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+        return 2 * R * Math.asin(Math.sqrt(a));
+    }
+
+    async function geocode(q) {
+        const qq = (q || "").trim();
+        if (!qq) return null;
+
+        // ✅ précis en Tunisie
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(qq + ", Tunisie")}&limit=1`;
+        const r = await fetch(url, { headers: { "Accept": "application/json" } });
+        const data = await r.json();
+        if (!data || !data[0]) return null;
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+
+    function clearRoute() {
+        if (routeLine) {
+            map.removeLayer(routeLine);
+            routeLine = null;
+        }
+    }
+
+    function clearMarkers() {
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+    }
+
+    function makePopupHtml(loc) {
+        let extra = "";
+        if (userPos && loc.lat != null && loc.lng != null) {
+            const d = haversineKm(userPos.lat, userPos.lng, loc.lat, loc.lng);
+            extra = `<br><b>Distance:</b> ${d.toFixed(2)} km`;
+        }
+
+        return `
+      <b>${loc.name}</b><br>${loc.type}
+      <br><b>Lat:</b> ${loc.lat ?? "?"}
+      <br><b>Lng:</b> ${loc.lng ?? "?"}
+      ${extra}
+    `;
+    }
+
+    function refreshMarkers() {
+        clearMarkers();
+        locals.forEach(loc => {
+            if (loc.lat == null || loc.lng == null) return;
+
+            const m = L.marker([loc.lat, loc.lng]).addTo(map);
+            m.bindPopup(makePopupHtml(loc));
+            markers.push(m);
+
+            // clic marker -> route depuis adresse utilisateur
+            m.on("click", async () => {
+                if (!userPos) return;
+                lastTarget = { lat: loc.lat, lng: loc.lng, name: loc.name };
+                await drawRoute(userPos.lat, userPos.lng, loc.lat, loc.lng);
+            });
+        });
+    }
+
+    // -----------------------
+    // API called from JavaFX
+    // -----------------------
+
+    // Java appelle: setLocaux(array)
+    async function setLocaux(arr) {
+        locals = Array.isArray(arr) ? arr : [];
+
+        // géocoder chaque local si pas coords (pas en DB)
+        for (const loc of locals) {
+            if (loc.lat == null || loc.lng == null) {
+                const pos = await geocode(loc.name);
+                if (pos) {
+                    loc.lat = pos.lat;
+                    loc.lng = pos.lng;
+                }
+            }
+        }
+
+        refreshMarkers();
+
+        // zoom sur tous les marqueurs
+        const all = locals.filter(l => l.lat != null && l.lng != null);
+        if (all.length) {
+            const bounds = L.latLngBounds(all.map(l => [l.lat, l.lng]));
+            map.fitBounds(bounds, { padding: [20, 20] });
+        }
+    }
+
+    // Java appelle: setStartFromQuery("djerba")
+    // ✅ ici on met à jour le trajet automatiquement vers le plus proche
+    async function setStartFromQuery(q) {
+        const pos = await geocode(q);
+        if (!pos) return;
+
+        userPos = pos;
+
+        // ✅ IMPORTANT: enlever l'ancien trajet quand l'adresse change
+        clearRoute();
+        if (window.mapsBridge && window.mapsBridge.onRouteInfo) {
+            window.mapsBridge.onRouteInfo("");
+        }
+
+        if (userMarker) map.removeLayer(userMarker);
+        userMarker = L.marker([userPos.lat, userPos.lng]).addTo(map)
+            .bindPopup("Votre adresse")
+            .openPopup();
+
+        map.setView([userPos.lat, userPos.lng], 11);
+
+        // refresh popups avec distance
+        refreshMarkers();
+
+        // ✅ proposer + sélectionner le plus proche
+        const nearest = findNearest();
+        if (nearest) {
+            lastTarget = { lat: nearest.lat, lng: nearest.lng, name: nearest.name };
+
+            if (window.mapsBridge && window.mapsBridge.onNearestLocal) {
+                window.mapsBridge.onNearestLocal(nearest.name);
+            }
+
+            // ✅ route automatique vers le plus proche
+            await drawRoute(userPos.lat, userPos.lng, nearest.lat, nearest.lng);
+
+            // ouvrir popup du plus proche
+            selectLocalByName(nearest.name);
+        }
+    }
+
+    function findNearest() {
+        if (!userPos || !locals.length) return null;
+
+        let best = null;
+        let bestD = Infinity;
+
+        for (const loc of locals) {
+            if (loc.lat == null || loc.lng == null) continue;
+            const d = haversineKm(userPos.lat, userPos.lng, loc.lat, loc.lng);
+            if (d < bestD) {
+                bestD = d;
+                best = loc;
+            }
+        }
+        return best;
+    }
+
+    // Java appelle: selectLocalByName("sfax")
+    // ✅ focus + popup uniquement
+    function selectLocalByName(name) {
+        const loc = locals.find(l => (l.name || "").toLowerCase() === String(name || "").toLowerCase());
+        if (!loc || loc.lat == null || loc.lng == null) return;
+
+        map.setView([loc.lat, loc.lng], 12);
+
+        for (const m of markers) {
+            const ll = m.getLatLng();
+            if (Math.abs(ll.lat - loc.lat) < 1e-6 && Math.abs(ll.lng - loc.lng) < 1e-6) {
+                m.openPopup();
+                break;
+            }
+        }
+    }
+
+    // Java appelle au hover ListView: routeToLocalName("sfax")
+    async function routeToLocalName(localName) {
+        if (!userPos || !localName) return;
+
+        const loc = locals.find(l => (l.name || "").toLowerCase() === String(localName).toLowerCase());
+        if (!loc || loc.lat == null || loc.lng == null) return;
+
+        lastTarget = { lat: loc.lat, lng: loc.lng, name: loc.name };
+
+        selectLocalByName(loc.name);
+        await drawRoute(userPos.lat, userPos.lng, loc.lat, loc.lng);
+    }
+
+    // -----------------------
+    // Routing via OSRM
+    // -----------------------
+    async function drawRoute(lat1, lng1, lat2, lng2) {
+        clearRoute();
+
+        // mêmes coords -> pas de route
+        if (Math.abs(lat1 - lat2) < 1e-7 && Math.abs(lng1 - lng2) < 1e-7) {
+            if (window.mapsBridge && window.mapsBridge.onRouteInfo) {
+                window.mapsBridge.onRouteInfo("Trajet: même position (0 km).");
+            }
+            return;
+        }
+
+        const url = `https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`;
+        const r = await fetch(url);
+        const data = await r.json();
+
+        if (!data.routes || !data.routes[0]) {
+            if (window.mapsBridge && window.mapsBridge.onRouteInfo) {
+                window.mapsBridge.onRouteInfo("Trajet indisponible.");
+            }
+            return;
+        }
+
+        const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+        const distKm = data.routes[0].distance / 1000;
+        const durMin = data.routes[0].duration / 60;
+
+        routeLine = L.polyline(coords).addTo(map);
+        map.fitBounds(routeLine.getBounds(), { padding: [20, 20] });
+
+        if (window.mapsBridge && window.mapsBridge.onRouteInfo) {
+            // ✅ ne jamais afficher 0.0 km • 0 min
+            if (distKm > 0.05 && durMin > 0.5) {
+                window.mapsBridge.onRouteInfo(`Trajet: ${distKm.toFixed(1)} km • ${durMin.toFixed(0)} min`);
+            } else {
+                window.mapsBridge.onRouteInfo("Trajet trop court / identique (0 km).");
+            }
+        }
+    }
+
+    // -----------------------
+    // Init
+    // -----------------------
+    window.addEventListener("load", () => {
+        map = L.map("map").setView([36.8065, 10.1815], 6);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+    });
+</script>
+
+</body>
+</html>

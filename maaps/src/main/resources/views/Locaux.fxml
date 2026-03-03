@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.LocauxController"
+      spacing="20"
+      style="-fx-background-color: #F5F5F5;"
+      alignment="TOP_CENTER">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="🏢 Locaux disponibles" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+        <Pane HBox.hgrow="ALWAYS"/>
+
+        <Button text="🗺 Maps"
+                onAction="#openMaps"
+                style="-fx-background-color: #455A64; -fx-text-fill: white; -fx-padding: 8 15; -fx-background-radius: 5;"/>
+        <Button fx:id="btnAddLocal" text="+ Ajouter un local" style="-fx-background-color: #1976D2; -fx-text-fill: white; -fx-padding: 8 15; -fx-background-radius: 5;"
+                onAction="#addLocal"/>
+    </HBox>
+    <Label text="Gérez les salles et espaces thérapeutiques" style="-fx-text-fill: #666; -fx-font-size: 14px;"/>
+
+    <!-- Filtres -->
+    <HBox spacing="15">
+        <ComboBox fx:id="typeCombo" promptText="Tous les types" prefWidth="150"/>
+        <ComboBox fx:id="etageCombo" promptText="Tous les étages" prefWidth="150"/>
+        <TextField fx:id="searchField" promptText="Rechercher..." prefWidth="300"/>
+    </HBox>
+
+    <!-- Conteneur des cartes -->
+    <ScrollPane fitToWidth="true">
+        <content>
+            <TilePane fx:id="locauxContainer" prefColumns="2" hgap="18" vgap="18"/>
+        </content>
+    </ScrollPane>
+
+</VBox>

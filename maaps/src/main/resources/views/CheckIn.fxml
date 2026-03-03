@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.CheckInController"
+      spacing="14"
+      style="-fx-padding: 18;">
+
+    <Label text="🧠 Check-in intelligent (QR Code)"
+           style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+
+    <Label text="Collez le texte du QR (ou utilisez un scanner USB qui écrit dans le champ),  cliquez Check-in."
+           style="-fx-text-fill:#546E7A;"/>
+
+    <TextArea fx:id="qrTextArea"
+              promptText="Ex: rid=12&amp;d=2026-02-24&amp;t=10:00&amp;sig=..."
+              prefRowCount="6"
+              wrapText="true"/>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Button fx:id="btnCheckIn"
+                text="✅ Valider check-in"
+                onAction="#doCheckIn"/>
+        <Label fx:id="resultLabel" text="" wrapText="true"/>
+    </HBox>
+
+</VBox>
