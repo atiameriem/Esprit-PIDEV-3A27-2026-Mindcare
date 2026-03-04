@@ -28,8 +28,8 @@ public class EmailServiceF {
     // ======================================================
     // 🔧 CONFIGURATION — Modifiez ces deux lignes
     // ======================================================
-    private static final String EMAIL_SENDER = "mindcareservicemdp@gmail.com";
-    private static final String EMAIL_PASSWORD = ""; // Mot de passe d'application Gmail
+    private static final String EMAIL_SENDER = "YOUR_SENDER_EMAIL@gmail.com";
+    private static final String EMAIL_PASSWORD = "YOUR_APP_PASSWORD"; // Mot de passe d'application Gmail
     // ======================================================
 
     private static final String SMTP_HOST = "smtp.gmail.com";
@@ -293,7 +293,6 @@ public class EmailServiceF {
                 "</div>" +
                 "</div></body></html>";
     }
-
 
     /**
      * Récupère les participants acceptés d'une formation : [email, "Prénom Nom"]

@@ -43,6 +43,9 @@ import java.time.format.DateTimeFormatter;
 
 public class FormationController {
 
+    @FXML
+    private TextField searchField;
+
     // === ÉLÉMENTS DE LA VUE PRINCIPALE ===
     @FXML
     private FlowPane formationsFlowPane;
@@ -67,7 +70,7 @@ public class FormationController {
     @FXML
     private VBox calendarPopup;
     @FXML
-    private Button allFormationsBtn, myFormationsBtn, demandesBtn, inscritsBtn, sessionsTabBtn;
+    private Button allFormationsBtn, myFormationsBtn, demandesBtn, inscritsBtn, sessionsTabBtn, aiInterviewBtn;
     @FXML
     private Button addFormationBtn;
     @FXML
@@ -225,6 +228,7 @@ public class FormationController {
     private final ParticipationServiceF participationServiceF = new ParticipationServiceF();
     private final SeanceGroupeServiceF seanceService = new SeanceGroupeServiceF();
     private final UserServiceF userServiceF = new UserServiceF();
+    private final EmailServiceF emailServiceF = new EmailServiceF();
     private final int currentUserId;
     private final String currentUserRole;
     private final String currentUserEmail;

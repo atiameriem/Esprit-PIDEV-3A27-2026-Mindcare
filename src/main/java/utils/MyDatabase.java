@@ -7,8 +7,8 @@ import java.sql.SQLException;
 public class MyDatabase {
 
     private final String URL = "jdbc:mysql://localhost:3306/projet_psychologie?zeroDateTimeBehavior=convertToNull&allowPublicKeyRetrieval=true&useSSL=false";
-    private final String USER = "root";
-    private final String PASS = "";
+    private final String USER = "your_db_user";
+    private final String PASS = "your_db_password";
     private Connection connection;
 
     private static MyDatabase instance;

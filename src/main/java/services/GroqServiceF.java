@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public class GroqServiceF {
 
-    private static final String API_KEY = "";
+    private static final String API_KEY = "YOUR_GROQ_API_KEY";
     private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
     // Modèles disponibles

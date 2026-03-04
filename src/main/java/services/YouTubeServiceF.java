@@ -10,7 +10,7 @@ import org.json.JSONObject;
 
 public class YouTubeServiceF {
 
-    private static final String API_KEY = "";
+    private static final String API_KEY = "YOUR_YOUTUBE_API_KEY";
 
     public static String getVideoTitle(String videoId) {
         try {
