@@ -9,8 +9,7 @@
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.MindCareLayoutController"
             stylesheets="@mindcare.css"
-            styleClass="root"
-            prefWidth="1200" prefHeight="700">
+            styleClass="root">
 
     <!-- SIDEBAR -->
     <left>
@@ -27,7 +26,7 @@
             <!-- Profile card -->
             <VBox spacing="6" styleClass="profileCard">
                 <Label text="Bonjour," styleClass="mutedWhite"/>
-                <Label fx:id="usernameLabel" text="Utilisateur" styleClass="whiteBold"/>
+                <Label fx:id="usernameLabel" text="Chargement..." styleClass="whiteBold"/>
             </VBox>
 
             <!-- Menu -->
@@ -41,6 +40,7 @@
                         <VBox spacing="8" styleClass="submenu">
                             <Button text="📅  Rendez-vous" styleClass="subBtn" onAction="#loadRendezVous"/>
                             <Button text="📄  Compte-rendu" styleClass="subBtn" onAction="#loadCompteRendu"/>
+                            <Button fx:id="statistiquesBtn" text="📊  Statistiques" styleClass="subBtn" onAction="#loadStatistiques" visible="false" managed="false"/>
                         </VBox>
                     </content>
                 </TitledPane>
@@ -121,7 +121,7 @@
                     <Pane HBox.hgrow="ALWAYS"/>
 
                     <!-- Right: Déconnexion button -->
-                    <Button text="🚪  Déconnexion" styleClass="logoutBtn" onAction="#handleLogout"/>
+                    <Button fx:id="logoutBtn" text="🚪  Déconnexion" styleClass="logoutBtn" onAction="#handleLogout"/>
                 </HBox>
 
                 <!-- Main content area - large white/light panel -->

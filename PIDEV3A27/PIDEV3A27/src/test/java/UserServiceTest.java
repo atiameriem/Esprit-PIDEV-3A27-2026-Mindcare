@@ -1,114 +1,98 @@
-/*package services;
+import models.User;
+import org.junit.jupiter.api.*;
+import services.UserService;
 
-import models.Reclamation;
-import models.TypeReclamation;
-import utils.MyDatabase;
-
-import java.sql.*;
-import java.util.ArrayList;
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
-public class ReclamationService {
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-    private final Connection connection;
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class UserServiceTest {
+    static UserService us;
+    private int idUser = -1;
 
-    public ReclamationService() {
-        connection = MyDatabase.getInstance().getCnx();
+    @BeforeAll
+    public static void setup() {
+        us = new UserService();
     }
 
-    // ================= CREATE =================
-    public void create(Reclamation r) throws SQLException {
+    @AfterEach
+    void cleanUp() throws SQLException {
+        if (idUser != -1) {
+            us.delete(idUser);
+            System.out.println("[DEBUG_LOG] Cleanup: Deleted User with ID: " + idUser);
+            idUser = -1;
+        }
+    }
 
-        String sql = "INSERT INTO reclamation (id_users, type, description, statut, date) VALUES (?, ?, ?, ?, NOW())";
+    @Test
+    @Order(1)
+    public void testCreateUser() {
+        User u = new User();
+        u.setNom("foulen");
+        u.setPrenom("ben foulen");
+        u.setEmail("foulen.test@esprit.tn");
+        u.setTelephone("12345678");
+        u.setMotDePasse("password123");
+        u.setRole(User.Role.Patient);
+        u.setDateInscription(LocalDate.now());
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-            stmt.setInt(1, r.getIdUser());
-            stmt.setString(2, r.getType().name());
-            stmt.setString(3, r.getDescription());
-            stmt.setString(4, r.getStatut() != null ? r.getStatut() : "EN_ATTENTE");
-
-            stmt.executeUpdate();
-
-            ResultSet rs = stmt.getGeneratedKeys();
-            if (rs.next()) {
-                r.setId(rs.getInt(1));
+        try {
+            int id = us.create(u);
+            this.idUser = id;
+            System.out.println("[DEBUG_LOG] Created User with ID: " + id);
+            assertTrue(id > 0, "User ID should be greater than 0");
+            List<User> users = us.read();
+            assertFalse(users.isEmpty());
+            boolean found = users.stream().anyMatch(pers -> pers.getId() == id && pers.getNom().equals("foulen"));
+            if (found) {
+                System.out.println("[DEBUG_LOG] Verified: User with the generated ID and name 'foulen' exists.");
             }
-            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    int id = generatedKeys.getInt(1);
-                    r.setId(id);  // mettre à jour l'objet Reclamation si nécessaire
-                    return id;
-                } else {
-                    throw new SQLException("Échec de la création de la réclamation, aucun ID généré.");
-                }
-            }
+            assertTrue(found, "User with the generated ID and name 'foulen' should exist");
+        } catch (SQLException e) {
+            System.out.println("exception in test : " + e.getMessage());
         }
     }
 
-    // ================= GET ALL =================
-    public List<Reclamation> getAll() throws SQLException {
+    @Test
+    @Order(2)
+    public void testUpdate() throws SQLException {
+        User u = new User();
+        u.setNom("foulen");
+        u.setPrenom("ben foulen");
+        u.setEmail("foulen.update@esprit.tn");
+        u.setTelephone("87654321");
+        u.setMotDePasse("password123");
+        u.setRole(User.Role.Patient);
+        u.setDateInscription(LocalDate.now());
 
-        List<Reclamation> list = new ArrayList<>();
-        String sql = "SELECT * FROM reclamation";
+        int id = us.create(u);
+        this.idUser = id;
+        System.out.println("[DEBUG_LOG] Created User with ID: " + id);
 
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        User updateInfo = new User();
+        updateInfo.setId(id);
+        updateInfo.setNom("after clean");
+        updateInfo.setPrenom("ben foulen");
+        updateInfo.setEmail("foulen.update@esprit.tn");
+        updateInfo.setTelephone("87654321");
+        updateInfo.setMotDePasse("password123");
+        updateInfo.setRole(User.Role.Patient);
+        updateInfo.setDateInscription(LocalDate.now());
+        updateInfo.setDateNaissance(LocalDate.of(2000, 1, 1));
 
-            while (rs.next()) {
+        us.update(updateInfo);
+        System.out.println("[DEBUG_LOG] Updated User ID " + id + " to name 'after clean'");
 
-                Reclamation r = new Reclamation();
-
-                r.setId(rs.getInt("id_reclamation"));
-                r.setIdUser(rs.getInt("id_users"));
-
-                String typeStr = rs.getString("type");
-                TypeReclamation type = TypeReclamation.Autre;
-
-                if (typeStr != null) {
-                    try {
-                        type = TypeReclamation.valueOf(typeStr);
-                    } catch (IllegalArgumentException ignored) {}
-                }
-
-                r.setType(type);
-                r.setDescription(rs.getString("description"));
-                r.setStatut(rs.getString("statut"));
-                r.setDate(rs.getDate("date"));
-
-                list.add(r);
-            }
+        List<User> users = us.read();
+        assertFalse(users.isEmpty());
+        boolean found = users.stream().anyMatch(pers -> pers.getId() == id && pers.getNom().equals("after clean"));
+        if (found) {
+            System.out.println("[DEBUG_LOG] Verified: User with ID " + id + " has updated name 'after clean'");
         }
-
-        return list;
-    }
-
-    // ================= UPDATE =================
-    public void update(Reclamation r) throws SQLException {
-
-        String sql = "UPDATE reclamation SET id_users = ?, type = ?, description = ?, statut = ? WHERE id_reclamation = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setInt(1, r.getIdUser());
-            stmt.setString(2, r.getType().name());
-            stmt.setString(3, r.getDescription());
-            stmt.setString(4, r.getStatut());
-            stmt.setInt(5, r.getId());
-
-            stmt.executeUpdate();
-        }
-    }
-
-    // ================= DELETE =================
-    public void delete(int id) throws SQLException {
-
-        String sql = "DELETE FROM reclamation WHERE id_reclamation = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            stmt.executeUpdate();
-        }
+        assertTrue(found, "User with ID " + id + " should have updated name 'after clean'");
     }
 }
-*/

@@ -53,7 +53,8 @@
                     </VBox>
                     <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="2">
                         <Label text="Date de Naissance" style="-fx-font-weight: bold; -fx-text-fill: #424242;"/>
-                        <DatePicker fx:id="signupDobPicker" promptText="JJ/MM/AAAA" maxWidth="Infinity" style="-fx-background-radius: 5; -fx-border-color: #E0E0E0;"/>
+                        <DatePicker fx:id="signupDobPicker" promptText="JJ/MM/AAAA" maxWidth="Infinity" 
+                                    style="-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #E0E0E0; -fx-border-radius: 8; -fx-padding: 5;"/>
                     </VBox>
 
                     <!-- Mot de passe -->
@@ -84,6 +85,16 @@
                         </HBox>
                     </VBox>
                 </GridPane>
+
+                <!-- Face ID -->
+                <VBox spacing="8">
+                    <Label text="Face ID (optionnel)" style="-fx-font-weight: bold; -fx-text-fill: #424242;"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Button text="📷  Capturer mon visage" onAction="#handleCaptureFaceSignup"
+                                style="-fx-background-color: #1B5E20; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 10 18; -fx-background-radius: 5; -fx-cursor: hand;"/>
+                        <Label fx:id="faceStatusLabel" text="Aucun visage capturé" style="-fx-text-fill: #757575; -fx-font-style: italic;"/>
+                    </HBox>
+                </VBox>
 
                 <Button text="Créer un compte" onAction="#handleSignupAction" maxWidth="Infinity"
                         style="-fx-background-color: #1976D2; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 12; -fx-background-radius: 5; -fx-cursor: hand;"/>

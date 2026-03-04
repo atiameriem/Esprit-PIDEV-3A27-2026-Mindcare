@@ -1,5 +1,4 @@
-/*import models.Reclamation;
-import models.TypeReclamation;
+import models.Reclamation;
 import models.User;
 import org.junit.jupiter.api.*;
 import services.ReclamationService;
@@ -14,43 +13,40 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ReclamationServiceTest {
 
-    static ReclamationService rs;
-    static UserService us;
+    static ReclamationService reclamationService;
+    static UserService userService;
     private static int idUser = -1;
     private static int idReclamation = -1;
 
     @BeforeAll
     public static void setup() throws SQLException {
-        rs = new ReclamationService();
-        us = new UserService();
+        reclamationService = new ReclamationService();
+        userService = new UserService();
 
-        // Création de l'utilisateur pour la clé étrangère
-        User u = new User(
-                25,
-                "TestUser",
-                "ForReclamation",
-                "rec@test.com",
-                "11111111",
-                LocalDate.of(2024, 1, 1),
-                "password",
-                User.Role.Patient
-        );
+        // Création d'un utilisateur de test pour la clé étrangère
+        User u = new User();
+        u.setNom("TestUser");
+        u.setPrenom("ForReclamation");
+        u.setEmail("rec.test@esprit.tn");
+        u.setTelephone("11111111");
+        u.setMotDePasse("password");
+        u.setRole(User.Role.Patient);
+        u.setDateInscription(LocalDate.of(2024, 1, 1));
 
-        idUser = us.create(u); // récupérer l'ID généré
-        System.out.println("[DEBUG_LOG] User créé pour Reclamation ID = " + idUser);
+        idUser = userService.create(u);
+        System.out.println("[DEBUG_LOG] User créé pour Reclamation, ID = " + idUser);
     }
 
     @AfterAll
     public static void cleanUp() {
         try {
             if (idReclamation != -1) {
-                rs.delete(idReclamation);
+                reclamationService.delete(idReclamation);
                 System.out.println("[DEBUG_LOG] Cleanup: Reclamation supprimée ID = " + idReclamation);
                 idReclamation = -1;
             }
-
             if (idUser != -1) {
-                us.delete(idUser);
+                userService.delete(idUser);
                 System.out.println("[DEBUG_LOG] Cleanup: User supprimé ID = " + idUser);
                 idUser = -1;
             }
@@ -65,13 +61,16 @@ public class ReclamationServiceTest {
     public void testCreateReclamation() throws SQLException {
         Reclamation r = new Reclamation();
         r.setIdUser(idUser);
-        r.setType(TypeReclamation.Autre);
+        r.setObjet("Problème de connexion");
+        r.setCategorie("Autre");
+        r.setUrgence("Moyenne");
         r.setDescription("Impossible de se connecter");
         r.setStatut("EN_ATTENTE");
 
-        idReclamation = rs.create(r); // récupérer l'ID généré
-        assertTrue(idReclamation > 0, "Reclamation ID should be greater than 0");
+        reclamationService.create(r);
+        idReclamation = r.getId(); // l'ID est affecté par create() via getGeneratedKeys()
 
+        assertTrue(idReclamation > 0, "Reclamation ID should be greater than 0");
         System.out.println("[DEBUG_LOG][TEST CREATE] Reclamation créée ID = " + idReclamation);
     }
 
@@ -83,12 +82,10 @@ public class ReclamationServiceTest {
             testCreateReclamation();
         }
 
-        List<Reclamation> list = rs.getAll();
+        List<Reclamation> list = reclamationService.getAll();
         assertFalse(list.isEmpty(), "La liste des réclamations ne doit pas être vide");
 
-        boolean found = list.stream()
-                .anyMatch(r -> r.getId() == idReclamation);
-
+        boolean found = list.stream().anyMatch(r -> r.getId() == idReclamation);
         assertTrue(found, "La réclamation doit exister dans la base");
         System.out.println("[DEBUG_LOG][TEST READ] Reclamation trouvée ID = " + idReclamation);
     }
@@ -104,16 +101,18 @@ public class ReclamationServiceTest {
         Reclamation r = new Reclamation();
         r.setId(idReclamation);
         r.setIdUser(idUser);
-        r.setType(TypeReclamation.Autre);
+        r.setObjet("Problème de connexion");
+        r.setCategorie("Autre");
+        r.setUrgence("Haute");
         r.setDescription("Problème résolu");
         r.setStatut("RESOLU");
 
-        rs.update(r);
+        reclamationService.update(r);
 
-        Reclamation updated = rs.findById(idReclamation);
+        Reclamation updated = reclamationService.findById(idReclamation);
         assertNotNull(updated, "La réclamation mise à jour doit être retrouvée");
-        assertEquals("RESOLU", updated.getStatut());
-        assertEquals(TypeReclamation.Autre, updated.getType());
+        assertEquals("RESOLU", updated.getStatut(), "Le statut doit être RESOLU");
+        assertEquals("Autre", updated.getCategorie(), "La catégorie doit être 'Autre'");
 
         System.out.println("[DEBUG_LOG][TEST UPDATE] Reclamation mise à jour ID = " + idReclamation);
     }
@@ -126,15 +125,13 @@ public class ReclamationServiceTest {
             testCreateReclamation();
         }
 
-        rs.delete(idReclamation);
-        System.out.println("[DEBUG_LOG][TEST DELETE] Reclamation supprimée ID = " + idReclamation);
+        int idToDelete = idReclamation;
+        reclamationService.delete(idToDelete);
+        System.out.println("[DEBUG_LOG][TEST DELETE] Reclamation supprimée ID = " + idToDelete);
         idReclamation = -1;
 
-        List<Reclamation> list = rs.getAll();
-        boolean found = list.stream()
-                .anyMatch(r -> r.getId() == idReclamation);
-
+        List<Reclamation> list = reclamationService.getAll();
+        boolean found = list.stream().anyMatch(r -> r.getId() == idToDelete);
         assertFalse(found, "La réclamation doit être supprimée de la base");
     }
 }
-*/

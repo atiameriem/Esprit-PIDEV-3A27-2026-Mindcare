@@ -15,14 +15,35 @@ public class SpeechToTextService {
     private TargetDataLine microphone;
     private Thread recognitionThread;
 
-    // ✅ Constructeur : charge le modèle UNE SEULE FOIS
     public SpeechToTextService() {
+        loadModel();
+    }
+
+    private void loadModel() {
         try {
             if (model == null) {
-                String modelPath = "C:\\Users\\eyabd\\OneDrive\\Bureau\\PIDEV3A277\\PIDEV3A27\\PIDEV3A27\\src\\main\\resources\\models\\vosk-model-small-fr-0.22";
+                String path1 = java.nio.file.Paths
+                        .get("src", "main", "resources", "vosk_resources", "vosk-model-small-fr-0.22").toAbsolutePath()
+                        .toString();
+                String path2 = java.nio.file.Paths.get("PIDEV3A27", "PIDEV3A27", "src", "main", "resources",
+                        "vosk_resources", "vosk-model-small-fr-0.22").toAbsolutePath().toString();
+                String path3 = "C:\\Users\\eyabd\\OneDrive\\Bureau\\service_user_rec\\PIDEV3A27\\PIDEV3A27\\src\\main\\resources\\vosk_resources\\vosk-model-small-fr-0.22";
 
-                if (!new File(modelPath).exists()) {
-                    throw new RuntimeException("Modèle introuvable: " + modelPath);
+                String modelPath = null;
+                if (new File(path1).exists()) {
+                    modelPath = path1;
+                } else if (new File(path2).exists()) {
+                    modelPath = path2;
+                } else if (new File(path3).exists()) {
+                    modelPath = path3;
+                }
+
+                if (modelPath == null || !new File(modelPath).exists()) {
+                    System.err.println("❌ VOSK: Modèle introuvable. Chemins testés :");
+                    System.err.println("1: " + path1);
+                    System.err.println("2: " + path2);
+                    System.err.println("3: " + path3);
+                    return; // On ne lance pas d'exception fatale ici, on quitte juste
                 }
 
                 model = new Model(modelPath);
@@ -42,6 +63,17 @@ public class SpeechToTextService {
 
         recognitionThread = new Thread(() -> {
             try {
+                // S'assurer que le modèle est bien chargé avant de le donner à Recognizer
+                // (sinon crash JNA memory access)
+                if (model == null) {
+                    loadModel();
+                    if (model == null) {
+                        Platform.runLater(
+                                () -> onError.accept("Erreur : Impossible de charger le dossier du modèle vocal."));
+                        isRecording = false;
+                        return;
+                    }
+                }
 
                 Recognizer recognizer = new Recognizer(model, 16000.0f);
 
@@ -49,10 +81,24 @@ public class SpeechToTextService {
                 DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
 
                 if (!AudioSystem.isLineSupported(info)) {
-                    throw new RuntimeException("Microphone non supporté !");
+                    // Fallback to searching all mixers for a compatible line
+                    boolean found = false;
+                    for (Mixer.Info mixerInfo : AudioSystem.getMixerInfo()) {
+                        Mixer mixer = AudioSystem.getMixer(mixerInfo);
+                        if (mixer.isLineSupported(info)) {
+                            microphone = (TargetDataLine) mixer.getLine(info);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        throw new RuntimeException(
+                                "Microphone non supporté avec le format 16000Hz Mono 16bit ! Vérifiez vos paramètres système.");
+                    }
+                } else {
+                    microphone = (TargetDataLine) AudioSystem.getLine(info);
                 }
 
-                microphone = (TargetDataLine) AudioSystem.getLine(info);
                 microphone.open(format);
                 microphone.start();
 

@@ -41,6 +41,8 @@ public class MindCareLayoutController {
     private TitledPane formationPane;
     @FXML
     private Button locauxBtn;
+    @FXML
+    private Button statistiquesBtn;
 
     @FXML
     public void initialize() {
@@ -73,10 +75,23 @@ public class MindCareLayoutController {
                 testPane.setManaged(false);
                 formationPane.setVisible(false);
                 formationPane.setManaged(false);
-                // Admin stays with Compte (for User Mgmt) and Reclamation (for Treatment)
-            } else {
-                // Patient / Psychologue: usage views
-                // They see everything except maybe some admin-only tabs inside views
+            }
+
+            if (currentUser.getRole() == User.Role.ResponsableC) {
+                // ResponsableC : accès limité à Profil/Réclamation, Locaux et Test
+                // psychologique
+                consultationPane.setVisible(false);
+                consultationPane.setManaged(false);
+                forumPane.setVisible(false);
+                forumPane.setManaged(false);
+                formationPane.setVisible(false);
+                formationPane.setManaged(false);
+            }
+
+            if (currentUser.getRole() == User.Role.Psychologue) {
+                // Psychologue : même interface que Patient + Statistiques visible
+                statistiquesBtn.setVisible(true);
+                statistiquesBtn.setManaged(true);
             }
         }
     }
@@ -88,14 +103,18 @@ public class MindCareLayoutController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/" + fxmlFile));
             Node view = loader.load();
-
-            // Remplacer le contenu de contentArea
             contentArea.getChildren().clear();
             contentArea.getChildren().add(view);
-
-        } catch (IOException e) {
-            System.err.println("Erreur lors du chargement de la vue: " + fxmlFile);
+        } catch (Throwable e) {
+            System.err.println("❌ Erreur chargement vue [" + fxmlFile + "]: " + e.getMessage());
             e.printStackTrace();
+            // Afficher un message d'erreur visible plutôt qu'une page blanche
+            javafx.scene.control.Label errLabel = new javafx.scene.control.Label(
+                    "⚠️ Impossible de charger la vue : " + fxmlFile + "\n" + e.getMessage());
+            errLabel.setStyle("-fx-text-fill: #d93025; -fx-font-size: 14px; -fx-padding: 30;");
+            errLabel.setWrapText(true);
+            contentArea.getChildren().clear();
+            contentArea.getChildren().add(errLabel);
         }
     }
 
@@ -159,6 +178,11 @@ public class MindCareLayoutController {
     @FXML
     private void loadLocaux() {
         loadView("Locaux.fxml");
+    }
+
+    @FXML
+    private void loadStatistiques() {
+        loadView("Statistiques.fxml");
     }
 
     @FXML

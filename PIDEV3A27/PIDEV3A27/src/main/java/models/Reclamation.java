@@ -11,12 +11,15 @@ public class Reclamation {
     private String description;
     private String statut;
     private Date date;
+    private String reponse;
+    private String categorie;
+    private String resume;
 
     public Reclamation() {
     }
 
     public Reclamation(int id, int idUser, String objet, String urgence,
-            String description, String statut, Date date) {
+            String description, String statut, Date date, String reponse, String categorie, String resume) {
         this.id = id;
         this.idUser = idUser;
         this.objet = objet;
@@ -24,6 +27,9 @@ public class Reclamation {
         this.description = description;
         this.statut = statut;
         this.date = date;
+        this.reponse = reponse;
+        this.categorie = categorie;
+        this.resume = resume;
     }
 
     // ===== GETTERS & SETTERS =====
@@ -84,11 +90,36 @@ public class Reclamation {
         this.date = date;
     }
 
+    public String getReponse() {
+        return reponse;
+    }
+
+    public void setReponse(String reponse) {
+        this.reponse = reponse;
+    }
+
+    public String getCategorie() {
+        return categorie;
+    }
+
+    public void setCategorie(String categorie) {
+        this.categorie = categorie;
+    }
+
+    public String getResume() {
+        return resume;
+    }
+
+    public void setResume(String resume) {
+        this.resume = resume;
+    }
+
     @Override
     public String toString() {
         return "Reclamation{id=" + id + ", idUser=" + idUser +
                 ", objet='" + objet + "', urgence='" + urgence +
                 "', statut='" + statut + "', date=" + date +
-                ", description='" + description + "'}";
+                ", description='" + description + "', reponse='" + reponse +
+                "', categorie='" + categorie + "', resume='" + resume + "'}";
     }
 }

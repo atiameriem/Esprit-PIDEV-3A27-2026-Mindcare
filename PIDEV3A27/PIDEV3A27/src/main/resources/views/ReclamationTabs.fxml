@@ -5,27 +5,31 @@
 
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="controllers.ReclamationTabsController"
-      style="-fx-background-color: transparent;">
+      spacing="10"
+      stylesheets="@../mindcare.css"
+      style="-fx-background-color: transparent; -fx-padding: 10;">
 
-    <TabPane fx:id="reclamationTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" 
-             style="-fx-background-color: transparent;">
-        <tabs>
-            <Tab fx:id="addTab" text="Ajouter">
-                <content>
-                    <fx:include source="Reclamation.fxml"/>
-                </content>
-            </Tab>
-            <Tab fx:id="myReclamationsTab" text="Mes Réclamations">
-                <content>
-                    <fx:include fx:id="mesReclamations" source="MesReclamations.fxml"/>
-                </content>
-            </Tab>
-            <Tab fx:id="adminTab" text="Gestion (Admin)">
-                <content>
-                    <fx:include source="AdminReclamations.fxml"/>
-                </content>
-            </Tab>
-        </tabs>
-    </TabPane>
+    <!-- Custom Tab Header -->
+    <HBox spacing="15" style="-fx-padding: 0 0 10 0;">
+        <Button fx:id="addTabBtn" onAction="#showAddTab" text="➕ Ajouter" 
+                style="-fx-background-color: #E3F2FD; -fx-text-fill: #1565C0; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 12; -fx-cursor: hand;"/>
+        <Button fx:id="myReclamationsTabBtn" onAction="#showMyTab" text="📋 Mes Réclamations" 
+                style="-fx-background-color: white; -fx-text-fill: #546E7A; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 12; -fx-border-color: #E0E0E0; -fx-border-radius: 12; -fx-cursor: hand;"/>
+        <Button fx:id="adminTabBtn" onAction="#showAdminTab" text="🛠️ Gestion Admin" 
+                style="-fx-background-color: white; -fx-text-fill: #546E7A; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 12; -fx-border-color: #E0E0E0; -fx-border-radius: 12; -fx-cursor: hand;"/>
+    </HBox>
+
+    <!-- Content Area -->
+    <StackPane VBox.vgrow="ALWAYS">
+        <VBox fx:id="addContent">
+            <fx:include source="Reclamation.fxml"/>
+        </VBox>
+        <VBox fx:id="myReclamationsContent" visible="false" managed="false">
+            <fx:include fx:id="mesReclamations" source="MesReclamations.fxml"/>
+        </VBox>
+        <VBox fx:id="adminContent" visible="false" managed="false">
+            <fx:include source="AdminReclamations.fxml"/>
+        </VBox>
+    </StackPane>
 
 </VBox>

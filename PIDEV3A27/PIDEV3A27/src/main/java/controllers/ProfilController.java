@@ -1,141 +1,378 @@
 package controllers;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.FlowPane;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import models.LoginHistory;
 import models.User;
+import services.LoginHistoryService;
 import services.UserService;
 import utils.UserSession;
 
 import java.io.IOException;
-import java.io.IOException;
+import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.Comparator;
 
 public class ProfilController {
 
-    // ================= GRID USERS =================
+    // ================= TABS =================
     @FXML
-    private FlowPane usersGrid;
+    private Button monProfilTabBtn;
+    @FXML
+    private Button historiqueTabBtn;
+    @FXML
+    private Button gestionUsersTabBtn;
 
     @FXML
-    private TextField userSearchField;
-
+    private VBox monProfilView;
     @FXML
-    private ComboBox<String> userSortComboBox;
+    private VBox historiqueView;
+    @FXML
+    private VBox gestionUsersView;
 
-    private List<User> allUsers;
-
-    // ================= PROFIL FIELDS =================
+    // ================= MON PROFIL =================
     @FXML
     private TextField nomField;
+    @FXML
+    private TextField prenomField;
     @FXML
     private TextField emailField;
     @FXML
     private TextField telephoneField;
     @FXML
-    private PasswordField currentPasswordField;
+    private PasswordField oldPasswordField;
     @FXML
     private PasswordField newPasswordField;
     @FXML
     private PasswordField confirmPasswordField;
     @FXML
-    private Label profileMessageLabel;
+    private Label profileMsgLabel;
     @FXML
-    private Label passwordMessageLabel;
-    @FXML
-    private TabPane profilTabPane;
-    @FXML
-    private Tab monProfilTab;
-    @FXML
-    private Tab gestionUsersTab;
+    private Label passwordMsgLabel;
 
-    private UserService userService;
+    // ================= HISTORIQUE =================
+    @FXML
+    private VBox historyListContainer;
+
+    // ================= GESTION UTILISATEURS =================
+    @FXML
+    private TextField searchUserField;
+    @FXML
+    private ComboBox<String> roleFilterCombo;
+    @FXML
+    private FlowPane usersGrid;
+
+    private final UserService userService = new UserService();
+    private final LoginHistoryService loginHistoryService = new LoginHistoryService();
+    private List<User> allUsers;
+
+    private static final String ACTIVE_TAB_STYLE = "-fx-background-color: #e8f0fe; -fx-text-fill: #1a73e8; -fx-font-weight: bold; "
+            +
+            "-fx-padding: 10 25; -fx-background-radius: 25; -fx-cursor: hand; " +
+            "-fx-border-color: #1a73e8; -fx-border-radius: 25; -fx-border-width: 1;";
+    private static final String INACTIVE_TAB_STYLE = "-fx-background-color: white; -fx-text-fill: #5f6368; -fx-font-weight: bold; "
+            +
+            "-fx-padding: 10 25; -fx-background-radius: 25; -fx-cursor: hand; " +
+            "-fx-border-color: #dadce0; -fx-border-radius: 25; -fx-border-width: 1;";
 
     @FXML
     public void initialize() {
-        userService = new UserService();
+        loadUserData();
 
-        // -------- INITIALIZER LE PROFIL --------
         User currentUser = UserSession.getInstance().getUser();
-        if (currentUser != null) {
-            nomField.setText(currentUser.getNom());
-            emailField.setText(currentUser.getEmail());
-            telephoneField.setText(currentUser.getTelephone() != null ? currentUser.getTelephone() : "");
+        if (currentUser != null && currentUser.getRole() == User.Role.Admin) {
+            gestionUsersTabBtn.setVisible(true);
+            gestionUsersTabBtn.setManaged(true);
 
-            // Apply Role-Based Visibility
-            if (currentUser.getRole() == User.Role.Admin) {
-                // Admin: Only Management
-                profilTabPane.getTabs().remove(monProfilTab);
-                // -------- CHARGER UTILISATEURS DE LA DB (Admin seulement) --------
-                loadUsersFromDB();
-            } else {
-                // Patient / Psychologue: Only Personal Profile
-                profilTabPane.getTabs().remove(gestionUsersTab);
-            }
-        }
+            roleFilterCombo.getItems().addAll("Tous", "Admin", "RespensableC", "Patient", "Psychologue");
+            roleFilterCombo.setValue("Tous");
 
-        if (userSortComboBox != null) {
-            userSortComboBox.getItems().addAll("Aucun", "Date d'inscription (Asc)", "Date d'inscription (Desc)");
-            userSortComboBox.setValue("Aucun");
+            searchUserField.textProperty().addListener((obs, oldVal, newVal) -> filterUsers());
+            roleFilterCombo.valueProperty().addListener((obs, oldVal, newVal) -> filterUsers());
 
-            userSearchField.textProperty().addListener((obs, oldV, newV) -> updateUsersView());
-            userSortComboBox.valueProperty().addListener((obs, oldV, newV) -> updateUsersView());
-        }
-
-        System.out.println("Vue Profil chargée");
-    }
-
-    // ================= LOAD USERS =================
-    // ================= LOAD USERS =================
-    private void loadUsersFromDB() {
-        try {
-            allUsers = userService.getAll();
-            updateUsersView();
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de charger les utilisateurs.");
+            refreshUserGrid();
         }
     }
 
-    private void updateUsersView() {
-        if (allUsers == null || usersGrid == null)
+    private void loadUserData() {
+        User user = UserSession.getInstance().getUser();
+        if (user != null) {
+            nomField.setText(user.getNom());
+            prenomField.setText(user.getPrenom());
+            emailField.setText(user.getEmail());
+            telephoneField.setText(user.getTelephone());
+        }
+    }
+
+    // ================= TAB NAVIGATION =================
+
+    @FXML
+    private void showMonProfil() {
+        show(monProfilView);
+        hide(historiqueView);
+        hide(gestionUsersView);
+        monProfilTabBtn.setStyle(ACTIVE_TAB_STYLE);
+        historiqueTabBtn.setStyle(INACTIVE_TAB_STYLE);
+        gestionUsersTabBtn.setStyle(INACTIVE_TAB_STYLE);
+    }
+
+    @FXML
+    private void showHistorique() {
+        hide(monProfilView);
+        show(historiqueView);
+        hide(gestionUsersView);
+        monProfilTabBtn.setStyle(INACTIVE_TAB_STYLE);
+        historiqueTabBtn.setStyle(ACTIVE_TAB_STYLE);
+        gestionUsersTabBtn.setStyle(INACTIVE_TAB_STYLE);
+        loadLoginHistory();
+    }
+
+    @FXML
+    private void showGestionUsers() {
+        hide(monProfilView);
+        hide(historiqueView);
+        show(gestionUsersView);
+        monProfilTabBtn.setStyle(INACTIVE_TAB_STYLE);
+        historiqueTabBtn.setStyle(INACTIVE_TAB_STYLE);
+        gestionUsersTabBtn.setStyle(ACTIVE_TAB_STYLE);
+        refreshUserGrid();
+    }
+
+    private void show(VBox view) {
+        view.setVisible(true);
+        view.setManaged(true);
+    }
+
+    private void hide(VBox view) {
+        view.setVisible(false);
+        view.setManaged(false);
+    }
+
+    // ================= HISTORIQUE CONNEXIONS =================
+
+    private void loadLoginHistory() {
+        historyListContainer.getChildren().clear();
+
+        User currentUser = UserSession.getInstance().getUser();
+        if (currentUser == null)
             return;
 
-        String search = (userSearchField.getText() == null) ? "" : userSearchField.getText().toLowerCase();
-        String sortOption = userSortComboBox.getValue();
+        List<LoginHistory> history = loginHistoryService.getByUser(currentUser.getId());
 
-        List<User> filtered = allUsers.stream()
-                .filter(u -> (u.getNom() != null && u.getNom().toLowerCase().contains(search)) ||
-                        (u.getPrenom() != null && u.getPrenom().toLowerCase().contains(search)) ||
-                        (u.getEmail() != null && u.getEmail().toLowerCase().contains(search)))
-                .collect(Collectors.toList());
-
-        if ("Date d'inscription (Asc)".equals(sortOption)) {
-            filtered.sort(
-                    Comparator.comparing(User::getDateInscription, Comparator.nullsLast(Comparator.naturalOrder())));
-        } else if ("Date d'inscription (Desc)".equals(sortOption)) {
-            filtered.sort(
-                    Comparator.comparing(User::getDateInscription, Comparator.nullsLast(Comparator.reverseOrder())));
+        if (history.isEmpty()) {
+            Label emptyLabel = new Label("Aucune connexion enregistrée pour l'instant.");
+            emptyLabel.setStyle("-fx-text-fill: #5f6368; -fx-font-size: 14px; -fx-padding: 30;");
+            historyListContainer.getChildren().add(emptyLabel);
+            return;
         }
 
-        usersGrid.getChildren().clear();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy  HH:mm:ss");
 
-        for (User user : filtered) {
+        for (LoginHistory h : history) {
+            HBox card = buildHistoryCard(h, formatter);
+            historyListContainer.getChildren().add(card);
+        }
+    }
+
+    private HBox buildHistoryCard(LoginHistory h, DateTimeFormatter formatter) {
+        HBox card = new HBox(18);
+        card.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        card.setStyle(
+                "-fx-background-color: white; -fx-padding: 18 25; -fx-background-radius: 12; " +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 4);");
+
+        // Device Icon Circle
+        StackPane iconCircle = new StackPane();
+        iconCircle.setMinSize(52, 52);
+        iconCircle.setMaxSize(52, 52);
+        String bgColor = getBgColorForType(h.getDeviceType());
+        iconCircle.setStyle("-fx-background-color: " + bgColor + "; -fx-background-radius: 50;");
+
+        Label iconLabel = new Label(h.getDeviceIcon());
+        iconLabel.setStyle("-fx-font-size: 22px;");
+        iconCircle.getChildren().add(iconLabel);
+
+        // Info
+        VBox infoBox = new VBox(4);
+        HBox.setHgrow(infoBox, Priority.ALWAYS);
+
+        String deviceDisplay = (h.getDeviceName() != null && !h.getDeviceName().isBlank())
+                ? h.getDeviceName()
+                : "Appareil inconnu";
+
+        Label deviceLabel = new Label(deviceDisplay);
+        deviceLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #202124;");
+
+        HBox metaRow = new HBox(12);
+        metaRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        Label typeLabel = buildBadge(h.getDeviceType() != null ? h.getDeviceType() : "Unknown", "#e8f0fe", "#1a73e8");
+        Label osLabel = buildBadge("🖥 " + (h.getOsName() != null ? h.getOsName() : "N/A"), "#f1f3f4", "#5f6368");
+        Label ipLabel = buildBadge("🌐 " + (h.getIpAddress() != null ? h.getIpAddress() : "N/A"), "#fef7e0", "#f29900");
+
+        metaRow.getChildren().addAll(typeLabel, osLabel, ipLabel);
+        infoBox.getChildren().addAll(deviceLabel, metaRow);
+
+        // Date
+        VBox dateBox = new VBox(3);
+        dateBox.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+
+        Label dateLabel = new Label(h.getLoginDate() != null ? formatter.format(h.getLoginDate()) : "—");
+        dateLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #5f6368;");
+
+        Label calIcon = new Label("📅");
+        calIcon.setStyle("-fx-font-size: 16px;");
+
+        dateBox.getChildren().addAll(calIcon, dateLabel);
+
+        card.getChildren().addAll(iconCircle, infoBox, dateBox);
+        return card;
+    }
+
+    private Label buildBadge(String text, String bg, String fg) {
+        Label badge = new Label(text);
+        badge.setStyle("-fx-background-color: " + bg + "; -fx-text-fill: " + fg + "; " +
+                "-fx-padding: 3 10; -fx-background-radius: 20; -fx-font-size: 12px; -fx-font-weight: bold;");
+        return badge;
+    }
+
+    private String getBgColorForType(String type) {
+        if (type == null)
+            return "#e8f0fe";
+        return switch (type) {
+            case "Laptop" -> "#e6f4ea";
+            case "Mobile" -> "#fce8e6";
+            case "Tablet" -> "#fef7e0";
+            default -> "#e8f0fe";
+        };
+    }
+
+    @FXML
+    private void handleClearHistory() {
+        User currentUser = UserSession.getInstance().getUser();
+        if (currentUser == null)
+            return;
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Effacer l'historique");
+        confirm.setHeaderText("Effacer tout l'historique de connexion ?");
+        confirm.setContentText("Cette action est irréversible.");
+
+        if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+            loginHistoryService.clearHistory(currentUser.getId());
+            loadLoginHistory();
+        }
+    }
+
+    // ================= PROFIL ACTIONS =================
+
+    @FXML
+    private void handleUpdateProfile() {
+        User user = UserSession.getInstance().getUser();
+        if (user == null)
+            return;
+
+        user.setNom(nomField.getText());
+        user.setPrenom(prenomField.getText());
+        user.setTelephone(telephoneField.getText());
+
+        try {
+            userService.update(user);
+            showFeedback(profileMsgLabel, "✅ Profil mis à jour avec succès !", "#1a73e8");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showFeedback(profileMsgLabel, "❌ Erreur lors de la mise à jour.", "#d93025");
+        }
+    }
+
+    @FXML
+    private void handleChangePassword() {
+        User user = UserSession.getInstance().getUser();
+        if (user == null)
+            return;
+
+        String oldPass = oldPasswordField.getText();
+        String newPass = newPasswordField.getText();
+        String confirmPass = confirmPasswordField.getText();
+
+        if (oldPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
+            showFeedback(passwordMsgLabel, "❌ Veuillez remplir tous les champs.", "#d93025");
+            return;
+        }
+        if (!user.getMotDePasse().equals(oldPass)) {
+            showFeedback(passwordMsgLabel, "❌ Ancien mot de passe incorrect.", "#d93025");
+            return;
+        }
+        if (!newPass.equals(confirmPass)) {
+            showFeedback(passwordMsgLabel, "❌ Les mots de passe ne correspondent pas.", "#d93025");
+            return;
+        }
+        if (newPass.length() < 8) {
+            showFeedback(passwordMsgLabel, "❌ Minimum 8 caractères.", "#d93025");
+            return;
+        }
+
+        try {
+            user.setMotDePasse(newPass);
+            userService.update(user);
+            showFeedback(passwordMsgLabel, "✅ Mot de passe modifié !", "#1a73e8");
+            oldPasswordField.clear();
+            newPasswordField.clear();
+            confirmPasswordField.clear();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showFeedback(passwordMsgLabel, "❌ Erreur serveur.", "#d93025");
+        }
+    }
+
+    private void showFeedback(Label label, String text, String color) {
+        label.setText(text);
+        label.setStyle("-fx-text-fill: " + color + "; -fx-font-weight: bold;");
+        label.setVisible(true);
+    }
+
+    // ================= GESTION UTILISATEURS =================
+
+    public void refreshUserGrid() {
+        try {
+            allUsers = userService.read();
+            filterUsers();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void filterUsers() {
+        String search = (searchUserField.getText() != null) ? searchUserField.getText().toLowerCase() : "";
+        String roleFilter = (roleFilterCombo.getValue() != null) ? roleFilterCombo.getValue() : "Tous";
+
+        List<User> filtered = allUsers.stream().filter(u -> {
+            boolean matchesSearch = u.getNom().toLowerCase().contains(search) ||
+                    u.getPrenom().toLowerCase().contains(search) ||
+                    u.getEmail().toLowerCase().contains(search);
+            boolean matchesRole = roleFilter.equals("Tous") || u.getRole().name().equals(roleFilter);
+            return matchesSearch && matchesRole;
+        }).collect(Collectors.toList());
+
+        displayUsers(filtered);
+    }
+
+    private void displayUsers(List<User> users) {
+        usersGrid.getChildren().clear();
+        for (User u : users) {
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/UserCard.fxml"));
-                Node card = loader.load();
-
+                Parent card = loader.load();
                 UserCardController controller = loader.getController();
-                controller.setData(user, this);
-
+                controller.setData(u, this);
                 usersGrid.getChildren().add(card);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -143,182 +380,65 @@ public class ProfilController {
         }
     }
 
-    // ================= PROFIL =================
-    @FXML
-    private void handleSave() {
-        User currentUser = UserSession.getInstance().getUser();
-        if (currentUser == null)
-            return;
-
-        String nom = nomField.getText();
-        String email = emailField.getText();
-        String phone = telephoneField.getText();
-
-        if (nom.isEmpty() || email.isEmpty()) {
-            profileMessageLabel.setText("Nom et Email sont obligatoires.");
-            profileMessageLabel.setStyle("-fx-text-fill: red;");
-            return;
-        }
-
-        // Email Domain Validation
-        String emailLower = email.toLowerCase();
-        if (!emailLower.endsWith("@gmail.com") && !emailLower.endsWith("@yahoo.com")
-                && !emailLower.endsWith("@outlook.com")) {
-            profileMessageLabel.setText("L'email doit se terminer par @gmail.com, @yahoo.com ou @outlook.com.");
-            profileMessageLabel.setStyle("-fx-text-fill: red;");
-            return;
-        }
-
-        // Phone Validation
-        if (phone != null && !phone.isEmpty() && (phone.length() != 8 || !phone.matches("\\d+"))) {
-            profileMessageLabel.setText("Le numéro de téléphone doit contenir exactement 8 chiffres.");
-            profileMessageLabel.setStyle("-fx-text-fill: red;");
-            return;
-        }
-
-        try {
-            currentUser.setNom(nom);
-            currentUser.setEmail(email);
-            currentUser.setTelephone(phone);
-
-            userService.update(currentUser);
-
-            profileMessageLabel.setText("Profil mis à jour avec succès !");
-            profileMessageLabel.setStyle("-fx-text-fill: green;");
-
-            // Re-charger la grille si on est admin pour voir le changement si nécessaire
-            loadUsersFromDB();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            profileMessageLabel.setText("Erreur lors de la mise à jour.");
-            profileMessageLabel.setStyle("-fx-text-fill: red;");
-        }
-    }
-
-    // ================= PASSWORD =================
-    @FXML
-    private void handleChangePassword() {
-        User currentUser = UserSession.getInstance().getUser();
-        if (currentUser == null)
-            return;
-
-        String currentPass = currentPasswordField.getText();
-        String newPass = newPasswordField.getText();
-        String confirmPass = confirmPasswordField.getText();
-
-        if (currentPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
-            passwordMessageLabel.setText("Veuillez remplir tous les champs.");
-            passwordMessageLabel.setStyle("-fx-text-fill: red;");
-            return;
-        }
-
-        if (!newPass.equals(confirmPass)) {
-            passwordMessageLabel.setText("Les mots de passe ne correspondent pas.");
-            passwordMessageLabel.setStyle("-fx-text-fill: red;");
-            return;
-        }
-
-        if (newPass.length() < 8) {
-            passwordMessageLabel.setText("Le nouveau mot de passe doit contenir au moins 8 caractères.");
-            passwordMessageLabel.setStyle("-fx-text-fill: red;");
-            return;
-        }
-
-        // Note: Idéalement vérifier currentPass avec le mot de passe actuel en base
-        try {
-            currentUser.setMotDePasse(newPass);
-            userService.update(currentUser);
-            passwordMessageLabel.setText("Mot de passe modifié avec succès !");
-            passwordMessageLabel.setStyle("-fx-text-fill: green;");
-
-            currentPasswordField.clear();
-            newPasswordField.clear();
-            confirmPasswordField.clear();
-        } catch (Exception e) {
-            e.printStackTrace();
-            passwordMessageLabel.setText("Erreur lors du changement de mot de passe.");
-            passwordMessageLabel.setStyle("-fx-text-fill: red;");
-        }
-    }
-
-    // ================= CRUD USERS =================
     @FXML
     private void handleAddUser() {
-        User newUser = showUserDialog(null);
-        if (newUser != null) {
-            try {
-                userService.create(newUser);
-                loadUsersFromDB();
-            } catch (Exception e) {
-                e.printStackTrace();
-                showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ajouter l'utilisateur.");
-            }
-        }
+        showUserDialog(null);
     }
 
     public void handleUpdateUser(User user) {
-        User updatedUser = showUserDialog(user);
-        if (updatedUser != null) {
-            try {
-                userService.update(updatedUser);
-                loadUsersFromDB();
-            } catch (Exception e) {
-                e.printStackTrace();
-                showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de mettre à jour l'utilisateur.");
-            }
-        }
+        showUserDialog(user);
     }
 
     public void handleDeleteUser(User user) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmation");
-        alert.setHeaderText("Supprimer " + user.getNom() + " ?");
-        alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                try {
-                    userService.delete(user.getId());
-                    loadUsersFromDB();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de supprimer l'utilisateur.");
-                }
+        alert.setTitle("Suppression");
+        alert.setHeaderText("Supprimer l'utilisateur " + user.getNom() + " ?");
+        alert.setContentText("Cette action est irréversible.");
+
+        if (alert.showAndWait().get() == ButtonType.OK) {
+            try {
+                userService.delete(user.getId());
+                refreshUserGrid();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        });
+        }
     }
 
-    private User showUserDialog(User user) {
+    private void showUserDialog(User user) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/UserDialog.fxml"));
-            Parent page = loader.load();
-
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle(user == null ? "Ajouter Utilisateur" : "Modifier Utilisateur");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(usersGrid.getScene().getWindow());
-            dialogStage.setScene(new Scene(page));
-
+            Parent root = loader.load();
             UserDialogController controller = loader.getController();
             controller.setUser(user);
 
-            dialogStage.showAndWait();
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle(user == null ? "Ajouter Utilisateur" : "Modifier Utilisateur");
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
 
             if (controller.isSaveClicked()) {
-                return controller.getUser();
+                User handledUser = controller.getUser();
+                if (handledUser.getId() == 0) {
+                    userService.create(handledUser);
+                } else {
+                    userService.update(handledUser);
+                }
+                refreshUserGrid();
+
+                Alert success = new Alert(Alert.AlertType.INFORMATION);
+                success.setHeaderText(null);
+                success.setContentText("Opération réussie avec succès !");
+                success.show();
             }
-
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le dialogue.");
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erreur");
+            alert.setHeaderText("Action impossible");
+            alert.setContentText("Le système n'a pas pu enregistrer l'utilisateur : " + e.getMessage());
+            alert.showAndWait();
         }
-        return null;
-    }
-
-    private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
     }
 }

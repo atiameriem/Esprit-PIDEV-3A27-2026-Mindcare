@@ -13,21 +13,33 @@ public class ReclamationService {
     }
 
     private Connection getConnection() {
-        return MyDatabase.getInstance().getCnx();
+        Connection conn = MyDatabase.getInstance().getConnection();
+        if (conn == null) {
+            System.err
+                    .println("❌ ReclamationService: Connection is null! Database might be down or credentials wrong.");
+        }
+        return conn;
     }
 
     // ================= CREATE =================
     public void create(Reclamation r) throws SQLException {
 
-        String sql = "INSERT INTO reclamation (id_users, objet, urgence, description, statut, date) VALUES (?, ?, ?, ?, ?, NOW())";
+        String sql = "INSERT INTO reclamation (id_users, objet, urgence, description, statut, date, reponse, categorie, resume) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?)";
 
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        Connection conn = getConnection();
+        if (conn == null)
+            return;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, r.getIdUser());
             stmt.setString(2, r.getObjet());
             stmt.setString(3, r.getUrgence());
             stmt.setString(4, r.getDescription());
             stmt.setString(5, r.getStatut() != null ? r.getStatut() : "EN_ATTENTE");
+            stmt.setString(6, r.getReponse());
+            stmt.setString(7, r.getCategorie());
+            stmt.setString(8, r.getResume());
 
             stmt.executeUpdate();
 
@@ -44,7 +56,11 @@ public class ReclamationService {
         List<Reclamation> list = new ArrayList<>();
         String sql = "SELECT * FROM reclamation";
 
-        try (Statement stmt = getConnection().createStatement();
+        Connection conn = getConnection();
+        if (conn == null)
+            return list;
+
+        try (Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
@@ -59,6 +75,9 @@ public class ReclamationService {
                 r.setDescription(rs.getString("description"));
                 r.setStatut(rs.getString("statut"));
                 r.setDate(rs.getDate("date"));
+                r.setReponse(rs.getString("reponse"));
+                r.setCategorie(rs.getString("categorie"));
+                r.setResume(rs.getString("resume"));
 
                 list.add(r);
             }
@@ -70,7 +89,7 @@ public class ReclamationService {
     // ================= UPDATE =================
     public void update(Reclamation r) throws SQLException {
 
-        String sql = "UPDATE reclamation SET id_users = ?, objet = ?, urgence = ?, description = ?, statut = ? WHERE id_reclamation = ?";
+        String sql = "UPDATE reclamation SET id_users = ?, objet = ?, urgence = ?, description = ?, statut = ?, reponse = ?, categorie = ?, resume = ? WHERE id_reclamation = ?";
 
         try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
 
@@ -79,10 +98,42 @@ public class ReclamationService {
             stmt.setString(3, r.getUrgence());
             stmt.setString(4, r.getDescription());
             stmt.setString(5, r.getStatut());
-            stmt.setInt(6, r.getId());
+            stmt.setString(6, r.getReponse());
+            stmt.setString(7, r.getCategorie());
+            stmt.setString(8, r.getResume());
+            stmt.setInt(9, r.getId());
 
             stmt.executeUpdate();
         }
+    }
+
+    // ================= FIND BY ID =================
+    public Reclamation findById(int id) throws SQLException {
+        String sql = "SELECT * FROM reclamation WHERE id_reclamation = ?";
+        Connection conn = getConnection();
+        if (conn == null)
+            return null;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Reclamation r = new Reclamation();
+                    r.setId(rs.getInt("id_reclamation"));
+                    r.setIdUser(rs.getInt("id_users"));
+                    r.setObjet(rs.getString("objet"));
+                    r.setUrgence(rs.getString("urgence"));
+                    r.setDescription(rs.getString("description"));
+                    r.setStatut(rs.getString("statut"));
+                    r.setDate(rs.getDate("date"));
+                    r.setReponse(rs.getString("reponse"));
+                    r.setCategorie(rs.getString("categorie"));
+                    r.setResume(rs.getString("resume"));
+                    return r;
+                }
+            }
+        }
+        return null;
     }
 
     // ================= DELETE =================
@@ -95,4 +146,5 @@ public class ReclamationService {
             stmt.executeUpdate();
         }
     }
+
 }

@@ -8,16 +8,18 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserService {
-
-    public UserService() {
-    }
+public class UserService implements IService<User> {
 
     private Connection getConnection() {
-        return MyDatabase.getInstance().getCnx();
+        Connection conn = MyDatabase.getInstance().getConnection();
+        if (conn == null) {
+            System.err.println("❌ UserService: Connection is null! Check MyDatabase configuration.");
+        }
+        return conn;
     }
 
     // ================= CREATE =================
+    @Override
     public int create(User user) throws SQLException {
         String sql = "INSERT INTO users (nom, prenom, email, telephone, date_inscription, mot_de_passe, role, badge_image, date_naissance) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -30,40 +32,25 @@ public class UserService {
             stmt.setDate(5, Date.valueOf(
                     user.getDateInscription() != null ? user.getDateInscription() : LocalDate.now()));
             stmt.setString(6, user.getMotDePasse());
-            stmt.setString(7, user.getRole().name());
+            stmt.setString(7, user.getRole() != null ? user.getRole().name() : User.Role.Patient.name());
             stmt.setString(8, user.getBadge());
             stmt.setDate(9, user.getDateNaissance() != null ? Date.valueOf(user.getDateNaissance()) : null);
 
+            System.out.println("💾 Inserting User: " + user.getNom() + ", Role: "
+                    + (user.getRole() != null ? user.getRole().name() : "NULL"));
             stmt.executeUpdate();
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
-                    int generatedId = rs.getInt(1);
-                    user.setId(generatedId);
-                    return generatedId;
+                    user.setId(rs.getInt(1));
                 }
             }
-            System.out.println("User ajouté !");
         }
-        return -1;
-    }
-
-    // ================= GET ALL =================
-    public List<User> getAll() throws SQLException {
-        List<User> users = new ArrayList<>();
-        String sql = "SELECT * FROM users";
-
-        try (Statement stmt = getConnection().createStatement();
-                ResultSet rs = stmt.executeQuery(sql)) {
-
-            while (rs.next()) {
-                users.add(mapResultSetToUser(rs));
-            }
-        }
-        return users;
+        return user.getId();
     }
 
     // ================= UPDATE =================
+    @Override
     public void update(User user) throws SQLException {
         String sql = "UPDATE users SET nom=?, prenom=?, email=?, telephone=?, "
                 + "date_inscription=?, mot_de_passe=?, role=?, badge_image=?, date_naissance=? WHERE id_users=?";
@@ -76,35 +63,72 @@ public class UserService {
             stmt.setDate(5, Date.valueOf(
                     user.getDateInscription() != null ? user.getDateInscription() : LocalDate.now()));
             stmt.setString(6, user.getMotDePasse());
-            stmt.setString(7, user.getRole().name());
+            stmt.setString(7, user.getRole() != null ? user.getRole().name() : User.Role.Patient.name());
             stmt.setString(8, user.getBadge());
             stmt.setDate(9, user.getDateNaissance() != null ? Date.valueOf(user.getDateNaissance()) : null);
             stmt.setInt(10, user.getId());
             stmt.executeUpdate();
-            System.out.println("User mis à jour !");
         }
     }
 
     // ================= DELETE =================
+    @Override
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM users WHERE id_users=?";
-
         try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
-            System.out.println("User supprimé !");
         }
     }
 
-    // ================= HELPERS =================
-    public boolean existsByEmail(String email) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+    // ================= READ =================
+    @Override
+    public List<User> read() throws SQLException {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM users";
+        Connection conn = getConnection();
+        if (conn == null)
+            return users;
+
+        try (Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                users.add(mapResultSetToUser(rs));
+            }
+        }
+        return users;
+    }
+
+    // ================= AUTHENTICATE =================
+    public User authenticate(String email, String password) throws SQLException {
+        String sql = "SELECT * FROM users WHERE email=? AND mot_de_passe=?";
+        Connection conn = getConnection();
+        if (conn == null)
+            return null;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, email);
+            stmt.setString(2, password);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt(1) > 0;
+                    return mapResultSetToUser(rs);
                 }
+            }
+        }
+        return null;
+    }
+
+    public boolean existsByEmail(String email) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
+        Connection conn = getConnection();
+        if (conn == null)
+            return false;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, email);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next())
+                    return rs.getInt(1) > 0;
             }
         }
         return false;
@@ -116,25 +140,32 @@ public class UserService {
             stmt.setString(1, email);
             stmt.setInt(2, id);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
+                if (rs.next())
                     return rs.getInt(1) > 0;
-                }
             }
         }
         return false;
     }
 
-    // ================= AUTHENTICATE =================
-    public User authenticate(String email, String password) throws SQLException {
-        String sql = "SELECT * FROM users WHERE email=? AND mot_de_passe=?";
+    public boolean existsByPhone(String phone) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users WHERE telephone = ?";
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+            stmt.setString(1, phone);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next())
+                    return rs.getInt(1) > 0;
+            }
+        }
+        return false;
+    }
 
+    public User getByEmail(String email) throws SQLException {
+        String sql = "SELECT * FROM users WHERE email=?";
         try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setString(1, email);
-            stmt.setString(2, password);
-
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return mapResultSetToUser(rs);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next())
+                    return mapResultSetToUser(rs);
             }
         }
         return null;
@@ -145,34 +176,20 @@ public class UserService {
         try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setInt(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
+                if (rs.next())
                     return mapResultSetToUser(rs);
-                }
-            }
-        }
-        return null;
-    }
-
-    public User getByEmail(String email) throws SQLException {
-        String sql = "SELECT * FROM users WHERE email=?";
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
-            stmt.setString(1, email);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToUser(rs);
-                }
             }
         }
         return null;
     }
 
     public void updatePassword(String email, String newPassword) throws SQLException {
-        String sql = "UPDATE users SET mot_de_passe=? WHERE email=?";
+        String sql = "UPDATE users SET mot_de_passe = ? WHERE email = ?";
         try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setString(1, newPassword);
             stmt.setString(2, email);
             stmt.executeUpdate();
-            System.out.println("Mot de passe mis à jour pour " + email);
+            System.out.println("Mot de passe mis à jour pour : " + email);
         }
     }
 
@@ -188,9 +205,8 @@ public class UserService {
         user.setBadge(rs.getString("badge_image"));
 
         Date dob = rs.getDate("date_naissance");
-        if (dob != null) {
+        if (dob != null)
             user.setDateNaissance(dob.toLocalDate());
-        }
 
         Date sqlDate = rs.getDate("date_inscription");
         user.setDateInscription(sqlDate != null ? sqlDate.toLocalDate() : LocalDate.now());
@@ -206,7 +222,6 @@ public class UserService {
             }
         }
         user.setRole(resolvedRole);
-
         return user;
     }
 }

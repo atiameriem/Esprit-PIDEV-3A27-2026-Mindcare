@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.EmailCodeDialogController"
+      alignment="TOP_CENTER"
+      spacing="0"
+      prefWidth="420"
+      style="-fx-background-color: #181A1D;
+             -fx-background-radius: 22;
+             -fx-border-color: #2D3139;
+             -fx-border-width: 1;
+             -fx-border-radius: 22;">
+
+    <!-- ===== LOGO HEADER ===== -->
+    <HBox alignment="CENTER" spacing="10"
+          style="-fx-padding: 28 30 16 30;">
+        <Label text="🧠" style="-fx-font-size: 26px;"/>
+        <Label text="MindCare"
+               style="-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: white;"/>
+    </HBox>
+
+    <!-- ===== GRADIENT BAR ===== -->
+    <Region prefHeight="4"
+            style="-fx-background-color: linear-gradient(to right, #1565C0, #64B5F6);"/>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <VBox alignment="CENTER" spacing="16"
+          style="-fx-padding: 30 40 35 40;">
+
+        <!-- Title -->
+        <Label text="Votre code de réinitialisation"
+               style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;"
+               wrapText="true" alignment="CENTER" maxWidth="340"/>
+
+        <!-- Email sent to -->
+        <Label fx:id="emailLabel"
+               text="Envoyé à ..."
+               style="-fx-font-size: 13px; -fx-text-fill: #718096;"/>
+
+        <!-- Description -->
+        <Label text="Vous avez demandé à réinitialiser votre mot de passe.&#10;Entrez ce code dans l'application."
+               style="-fx-font-size: 13px; -fx-text-fill: #A0AEC0;"
+               wrapText="true" alignment="CENTER_LEFT" maxWidth="340"/>
+
+        <!-- ===== DIGIT BOXES ===== -->
+        <HBox fx:id="digitRow" alignment="CENTER" spacing="8"
+              style="-fx-padding: 10 0 6 0;"/>
+
+        <!-- Expiry -->
+        <Label text="Ce code est valable 10 minutes."
+               style="-fx-font-size: 12px; -fx-text-fill: #4A5568;"/>
+
+        <!-- Close button -->
+        <Button text="✓  Compris"
+                onAction="#handleClose"
+                maxWidth="220"
+                style="-fx-background-color: #3B82F6;
+                       -fx-text-fill: white;
+                       -fx-font-size: 15px;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 14;
+                       -fx-padding: 11 40;
+                       -fx-cursor: hand;
+                       -fx-effect: dropshadow(gaussian,rgba(59,130,246,0.45),10,0,0,4);"/>
+    </VBox>
+
+    <!-- ===== FOOTER ===== -->
+    <HBox alignment="CENTER"
+          style="-fx-padding: 12 30 14 30;
+                 -fx-border-color: #2D3139;
+                 -fx-border-width: 1 0 0 0;">
+        <Label text="© 2026 MindCare — Ne pas partager ce code"
+               style="-fx-font-size: 11px; -fx-text-fill: #374151;"/>
+    </HBox>
+
+</VBox>

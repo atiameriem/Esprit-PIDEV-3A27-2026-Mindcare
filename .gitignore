@@ -1,0 +1,5 @@
+tokens/
+face_data/
+.idea/
+*.json
+credentials.json

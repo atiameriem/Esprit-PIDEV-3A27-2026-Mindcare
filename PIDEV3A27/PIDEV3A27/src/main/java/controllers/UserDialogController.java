@@ -30,6 +30,8 @@ public class UserDialogController {
     @FXML
     private RadioButton adminRadio;
     @FXML
+    private RadioButton responsableRadio;
+    @FXML
     private ToggleGroup roleToggleGroup;
     @FXML
     private Button saveButton;
@@ -62,6 +64,9 @@ public class UserDialogController {
                     case Psychologue:
                         psychologueRadio.setSelected(true);
                         break;
+                    case ResponsableC:
+                        responsableRadio.setSelected(true);
+                        break;
                     case Admin:
                         adminRadio.setSelected(true);
                         break;
@@ -90,10 +95,10 @@ public class UserDialogController {
                 // données)
                 user.setDateInscription(LocalDate.now());
             }
-            user.setNom(nomField.getText());
-            user.setPrenom(prenomField.getText());
-            user.setEmail(emailField.getText());
-            user.setTelephone(telephoneField.getText());
+            user.setNom(nomField.getText().trim());
+            user.setPrenom(prenomField.getText().trim());
+            user.setEmail(emailField.getText().trim());
+            user.setTelephone(telephoneField.getText().trim());
 
             LocalDate dob = dobPicker.getValue();
             user.setDateNaissance(dob);
@@ -104,6 +109,8 @@ public class UserDialogController {
                 selectedRole = User.Role.Psychologue;
             else if (adminRadio.isSelected())
                 selectedRole = User.Role.Admin;
+            else if (responsableRadio.isSelected())
+                selectedRole = User.Role.ResponsableC;
             user.setRole(selectedRole);
 
             saveClicked = true;
@@ -124,18 +131,18 @@ public class UserDialogController {
     private boolean isInputValid() {
         String errorMessage = "";
 
-        if (nomField.getText() == null || nomField.getText().isEmpty()) {
+        if (nomField.getText() == null || nomField.getText().trim().isEmpty()) {
             errorMessage += "Nom invalide!\n";
         }
-        if (prenomField.getText() == null || prenomField.getText().isEmpty()) {
+        if (prenomField.getText() == null || prenomField.getText().trim().isEmpty()) {
             errorMessage += "Prénom invalide!\n";
         }
-        if (emailField.getText() == null || emailField.getText().isEmpty()) {
+        if (emailField.getText() == null || emailField.getText().trim().isEmpty()) {
             errorMessage += "Email invalide!\n";
         } else {
-            String email = emailField.getText().toLowerCase();
-            if (!email.endsWith("@gmail.com") && !email.endsWith("@yahoo.com") && !email.endsWith("@outlook.com")) {
-                errorMessage += "L'email doit se terminer par @gmail.com, @yahoo.com ou @outlook.com!\n";
+            String email = emailField.getText().trim();
+            if (!email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+                errorMessage += "Format d'email invalide (ex: user@domain.com)!\n";
             }
         }
 

@@ -18,7 +18,7 @@ public class User {
 
     public enum Role {
         Admin,
-        RespensableC,
+        ResponsableC,
         Patient,
         Psychologue
     }
@@ -43,23 +43,7 @@ public class User {
         this.dateNaissance = dateNaissance;
     }
 
-    public User(String nom, String prenom,
-            String email, String telephone,
-            LocalDate dateInscription,
-            String motDePasse, Role role, String badgeImage, LocalDate dateNaissance) {
-
-        this.nom = nom;
-        this.prenom = prenom;
-        this.email = email;
-        this.telephone = telephone;
-        this.dateInscription = dateInscription;
-        this.motDePasse = motDePasse;
-        this.role = role;
-        this.badgeImage = badgeImage;
-        this.dateNaissance = dateNaissance;
-    }
-
-    // ===== GETTERS & SETTERS =====
+    // ================= GETTERS & SETTERS =================
 
     public int getId() {
         return id;
@@ -156,7 +140,6 @@ public class User {
                 ", prenom='" + prenom + '\'' +
                 ", email='" + email + '\'' +
                 ", role=" + role +
-                ", dateNaissance=" + dateNaissance +
                 ", dateInscription=" + dateInscription +
                 '}';
     }

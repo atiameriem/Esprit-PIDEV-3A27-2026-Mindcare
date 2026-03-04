@@ -1,24 +1,19 @@
 package controllers;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.VBox;
 import models.User;
 import utils.UserSession;
 
 public class ReclamationTabsController {
 
     @FXML
-    private TabPane reclamationTabPane;
-
+    private Button addTabBtn, myReclamationsTabBtn, adminTabBtn;
     @FXML
-    private Tab addTab;
-
-    @FXML
-    private Tab myReclamationsTab;
-
-    @FXML
-    private Tab adminTab;
+    private VBox addContent, myReclamationsContent, adminContent;
 
     @FXML
     private MesReclamationsController mesReclamationsController;
@@ -28,25 +23,70 @@ public class ReclamationTabsController {
         User currentUser = UserSession.getInstance().getUser();
 
         if (currentUser != null) {
-            if (currentUser.getRole() == User.Role.Admin) {
-                // Admin: Only sees Management
-                reclamationTabPane.getTabs().remove(addTab);
-                reclamationTabPane.getTabs().remove(myReclamationsTab);
-            } else {
-                // Patients/Psychologues: Only see usage
-                reclamationTabPane.getTabs().remove(adminTab);
-            }
-        } else {
-            // Default security
-            reclamationTabPane.getTabs().clear();
-        }
+            User.Role role = currentUser.getRole();
+            System.out.println("🔑 Role connecté : " + role);
 
-        // Ajouter un écouteur de sélection pour rafraîchir les données quand on change
-        // d'onglet
-        reclamationTabPane.getSelectionModel().selectedItemProperty().addListener((observable, oldTab, newTab) -> {
-            if (newTab == myReclamationsTab && mesReclamationsController != null) {
-                mesReclamationsController.loadReclamations();
+            if (role == User.Role.Admin || role == User.Role.ResponsableC) {
+                // Le ResponsableC (et l'Admin) peuvent gérer les réclamations
+                addTabBtn.setManaged(false);
+                addTabBtn.setVisible(false);
+                myReclamationsTabBtn.setManaged(false);
+                myReclamationsTabBtn.setVisible(false);
+
+                adminTabBtn.setManaged(true);
+                adminTabBtn.setVisible(true);
+                showAdminTab();
+            } else {
+                // Patient, Psychologue : vue standard (ajouter / mes réclamations)
+                adminTabBtn.setManaged(false);
+                adminTabBtn.setVisible(false);
+                showAddTab();
             }
-        });
+        }
+    }
+
+    @FXML
+    private void showAddTab() {
+        switchTab(addContent, addTabBtn);
+    }
+
+    @FXML
+    private void showMyTab() {
+        switchTab(myReclamationsContent, myReclamationsTabBtn);
+        if (mesReclamationsController != null) {
+            mesReclamationsController.loadReclamations();
+        }
+    }
+
+    @FXML
+    private void showAdminTab() {
+        switchTab(adminContent, adminTabBtn);
+    }
+
+    private void switchTab(VBox content, Button btn) {
+        // Reset all
+        addContent.setVisible(false);
+        addContent.setManaged(false);
+        myReclamationsContent.setVisible(false);
+        myReclamationsContent.setManaged(false);
+        adminContent.setVisible(false);
+        adminContent.setManaged(false);
+
+        resetBtnStyle(addTabBtn);
+        resetBtnStyle(myReclamationsTabBtn);
+        resetBtnStyle(adminTabBtn);
+
+        // Show selected
+        content.setVisible(true);
+        content.setManaged(true);
+
+        // Premium active style
+        btn.setStyle(
+                "-fx-background-color: #E3F2FD; -fx-text-fill: #1565C0; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 12; -fx-cursor: hand;");
+    }
+
+    private void resetBtnStyle(Button btn) {
+        btn.setStyle(
+                "-fx-background-color: white; -fx-text-fill: #546E7A; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 12; -fx-border-color: #E0E0E0; -fx-border-radius: 12; -fx-cursor: hand;");
     }
 }

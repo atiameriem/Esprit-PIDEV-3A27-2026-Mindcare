@@ -6,42 +6,82 @@
 
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="controllers.ReclamationCardController"
-      spacing="10"
+      spacing="18"
       style="-fx-background-color: white; 
-             -fx-background-radius: 15; 
-             -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5); 
-             -fx-padding: 20; 
-             -fx-border-color: #f0f0f0; 
-             -fx-border-radius: 15; 
-             -fx-border-width: 1;"
-      prefWidth="300" maxWidth="300">
+             -fx-background-radius: 22; 
+             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 15, 0, 0, 6); 
+             -fx-padding: 26; 
+             -fx-border-color: #F1F5F9; 
+             -fx-border-radius: 22; 
+             -fx-border-width: 1.5;"
+      prefWidth="380" maxWidth="380" minWidth="380">
 
-    <HBox alignment="CENTER_LEFT" spacing="10">
-        <StackPane fx:id="iconContainer" style="-fx-background-color: #e3f2fd; -fx-background-radius: 10; -fx-padding: 8;">
-            <Label fx:id="typeEmoji" text="📝" style="-fx-font-size: 20px;"/>
+    <!-- Header Section -->
+    <HBox alignment="TOP_LEFT" spacing="15">
+        <StackPane fx:id="iconContainer" 
+                   style="-fx-background-color: #EFF6FF; -fx-background-radius: 14; -fx-min-width: 52; -fx-min-height: 52;">
+            <Label fx:id="typeEmoji" text="📋" style="-fx-font-size: 26px;"/>
         </StackPane>
-        <VBox spacing="2" HBox.hgrow="ALWAYS">
-            <Label fx:id="typeLabel" text="Objet de la réclamation" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #2c3e50;"/>
-            <HBox spacing="10" alignment="CENTER_LEFT">
-                <Label fx:id="dateLabel" text="12 Oct 2023" style="-fx-font-size: 12px; -fx-text-fill: #7f8c8d;"/>
-                <Label fx:id="urgenceLabel" text="HIGH" style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: white; -fx-background-color: #e53e3e; -fx-padding: 2 6; -fx-background-radius: 4;"/>
+        
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label fx:id="typeLabel" text="Objet de la réclamation" 
+                   wrapText="true"
+                   style="-fx-font-weight: 900; -fx-font-size: 18px; -fx-text-fill: #1E293B;"/>
+            <HBox spacing="6" alignment="CENTER_LEFT">
+                <Label text="📅" style="-fx-font-size: 11px; -fx-opacity: 0.5;"/>
+                <Label fx:id="dateLabel" text="12 Oct 2023" 
+                       style="-fx-font-size: 13px; -fx-text-fill: #94A3B8; -fx-font-weight: bold;"/>
             </HBox>
         </VBox>
-        <Label fx:id="statutLabel" text="En attente" 
-               style="-fx-background-color: #fbd38d; -fx-text-fill: #744210; -fx-padding: 4 10; -fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold;"/>
+        
+        <Label fx:id="statutLabel" text="EN ATTENTE" 
+               style="-fx-background-color: #FEF3C7; -fx-text-fill: #B45309; -fx-padding: 6 14; -fx-background-radius: 10; -fx-font-size: 10px; -fx-font-weight: 900; -fx-letter-spacing: 0.5px;"/>
     </HBox>
 
-    <Separator style="-fx-opacity: 0.5;"/>
+    <!-- Badges Area -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <HBox alignment="CENTER" spacing="6" fx:id="urgencyContainer"
+              style="-fx-background-color: #FEE2E2; -fx-padding: 5 12; -fx-background-radius: 8;">
+            <Label text="⚡" style="-fx-font-size: 11px;"/>
+            <Label fx:id="urgenceLabel" text="URGENCE" style="-fx-font-size: 10px; -fx-font-weight: 900; -fx-text-fill: #EF4444;"/>
+        </HBox>
+        <HBox alignment="CENTER" spacing="6" fx:id="categorieContainer" visible="false" managed="false"
+              style="-fx-background-color: #F1F5F9; -fx-padding: 5 12; -fx-background-radius: 8;">
+            <Label text="🏷️" style="-fx-font-size: 11px;"/>
+            <Label fx:id="categorieLabel" text="CATÉGORIE" style="-fx-font-size: 10px; -fx-font-weight: 900; -fx-text-fill: #475569;"/>
+        </HBox>
+    </HBox>
 
+    <Separator style="-fx-opacity: 0.3;"/>
+
+    <!-- Content Area -->
     <Label fx:id="descriptionLabel" text="Description de la réclamation..." 
            wrapText="true" minHeight="60" alignment="TOP_LEFT"
-           style="-fx-text-fill: #555; -fx-font-size: 13px; -fx-line-spacing: 2;"/>
+           style="-fx-text-fill: #334155; -fx-font-size: 14px; -fx-line-spacing: 1.5;"/>
 
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="editBtn" text="Modifier" onAction="#handleEdit"
-                style="-fx-background-color: #077bff; -fx-text-fill: white; -fx-background-radius: 5; -fx-padding: 6 12; -fx-font-size: 12px;"/>
-        <Button fx:id="deleteBtn" text="Supprimer" onAction="#handleDelete"
-                style="-fx-background-color: #342fd3; -fx-text-fill: white; -fx-background-radius: 5; -fx-padding: 6 12; -fx-font-size: 12px;"/>
+    <!-- Admin Response Section -->
+    <VBox fx:id="reponseContainer" spacing="10" 
+          style="-fx-background-color: #F0FDF4; -fx-padding: 16; -fx-background-radius: 16; -fx-border-color: #DCFCE7; -fx-border-radius: 16; -fx-border-width: 1;" 
+          visible="false" managed="false">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="✉" style="-fx-font-size: 14px;"/>
+            <Label text="RÉPONSE DU SUPPORT" 
+                   style="-fx-font-weight: 900; -fx-font-size: 10px; -fx-text-fill: #15803D; -fx-letter-spacing: 1px;"/>
+        </HBox>
+        <Label fx:id="reponseLabel" text="Votre demande a été traitée avec soin..." 
+               wrapText="true" 
+               style="-fx-text-fill: #166534; -fx-font-size: 14px; -fx-font-style: italic; -fx-line-spacing: 1.3;"/>
+    </VBox>
+
+    <Region VBox.vgrow="ALWAYS" minHeight="10"/>
+
+    <!-- Action Bar -->
+    <HBox spacing="14" alignment="CENTER_RIGHT" fx:id="actionButtons">
+        <Button fx:id="deleteBtn" text="🗑 Supprimer" onAction="#handleDelete"
+                style="-fx-background-color: white; -fx-text-fill: #EF4444; -fx-background-radius: 12; -fx-border-color: #FEE2E2; -fx-border-radius: 12; -fx-padding: 10 24; -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;"/>
+        <Button fx:id="editBtn" text="✏ Modifier" onAction="#handleEdit"
+                style="-fx-background-color: linear-gradient(to right, #2563EB, #3B82F6); -fx-text-fill: white; -fx-background-radius: 12; -fx-padding: 10 32; -fx-font-size: 13px; -fx-font-weight: 900; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.3), 10, 0, 0, 4);"/>
     </HBox>
 
 </VBox>
+

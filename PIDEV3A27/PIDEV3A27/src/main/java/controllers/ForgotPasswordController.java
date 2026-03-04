@@ -9,7 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import services.EmailService;
+import services.EmailServicep;
 import services.UserService;
 import java.io.IOException;
 import java.util.Random;
@@ -32,7 +32,7 @@ public class ForgotPasswordController {
     private String generatedCode;
     private String userEmail;
     private final UserService userService = new UserService();
-    private final EmailService emailService = new EmailService();
+    private final EmailServicep emailService = new EmailServicep();
 
     @FXML
     private void handleSendResetCode() {
@@ -115,15 +115,11 @@ public class ForgotPasswordController {
 
         sendTask.setOnSucceeded(e -> {
             boolean sent = sendTask.getValue();
-            if (!sent) {
-                // FALLBACK : Show code in a popup for testing
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Mode Test - Code de vérification");
-                alert.setHeaderText("L'envoi d'email a échoué (config requise).");
-                alert.setContentText("Puisque vous êtes en mode test, voici votre code : " + generatedCode);
-                alert.showAndWait();
+            if (sent) {
+                setMessage("Code envoyé à " + userEmail + " ✓", false);
+            } else {
+                setMessage("Erreur lors de l'envoi. Vérifiez votre email.", true);
             }
-            setMessage("Code envoyé !", false);
         });
 
         sendTask.setOnFailed(e -> {
