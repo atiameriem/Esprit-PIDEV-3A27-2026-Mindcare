@@ -11,8 +11,34 @@ public class Participation {
     private int rating; // 0 à 5 stars
 
     private String titreFormation;
+    private String description;
+    private String categorie;
     private String imagePath;
+    private int idCreateur;
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getCategorie() {
+        return categorie;
+    }
+
+    public void setCategorie(String categorie) {
+        this.categorie = categorie;
+    }
+
+    public int getIdCreateur() {
+        return idCreateur;
+    }
+
+    public void setIdCreateur(int idCreateur) {
+        this.idCreateur = idCreateur;
+    }
 
     public String getImagePath() {
         return imagePath;

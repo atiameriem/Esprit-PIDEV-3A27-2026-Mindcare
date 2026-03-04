@@ -1,6 +1,6 @@
 package services;
 
-import utils.JitsiMeetWindow;
+import utils.JitsiMeetWindowF;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter;
  * Service de gestion des consultations vidéo MindCare.
  * Fait le lien entre les rendez-vous et la fenêtre Jitsi.
  */
-public class JitsiMeetService {
+public class JitsiMeetServiceF {
 
     /**
      * Démarre une consultation entre un médecin et un patient.
@@ -24,13 +24,13 @@ public class JitsiMeetService {
         System.out.println("[MindCare] Heure    : " + LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
 
-        JitsiMeetWindow.open(appointmentId, doctorName, patientName);
+        JitsiMeetWindowF.open(appointmentId, doctorName, patientName);
     }
 
     /**
      * Génère le lien de salle Jitsi pour partager avec le patient par email/SMS.
      */
     public static String getRoomLink(int appointmentId) {
-        return "https://meet.jit.si/MindCare-Session-" + appointmentId;
+        return "https://meet.ffmuc.net/MindCare-Session-" + appointmentId;
     }
 }

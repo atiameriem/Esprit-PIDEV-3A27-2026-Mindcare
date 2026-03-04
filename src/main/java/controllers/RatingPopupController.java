@@ -3,7 +3,7 @@ package controllers;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
-import services.ParticipationService;
+import services.ParticipationServiceF;
 import utils.UserSession;
 
 import java.sql.SQLException;
@@ -17,7 +17,7 @@ public class RatingPopupController {
 
     private int selectedRating = 0;
     private int formationId;
-    private final ParticipationService participationService = new ParticipationService();
+    private final ParticipationServiceF participationServiceF = new ParticipationServiceF();
 
     public void setFormationId(int formationId) {
         this.formationId = formationId;
@@ -70,7 +70,7 @@ public class RatingPopupController {
         if (selectedRating > 0) {
             try {
                 int userId = UserSession.getInstance().getUser().getId_users();
-                participationService.updateRating(userId, formationId, selectedRating);
+                participationServiceF.updateRating(userId, formationId, selectedRating);
             } catch (SQLException e) {
                 e.printStackTrace();
             }

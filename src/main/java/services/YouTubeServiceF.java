@@ -8,16 +8,36 @@ import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class YouTubeService {
+public class YouTubeServiceF {
 
-    private static final String API_KEY = "AIzaSyDE5CRGEe0nqmrP6G9X2bVhRihcVAN6tmE";
+    private static final String API_KEY = "";
+
+    public static String getVideoTitle(String videoId) {
+        try {
+            OkHttpClient client = new OkHttpClient();
+            String url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + videoId + "&key=" + API_KEY;
+            Request request = new Request.Builder().url(url).build();
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful())
+                    return null;
+                JSONObject obj = new JSONObject(response.body().string());
+                JSONArray items = obj.getJSONArray("items");
+                if (items.length() > 0) {
+                    return decodeHtml(items.getJSONObject(0).getJSONObject("snippet").getString("title"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     public static JsonArray search(String query) throws Exception {
         OkHttpClient client = new OkHttpClient();
 
         String searchUrl = "https://www.googleapis.com/youtube/v3/search" +
                 "?part=snippet" +
-                "&q=" + query + " méditation relaxation" +
+                "&q=" + java.net.URLEncoder.encode(query + " podcast thérapie psychologie formation", "UTF-8") +
                 "&type=video" +
                 "&relevanceLanguage=fr" +
                 "&maxResults=10" +
@@ -40,8 +60,8 @@ public class YouTubeService {
                 String videoId = item.getJSONObject("id").getString("videoId");
 
                 JsonObject st = new JsonObject();
-                st.addProperty("title", snippet.getString("title"));
-                st.addProperty("description", snippet.getString("description"));
+                st.addProperty("title", decodeHtml(snippet.getString("title")));
+                st.addProperty("description", decodeHtml(snippet.getString("description")));
                 st.addProperty("thumbnail",
                         snippet.getJSONObject("thumbnails").getJSONObject("medium").getString("url"));
                 st.addProperty("videoId", videoId);
@@ -49,5 +69,18 @@ public class YouTubeService {
             }
             return standardizedItems;
         }
+    }
+
+    private static String decodeHtml(String text) {
+        if (text == null)
+            return "";
+        return text
+                .replace("&#39;", "'")
+                .replace("&quot;", "\"")
+                .replace("&amp;", "&")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&#x27;", "'")
+                .replace("&apos;", "'");
     }
 }

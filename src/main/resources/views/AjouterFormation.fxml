@@ -8,165 +8,325 @@
 <ScrollPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.FormationController"
             fitToWidth="true"
-            prefHeight="600"
-            prefWidth="750"
-            style="-fx-background-color: white; -fx-background: white;">
+            prefHeight="620"
+            prefWidth="780"
+            style="-fx-background-color: #F8FAFC; -fx-background: #F8FAFC;
+                   -fx-border-color: transparent;">
 
-    <VBox spacing="25" style="-fx-background-color: transparent;">
+    <VBox spacing="20" style="-fx-background-color: #F8FAFC;">
         <padding>
-            <Insets top="30" right="30" bottom="30" left="30"/>
+            <Insets top="24" right="28" bottom="28" left="28"/>
         </padding>
 
-        <!-- ===== TITRE ===== -->
-        <VBox spacing="5" style="-fx-padding: 0 0 10 0;">
-            <Label text="Gestion de la Formation"
-                   style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-            <Label text="Configurez les détails et le programme" style="-fx-text-fill: #5F7F8B;"/>
-        </VBox>
+        <!-- ── TITRE COMPACT ── -->
+        <HBox alignment="CENTER_LEFT" spacing="12">
+            <StackPane style="-fx-background-color: #5C98A8; -fx-background-radius: 10;
+                              -fx-min-width: 36px; -fx-min-height: 36px; -fx-max-width: 36px; -fx-max-height: 36px;">
+                <Label text="🎓" style="-fx-font-size: 16px;"/>
+            </StackPane>
+            <VBox spacing="2">
+                <Label text="Gestion de la Formation"
+                       style="-fx-font-size: 18px; -fx-font-weight: 900; -fx-text-fill: #1F2A33;"/>
+                <Label text="Configurez les détails et le programme"
+                       style="-fx-font-size: 12px; -fx-text-fill: #64748B;"/>
+            </VBox>
+        </HBox>
 
-        <!-- ===== SECTION 1: DÉTAILS DE LA FORMATION ===== -->
-        <VBox fx:id="step1Container" spacing="20"
-              style="-fx-background-color: white; -fx-padding: 25; -fx-background-radius: 18; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);">
+        <!-- ══════════════════════════════════
+             SECTION 1 — INFORMATIONS GÉNÉRALES
+             ══════════════════════════════════ -->
+        <VBox fx:id="step1Container" spacing="16"
+              style="-fx-background-color: white;
+                     -fx-padding: 20;
+                     -fx-background-radius: 16;
+                     -fx-border-color: #DDECEF;
+                     -fx-border-radius: 16;
+                     -fx-border-width: 1;
+                     -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.08), 12, 0, 0, 4);">
 
+            <!-- Section header -->
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <StackPane prefWidth="30" prefHeight="30" style="-fx-background-color: rgba(92,152,168,0.1); -fx-background-radius: 8;">
-                    <Label text="ℹ" style="-fx-text-fill: #5C98A8; -fx-font-weight: bold;"/>
+                <StackPane style="-fx-background-color: #EAF3F5; -fx-background-radius: 8;
+                                  -fx-min-width: 28px; -fx-min-height: 28px; -fx-max-width: 28px; -fx-max-height: 28px;">
+                    <Label text="ℹ" style="-fx-text-fill: #5C98A8; -fx-font-weight: bold; -fx-font-size: 13px;"/>
                 </StackPane>
-                <Label fx:id="step1Title" text="Informations Générales" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
+                <Label fx:id="step1Title" text="Informations Générales"
+                       style="-fx-font-size: 15px; -fx-font-weight: 800; -fx-text-fill: #1F2A33;"/>
             </HBox>
 
-            <Separator/>
+            <Separator style="-fx-background-color: #DDECEF;"/>
 
-            <GridPane hgap="20" vgap="15">
+            <!-- Grid de champs -->
+            <GridPane hgap="16" vgap="14">
                 <columnConstraints>
-                    <ColumnConstraints hgrow="ALWAYS" />
-                    <ColumnConstraints hgrow="ALWAYS" />
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
                 </columnConstraints>
 
-                <VBox spacing="8" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                    <Label text="Titre de la formation" style="-fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-                    <TextField fx:id="titreField" promptText="Ex: Introduction à la TCC" style="-fx-background-radius: 10; -fx-padding: 10;"/>
+                <!-- Titre -->
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                    <Label text="Titre de la formation"
+                           style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
+                    <TextField fx:id="titreField" promptText="Ex: Introduction à la TCC"
+                               style="-fx-background-color: #FAFCFD;
+                                      -fx-background-radius: 9;
+                                      -fx-padding: 9 12;
+                                      -fx-border-color: #DDECEF;
+                                      -fx-border-radius: 9;
+                                      -fx-border-width: 1.5;
+                                      -fx-font-size: 13px;"/>
                 </VBox>
 
-                <VBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                    <Label text="Durée estimée" style="-fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-                    <TextField fx:id="dureeField" promptText="Ex: 6 semaines" style="-fx-background-radius: 10; -fx-padding: 10;"/>
+                <!-- Durée -->
+                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    <Label text="Durée estimée"
+                           style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
+                    <TextField fx:id="dureeField" promptText="Ex: 6 semaines"
+                               style="-fx-background-color: #FAFCFD;
+                                      -fx-background-radius: 9;
+                                      -fx-padding: 9 12;
+                                      -fx-border-color: #DDECEF;
+                                      -fx-border-radius: 9;
+                                      -fx-border-width: 1.5;
+                                      -fx-font-size: 13px;"/>
                 </VBox>
 
-                <VBox spacing="8" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                    <Label text="Niveau" style="-fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-                    <ComboBox fx:id="niveauCombo" promptText="Sélectionner..." maxWidth="Infinity" style="-fx-background-radius: 10; -fx-padding: 5;"/>
+                <!-- Niveau -->
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                    <Label text="Niveau"
+                           style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
+                    <ComboBox fx:id="niveauCombo" promptText="Sélectionner..."
+                              maxWidth="Infinity"
+                              style="-fx-background-color: #FAFCFD;
+                                     -fx-background-radius: 9;
+                                     -fx-border-color: #DDECEF;
+                                     -fx-border-radius: 9;
+                                     -fx-border-width: 1.5;
+                                     -fx-padding: 4;"/>
                 </VBox>
 
-                <VBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                    <Label text="Catégorie" style="-fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-                    <ComboBox fx:id="categorieFormationCombo" promptText="Sélectionner..." maxWidth="Infinity" style="-fx-background-radius: 10; -fx-padding: 5;"/>
+                <!-- Catégorie -->
+                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <Label text="Catégorie"
+                           style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
+                    <ComboBox fx:id="categorieFormationCombo" promptText="Sélectionner..."
+                              maxWidth="Infinity"
+                              style="-fx-background-color: #FAFCFD;
+                                     -fx-background-radius: 9;
+                                     -fx-border-color: #DDECEF;
+                                     -fx-border-radius: 9;
+                                     -fx-border-width: 1.5;
+                                     -fx-padding: 4;"/>
                 </VBox>
 
-                <VBox spacing="8" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2">
-                    <Label text="Description" style="-fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-                    <TextArea fx:id="descriptionArea" promptText="Décrivez..." prefRowCount="3" style="-fx-background-radius: 10;"/>
+                <!-- Description -->
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="2"
+                      GridPane.columnSpan="2">
+                    <Label text="Description"
+                           style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
+                    <TextArea fx:id="descriptionArea" promptText="Décrivez le contenu et les objectifs..."
+                              prefRowCount="3"
+                              style="-fx-background-color: #FAFCFD;
+                                     -fx-background-radius: 9;
+                                     -fx-border-color: #DDECEF;
+                                     -fx-border-radius: 9;
+                                     -fx-border-width: 1.5;
+                                     -fx-font-size: 13px;
+                                     -fx-padding: 9 12;"/>
                 </VBox>
             </GridPane>
 
-            <!-- Section Image -->
+            <!-- Image de couverture -->
             <VBox spacing="10">
-                <Label text="Image de couverture" style="-fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-                <HBox spacing="20" alignment="CENTER_LEFT">
-                    <ImageView fx:id="imagePreview"
-                               fitHeight="130"
-                               fitWidth="220"
-                               preserveRatio="true"
-                               style="-fx-background-color: #F8FAFC; -fx-border-color: #E2E8F0; -fx-border-width: 1; -fx-border-radius: 12;"/>
-                    <VBox spacing="10">
-                        <Button text="Changer l'image" onAction="#selectImage"
-                                style="-fx-background-color: #EAF3F5; -fx-text-fill: #5C98A8; -fx-font-weight: bold; -fx-background-radius: 10;"/>
+                <Label text="Image de couverture"
+                       style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
+                <HBox spacing="18" alignment="CENTER_LEFT">
+                    <StackPane style="-fx-background-color: #EAF3F5;
+                                      -fx-background-radius: 12;
+                                      -fx-border-color: #DDECEF;
+                                      -fx-border-radius: 12;
+                                      -fx-border-width: 1.5;
+                                      -fx-min-width: 200px; -fx-min-height: 120px;
+                                      -fx-max-width: 200px; -fx-max-height: 120px;">
+                        <ImageView fx:id="imagePreview"
+                                   fitHeight="116" fitWidth="196"
+                                   preserveRatio="true"/>
+                        <Label text="Aperçu" style="-fx-text-fill: #9BBDCA; -fx-font-size: 12px;"/>
+                    </StackPane>
+                    <VBox spacing="10" alignment="CENTER_LEFT">
+                        <Button text="🖼 Choisir une image" onAction="#selectImage"
+                                style="-fx-background-color: #EAF3F5;
+                                       -fx-text-fill: #5C98A8;
+                                       -fx-font-weight: bold;
+                                       -fx-background-radius: 9;
+                                       -fx-padding: 9 18;
+                                       -fx-border-color: #AACFD9;
+                                       -fx-border-radius: 9;
+                                       -fx-border-width: 1;
+                                       -fx-cursor: hand;"/>
                         <Label fx:id="imagePathLabel" text="Aucune image sélectionnée"
-                               style="-fx-text-fill: #5F7F8B; -fx-font-size: 11px;"/>
+                               style="-fx-text-fill: #64748B; -fx-font-size: 11px;"/>
                     </VBox>
                 </HBox>
             </VBox>
         </VBox>
 
-        <!-- ===== SECTION 2: MODULES & CONTENUS ===== -->
-        <VBox fx:id="step2Container" spacing="20" visible="false" managed="false"
-              style="-fx-background-color: white; -fx-padding: 25; -fx-background-radius: 18; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);">
+        <!-- ══════════════════════════════════
+             SECTION 2 — MODULES & CONTENUS
+             ══════════════════════════════════ -->
+        <VBox fx:id="step2Container" spacing="16" visible="false" managed="false"
+              style="-fx-background-color: white;
+                     -fx-padding: 20;
+                     -fx-background-radius: 16;
+                     -fx-border-color: #DDECEF;
+                     -fx-border-radius: 16;
+                     -fx-border-width: 1;
+                     -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.08), 12, 0, 0, 4);">
 
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <StackPane prefWidth="30" prefHeight="30" style="-fx-background-color: rgba(92,152,168,0.1); -fx-background-radius: 8;">
-                    <Label text="📋" style="-fx-text-fill: #5C98A8; -fx-font-weight: bold;"/>
+                <StackPane style="-fx-background-color: #EAF3F5; -fx-background-radius: 8;
+                                  -fx-min-width: 28px; -fx-min-height: 28px; -fx-max-width: 28px; -fx-max-height: 28px;">
+                    <Label text="📋" style="-fx-font-size: 13px;"/>
                 </StackPane>
-                <Label fx:id="step2Title" text="Programme (Modules &amp; Contenus)" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
+                <Label fx:id="step2Title" text="Programme (Modules &amp; Contenus)"
+                       style="-fx-font-size: 15px; -fx-font-weight: 800; -fx-text-fill: #1F2A33;"/>
             </HBox>
 
-            <Separator/>
+            <Separator style="-fx-background-color: #DDECEF;"/>
 
-            <HBox spacing="25">
-                <!-- Formulaire Module -->
-                <VBox spacing="15" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: #F8FBFC; -fx-padding: 20; -fx-background-radius: 14; -fx-border-color: #DDECEF; -fx-border-radius: 14;">
-                    <Label text="Ajouter / Modifier un Module" style="-fx-font-weight: bold; -fx-text-fill: #5C98A8;"/>
+            <HBox spacing="18">
 
-                    <VBox spacing="5">
-                        <TextField fx:id="moduleTitreField" promptText="Titre du module" style="-fx-background-radius: 8;"/>
-                    </VBox>
-                    <VBox spacing="5">
-                        <TextArea fx:id="moduleDescriptionArea" promptText="Bref descriptif..." prefRowCount="2" style="-fx-background-radius: 8;"/>
-                    </VBox>
+                <!-- ── Formulaire Module (gauche) ── -->
+                <VBox spacing="12" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: #F8FAFC;
+                             -fx-padding: 18;
+                             -fx-background-radius: 12;
+                             -fx-border-color: #DDECEF;
+                             -fx-border-radius: 12;
+                             -fx-border-width: 1;">
 
-                    <VBox spacing="5" alignment="CENTER_LEFT">
-                        <Label text="Rechercher des supports en ligne" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #5C98A8;"/>
-                        <HBox spacing="10">
-                            <Button text="🔎 YouTube" onAction="#rechercherVideosYouTube" style="-fx-background-radius: 8; -fx-font-size: 10px; -fx-background-color: #FEE2E2; -fx-text-fill: #EF4444;"/>
-                            <Button text="🧠 Recommandation IA" onAction="#rechercherVideosIA" style="-fx-background-radius: 8; -fx-font-size: 10px; -fx-background-color: #EEF2FF; -fx-text-fill: #4F46E5;"/>
+                    <Label text="Ajouter / Modifier un Module"
+                           style="-fx-font-size: 12px; -fx-font-weight: 800; -fx-text-fill: #5C98A8;"/>
+
+                    <TextField fx:id="moduleTitreField" promptText="Titre du module"
+                               style="-fx-background-color: white; -fx-background-radius: 8;
+                                      -fx-padding: 9 12; -fx-border-color: #DDECEF;
+                                      -fx-border-radius: 8; -fx-border-width: 1.5; -fx-font-size: 12px;"/>
+
+                    <TextArea fx:id="moduleDescriptionArea" promptText="Descriptif du module..."
+                              prefRowCount="2"
+                              style="-fx-background-color: white; -fx-background-radius: 8;
+                                     -fx-padding: 8 12; -fx-border-color: #DDECEF;
+                                     -fx-border-radius: 8; -fx-border-width: 1.5; -fx-font-size: 12px;"/>
+
+                    <!-- YouTube search -->
+                    <VBox spacing="6">
+                        <Label text="Rechercher sur YouTube"
+                               style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #5C98A8;"/>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <TextField fx:id="youtubeSearchField"
+                                       promptText="Ex: Thérapie cognitive..."
+                                       HBox.hgrow="ALWAYS"
+                                       style="-fx-background-color: white; -fx-background-radius: 7;
+                                              -fx-padding: 7 10; -fx-border-color: #DDECEF;
+                                              -fx-border-radius: 7; -fx-border-width: 1.5; -fx-font-size: 12px;"/>
+                            <Button text="🔎 Chercher" onAction="#rechercherVideosYouTube"
+                                    style="-fx-background-color: #EAF3F5; -fx-text-fill: #5C98A8;
+                                           -fx-font-weight: bold; -fx-background-radius: 7;
+                                           -fx-padding: 7 14; -fx-font-size: 11px; -fx-cursor: hand;
+                                           -fx-border-color: #AACFD9; -fx-border-radius: 7; -fx-border-width: 1;"/>
                         </HBox>
                     </VBox>
 
-                    <Label text="Supports de cours locaux" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
+                    <!-- Supports locaux -->
+                    <VBox spacing="6">
+                        <Label text="Supports de cours locaux"
+                               style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
+                        <HBox spacing="8">
+                            <Button text="📄 PDF" onAction="#ajouterPDF"
+                                    style="-fx-background-color: #EAF3F5; -fx-text-fill: #5C98A8;
+                                           -fx-background-radius: 7; -fx-font-size: 11px; -fx-font-weight: bold;
+                                           -fx-padding: 7 14; -fx-cursor: hand;
+                                           -fx-border-color: #AACFD9; -fx-border-radius: 7; -fx-border-width: 1;"/>
+                            <Button text="🎥 Vidéo" onAction="#ajouterVideo"
+                                    style="-fx-background-color: #EAF3F5; -fx-text-fill: #5C98A8;
+                                           -fx-background-radius: 7; -fx-font-size: 11px; -fx-font-weight: bold;
+                                           -fx-padding: 7 14; -fx-cursor: hand;
+                                           -fx-border-color: #AACFD9; -fx-border-radius: 7; -fx-border-width: 1;"/>
+                        </HBox>
+                    </VBox>
+
+                    <ListView fx:id="contenusListView" prefHeight="90"
+                              style="-fx-background-color: white; -fx-background-radius: 8;
+                                     -fx-border-color: #DDECEF; -fx-border-radius: 8;
+                                     -fx-border-width: 1; -fx-font-size: 11px;"/>
+
                     <HBox spacing="10">
-                        <Button text="📄 PDF" onAction="#ajouterPDF" style="-fx-background-radius: 8; -fx-font-size: 11px;"/>
-                        <Button text="🎥 Vidéo" onAction="#ajouterVideo" style="-fx-background-radius: 8; -fx-font-size: 11px;"/>
-                        <Button text="🎧 Audio" onAction="#ajouterPodcast" style="-fx-background-radius: 8; -fx-font-size: 11px;"/>
-                    </HBox>
-
-                    <ListView fx:id="contenusListView" prefHeight="100" style="-fx-background-radius: 8; -fx-font-size: 11px;"/>
-
-                    <HBox spacing="10">
-                        <Button text="Supprimer sélection" onAction="#supprimerContenu"
+                        <Button text="🗑 Supprimer" onAction="#supprimerContenu"
                                 HBox.hgrow="ALWAYS" maxWidth="Infinity"
-                                style="-fx-background-color: #FEF2F2; -fx-text-fill: #EF4444; -fx-font-weight: bold; -fx-background-radius: 8;"/>
-
-                        <Button text="Enregistrer Module" onAction="#ajouterModule"
+                                style="-fx-background-color: #FEF2F2; -fx-text-fill: #DC2626;
+                                       -fx-font-weight: bold; -fx-background-radius: 8;
+                                       -fx-padding: 9; -fx-cursor: hand;
+                                       -fx-border-color: #FECACA; -fx-border-radius: 8; -fx-border-width: 1;"/>
+                        <Button text="✅ Enregistrer Module" onAction="#ajouterModule"
                                 HBox.hgrow="ALWAYS" maxWidth="Infinity"
-                                style="-fx-background-color: #5C98A8; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;"/>
+                                style="-fx-background-color: #5C98A8; -fx-text-fill: white;
+                                       -fx-font-weight: bold; -fx-background-radius: 8;
+                                       -fx-padding: 9; -fx-cursor: hand;
+                                       -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.25), 6, 0, 0, 2);"/>
                     </HBox>
                 </VBox>
 
-                <!-- Liste des Modules -->
-                <VBox fx:id="modulesPreviewContainer" spacing="12" HBox.hgrow="ALWAYS">
-                    <Label text="Aperçu des Modules" style="-fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-                    <ListView fx:id="modulesListView" VBox.vgrow="ALWAYS" prefHeight="300" style="-fx-background-radius: 12;"/>
-                    <Button text="🗑 Supprimer module" onAction="#supprimerModule"
+                <!-- ── Aperçu des Modules (droite) ── -->
+                <VBox fx:id="modulesPreviewContainer" spacing="10" HBox.hgrow="ALWAYS">
+                    <Label text="Aperçu des Modules"
+                           style="-fx-font-size: 12px; -fx-font-weight: 800; -fx-text-fill: #1F2A33;"/>
+                    <ListView fx:id="modulesListView" VBox.vgrow="ALWAYS" prefHeight="280"
+                              style="-fx-background-color: white; -fx-background-radius: 10;
+                                     -fx-border-color: #DDECEF; -fx-border-radius: 10; -fx-border-width: 1;"/>
+                    <Button text="🗑 Supprimer le module sélectionné" onAction="#supprimerModule"
                             maxWidth="Infinity"
-                            style="-fx-background-color: #FEF2F2; -fx-text-fill: #EF4444; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10;"/>
+                            style="-fx-background-color: #FEF2F2; -fx-text-fill: #DC2626;
+                                   -fx-font-weight: bold; -fx-background-radius: 9; -fx-padding: 9;
+                                   -fx-border-color: #FECACA; -fx-border-radius: 9; -fx-border-width: 1;
+                                   -fx-cursor: hand;"/>
                 </VBox>
             </HBox>
         </VBox>
 
-        <!-- ===== BOUTONS DE NAVIGATION ===== -->
-        <HBox spacing="15" alignment="CENTER_RIGHT">
-            <Button text="Annuler" onAction="#closePopup" style="-fx-background-color: white; -fx-text-fill: #4B5563; -fx-padding: 12 25; -fx-background-radius: 10; -fx-border-color: #DDD; -fx-border-radius: 10;"/>
+        <!-- ══════════════════════════════════
+             BOUTONS DE NAVIGATION
+             ══════════════════════════════════ -->
+        <HBox spacing="12" alignment="CENTER_RIGHT" style="-fx-padding: 4 0 0 0;">
 
-            <Region HBox.hgrow="ALWAYS" />
+            <Button text="Annuler" onAction="#closePopup"
+                    style="-fx-background-color: white; -fx-text-fill: #64748B;
+                           -fx-padding: 10 22; -fx-background-radius: 9;
+                           -fx-border-color: #DDECEF; -fx-border-radius: 9; -fx-border-width: 1.5;
+                           -fx-font-size: 12px; -fx-cursor: hand;"/>
 
-            <Button fx:id="prevStepBtn" text="Précédent" onAction="#goToPreviousStep" visible="false" managed="false"
-                    style="-fx-background-color: #F3F4F6; -fx-text-fill: #374151; -fx-padding: 12 25; -fx-background-radius: 10; -fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
 
-            <Button fx:id="nextStepBtn" text="Suivant" onAction="#goToNextStep"
-                    style="-fx-background-color: #5C98A8; -fx-text-fill: white; -fx-padding: 12 35; -fx-background-radius: 10; -fx-font-weight: bold;"/>
+            <Button fx:id="prevStepBtn" text="← Précédent" onAction="#goToPreviousStep"
+                    visible="false" managed="false"
+                    style="-fx-background-color: #EAF3F5; -fx-text-fill: #5C98A8;
+                           -fx-padding: 10 22; -fx-background-radius: 9;
+                           -fx-border-color: #AACFD9; -fx-border-radius: 9; -fx-border-width: 1.5;
+                           -fx-font-weight: bold; -fx-font-size: 12px; -fx-cursor: hand;"/>
 
-            <Button fx:id="mainButton" text="Enregistrer la Formation" onAction="#handleSaveAction" visible="false" managed="false"
-                    style="-fx-background-color: linear-gradient(to right, #5C98A8, #7FB9C7); -fx-text-fill: white; -fx-padding: 12 35; -fx-background-radius: 10; -fx-font-weight: bold;"/>
+            <Button fx:id="nextStepBtn" text="Suivant →" onAction="#goToNextStep"
+                    style="-fx-background-color: #5C98A8; -fx-text-fill: white;
+                           -fx-padding: 10 30; -fx-background-radius: 9;
+                           -fx-font-weight: bold; -fx-font-size: 12px; -fx-cursor: hand;
+                           -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.30), 8, 0, 0, 3);"/>
+
+            <Button fx:id="mainButton" text="💾 Enregistrer la Formation"
+                    onAction="#handleSaveAction" visible="false" managed="false"
+                    style="-fx-background-color: linear-gradient(to right, #5C98A8, #7FB9C7);
+                           -fx-text-fill: white; -fx-padding: 10 30; -fx-background-radius: 9;
+                           -fx-font-weight: bold; -fx-font-size: 12px; -fx-cursor: hand;
+                           -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.35), 10, 0, 0, 4);"/>
         </HBox>
+
     </VBox>
 </ScrollPane>

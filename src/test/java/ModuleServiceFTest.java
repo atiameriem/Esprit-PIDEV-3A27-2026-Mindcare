@@ -2,7 +2,7 @@ import models.Formation;
 import models.Module;
 import org.junit.jupiter.api.*;
 import services.FormationService;
-import services.ModuleService;
+import services.ModuleServiceF;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -12,16 +12,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class ModuleServiceTest {
+public class ModuleServiceFTest {
 
-    static ModuleService ms;
+    static ModuleServiceF ms;
     static FormationService fs;
     private static int formationId; // Formation de test
     private int moduleId = -1;
 
     @BeforeAll
     public static void setup() throws SQLException {
-        ms = new ModuleService();
+        ms = new ModuleServiceF();
         fs = new FormationService();
 
         // Créer une formation test

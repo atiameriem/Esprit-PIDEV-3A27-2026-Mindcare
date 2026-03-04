@@ -46,11 +46,6 @@
             <version>20231013</version>
         </dependency>
         <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-media</artifactId>
-            <version>21.0.2</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
             <version>3.0.1</version>
@@ -67,8 +62,8 @@
         </dependency>
         <dependency>
             <groupId>uk.co.caprica</groupId>
-            <artifactId>vlcj-javafx</artifactId>
-            <version>1.2.0</version>
+            <artifactId>vlcj-natives</artifactId>
+            <version>4.8.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -76,11 +71,25 @@
             <version>2.10.1</version>
         </dependency>
 
-        <!-- Upload fichiers -->
+        <!-- Upload fichiers & POI compat -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
+            <version>2.15.1</version>
+        </dependency>
+
+        <!-- Supprime le warning Log4j2 -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.22.1</version>
+        </dependency>
+
+        <!-- Apache POI compresseur (WordGen) -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.26.1</version>
         </dependency>
 
 
@@ -137,6 +146,12 @@
             <artifactId>jcefmaven</artifactId>
             <version>122.1.10</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -148,12 +163,15 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>test.MainFx</mainClass>
+                    <mainClass>test.Main</mainClass>
                     <options>
                         <!-- Accès aux internals JavaFX nécessaires pour SwingNode -->
                         <option>--add-opens=javafx.graphics/com.sun.javafx.sg.prism=ALL-UNNAMED</option>
                         <option>--add-opens=javafx.graphics/com.sun.javafx.scene=ALL-UNNAMED</option>
                         <option>--add-opens=javafx.graphics/com.sun.javafx.tk=ALL-UNNAMED</option>
+                        <!-- Modules JavaFX (demande utilisateur) -->
+                        <option>--add-modules</option>
+                        <option>javafx.controls,javafx.fxml,javafx.web,javafx.swing</option>
                     </options>
                 </configuration>
             </plugin>

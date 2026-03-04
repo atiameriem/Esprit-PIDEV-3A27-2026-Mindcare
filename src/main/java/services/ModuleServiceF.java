@@ -7,18 +7,19 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ModuleService implements IService<Module> {
+public class ModuleServiceF implements IService<Module> {
 
-    private final Connection connection;
+    public ModuleServiceF() {
+    }
 
-    public ModuleService() {
-        connection = MyDatabase.getInstance().getConnection();
+    private Connection getConnection() {
+        return MyDatabase.getInstance().getConnection();
     }
 
     @Override
     public int create(Module module) throws SQLException {
         String query = "INSERT INTO module (titre, description, id_formation) VALUES (?, ?, ?)";
-        try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement statement = getConnection().prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, module.getTitre());
             statement.setString(2, module.getDescription());
             statement.setInt(3, module.getFormationId());
@@ -42,7 +43,7 @@ public class ModuleService implements IService<Module> {
     @Override
     public void update(Module module) throws SQLException {
         String query = "UPDATE module SET titre = ?, description = ?, id_formation = ? WHERE id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (PreparedStatement statement = getConnection().prepareStatement(query)) {
             statement.setString(1, module.getTitre());
             statement.setString(2, module.getDescription());
             statement.setInt(3, module.getFormationId());
@@ -54,7 +55,7 @@ public class ModuleService implements IService<Module> {
     @Override
     public void delete(int id) throws SQLException {
         String query = "DELETE FROM module WHERE id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (PreparedStatement statement = getConnection().prepareStatement(query)) {
             statement.setInt(1, id);
             statement.executeUpdate();
         }
@@ -64,7 +65,7 @@ public class ModuleService implements IService<Module> {
     public List<Module> read() throws SQLException {
         List<Module> modules = new ArrayList<>();
         String query = "SELECT * FROM module";
-        try (Statement statement = connection.createStatement();
+        try (Statement statement = getConnection().createStatement();
                 ResultSet resultSet = statement.executeQuery(query)) {
             while (resultSet.next()) {
                 Module m = mapResultSetToModule(resultSet);
@@ -77,7 +78,7 @@ public class ModuleService implements IService<Module> {
     public List<Module> findByFormationId(int formationId) throws SQLException {
         List<Module> modules = new ArrayList<>();
         String query = "SELECT * FROM module WHERE id_formation= ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (PreparedStatement statement = getConnection().prepareStatement(query)) {
             statement.setInt(1, formationId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
@@ -90,7 +91,7 @@ public class ModuleService implements IService<Module> {
 
     public Module findById(int id) throws SQLException {
         String query = "SELECT * FROM module WHERE id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (PreparedStatement statement = getConnection().prepareStatement(query)) {
             statement.setInt(1, id);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {

@@ -110,11 +110,6 @@ public class MindCareLayoutController {
     }
 
     @FXML
-    private void loadConsulterSupport() {
-        loadView("Statistiques.fxml");
-    }
-
-    @FXML
     private void loadLocaux() {
         loadView("Locaux.fxml");
     }

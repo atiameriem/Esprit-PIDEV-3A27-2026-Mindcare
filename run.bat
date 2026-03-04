@@ -4,16 +4,6 @@ echo    Lancement de MindCare Application
 echo ========================================
 echo.
 
-REM Ajouter GStreamer au PATH pour que JavaFX puisse lire les vidéos
-set GSTREAMER_DIR=C:\Program Files\gstreamer\1.0\msvc_x86_64\bin
-if exist "%GSTREAMER_DIR%" (
-    set PATH=%GSTREAMER_DIR%;%PATH%
-    echo GStreamer trouve: %GSTREAMER_DIR%
-) else (
-    echo ATTENTION: GStreamer non trouve - les videos locales pourraient ne pas fonctionner
-)
-echo.
-
 echo Verification de Maven...
 where mvn >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (

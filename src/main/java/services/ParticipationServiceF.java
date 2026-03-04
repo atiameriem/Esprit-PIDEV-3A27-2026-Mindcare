@@ -7,13 +7,11 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ParticipationService {
-    private final Connection connection;
-
-    public ParticipationService() {
-        connection = MyDatabase.getInstance().getConnection();
+public class ParticipationServiceF {
+    public ParticipationServiceF() {
+        Connection conn = MyDatabase.getInstance().getConnection();
         try {
-            DatabaseMetaData dbmd = connection.getMetaData();
+            DatabaseMetaData dbmd = conn.getMetaData();
             boolean statusExists = false;
             try (ResultSet rs = dbmd.getColumns(null, null, "participation", "statut")) {
                 if (rs.next())
@@ -21,7 +19,7 @@ public class ParticipationService {
             }
 
             if (!statusExists) {
-                try (Statement st = connection.createStatement()) {
+                try (Statement st = conn.createStatement()) {
                     st.execute("ALTER TABLE participation ADD COLUMN statut VARCHAR(50) DEFAULT 'en attente'");
                     System.out.println("Column statut added to participation table.");
                 }
@@ -34,7 +32,7 @@ public class ParticipationService {
                     ratingExists = true;
             }
             if (!ratingExists) {
-                try (Statement st = connection.createStatement()) {
+                try (Statement st = conn.createStatement()) {
                     st.execute("ALTER TABLE participation ADD COLUMN rating INT DEFAULT 0");
                     System.out.println("Column rating added to participation table.");
                 }
@@ -44,9 +42,13 @@ public class ParticipationService {
         }
     }
 
+    private Connection getConnection() {
+        return MyDatabase.getInstance().getConnection();
+    }
+
     public void create(Participation p) throws SQLException {
         String query = "INSERT INTO participation (id_users, id_formation, date_inscription, statut) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement pst = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement pst = getConnection().prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             pst.setInt(1, p.getIdUser());
             pst.setInt(2, p.getIdFormation());
             pst.setTimestamp(3, new Timestamp(p.getDateInscription().getTime()));
@@ -59,15 +61,13 @@ public class ParticipationService {
         }
     }
 
-    /**
-     * Find all participations for a given user (with formation title and image)
-     */
     public List<Participation> findByUserId(int userId) throws SQLException {
         List<Participation> list = new ArrayList<>();
-        String query = "SELECT p.*, f.titre as titre_formation, f.imagePath FROM participation p " +
+        String query = "SELECT p.*, f.titre as titre_formation, f.description, f.categorie, f.imagePath, f.id_users as id_createur FROM participation p "
+                +
                 "JOIN formation f ON p.id_formation = f.id_formation " +
                 "WHERE p.id_users = ?";
-        try (PreparedStatement pst = connection.prepareStatement(query)) {
+        try (PreparedStatement pst = getConnection().prepareStatement(query)) {
             pst.setInt(1, userId);
             try (ResultSet rs = pst.executeQuery()) {
                 while (rs.next()) {
@@ -78,17 +78,13 @@ public class ParticipationService {
         return list;
     }
 
-    /**
-     * Find all enrollments for a given formation (admin/psy view — returns patient
-     * name in titreFormation)
-     */
     public List<Participation> findByFormationId(int formationId) throws SQLException {
         List<Participation> list = new ArrayList<>();
         String query = "SELECT p.*, u.nom, u.prenom, f.titre as titre_formation FROM participation p " +
                 "JOIN users u ON p.id_users = u.id_users " +
                 "JOIN formation f ON p.id_formation = f.id_formation " +
                 "WHERE p.id_formation = ?";
-        try (PreparedStatement pst = connection.prepareStatement(query)) {
+        try (PreparedStatement pst = getConnection().prepareStatement(query)) {
             pst.setInt(1, formationId);
             try (ResultSet rs = pst.executeQuery()) {
                 while (rs.next()) {
@@ -102,35 +98,35 @@ public class ParticipationService {
         return list;
     }
 
-    /**
-     * Update participation status (accept / refuse)
-     */
     public void updateStatut(int idParticipation, String nouveauStatut) throws SQLException {
         String query = "UPDATE participation SET statut = ? WHERE id_participation = ?";
-        try (PreparedStatement pst = connection.prepareStatement(query)) {
+        try (PreparedStatement pst = getConnection().prepareStatement(query)) {
             pst.setString(1, nouveauStatut);
             pst.setInt(2, idParticipation);
             pst.executeUpdate();
         }
     }
 
-    /**
-     * Delete a participation by ID
-     */
     public void delete(int id) throws SQLException {
         String query = "DELETE FROM participation WHERE id_participation = ?";
-        try (PreparedStatement pst = connection.prepareStatement(query)) {
+        try (PreparedStatement pst = getConnection().prepareStatement(query)) {
             pst.setInt(1, id);
             pst.executeUpdate();
         }
     }
 
-    /**
-     * Noter une formation (1 à 5 stars)
-     */
+    public void deleteByUserAndFormation(int userId, int formationId) throws SQLException {
+        String query = "DELETE FROM participation WHERE id_users = ? AND id_formation = ?";
+        try (PreparedStatement pst = getConnection().prepareStatement(query)) {
+            pst.setInt(1, userId);
+            pst.setInt(2, formationId);
+            pst.executeUpdate();
+        }
+    }
+
     public void updateRating(int userId, int formationId, int rating) throws SQLException {
         String query = "UPDATE participation SET rating = ? WHERE id_users = ? AND id_formation = ?";
-        try (PreparedStatement pst = connection.prepareStatement(query)) {
+        try (PreparedStatement pst = getConnection().prepareStatement(query)) {
             pst.setInt(1, rating);
             pst.setInt(2, userId);
             pst.setInt(3, formationId);
@@ -141,7 +137,7 @@ public class ParticipationService {
 
     public boolean hasRated(int userId, int formationId) throws SQLException {
         String query = "SELECT rating FROM participation WHERE id_users = ? AND id_formation = ?";
-        try (PreparedStatement pst = connection.prepareStatement(query)) {
+        try (PreparedStatement pst = getConnection().prepareStatement(query)) {
             pst.setInt(1, userId);
             pst.setInt(2, formationId);
             try (ResultSet rs = pst.executeQuery()) {
@@ -153,12 +149,9 @@ public class ParticipationService {
         return false;
     }
 
-    /**
-     * Count the number of accepted participants for a given formation
-     */
     public int countParticipants(int formationId) throws SQLException {
         String query = "SELECT COUNT(*) FROM participation WHERE id_formation = ? AND statut = 'accepté'";
-        try (PreparedStatement pst = connection.prepareStatement(query)) {
+        try (PreparedStatement pst = getConnection().prepareStatement(query)) {
             pst.setInt(1, formationId);
             try (ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) {
@@ -179,8 +172,21 @@ public class ParticipationService {
         p.setTitreFormation(rs.getString("titre_formation"));
         p.setRating(rs.getInt("rating"));
         try {
+            p.setDescription(rs.getString("description"));
+        } catch (SQLException e) {
+        }
+        try {
+            p.setCategorie(rs.getString("categorie"));
+        } catch (SQLException e) {
+        }
+        try {
             // imagePath is not present in all joins — silently ignore if absent
             p.setImagePath(rs.getString("imagePath"));
+        } catch (SQLException e) {
+            // ignore
+        }
+        try {
+            p.setIdCreateur(rs.getInt("id_createur"));
         } catch (SQLException e) {
             // ignore
         }

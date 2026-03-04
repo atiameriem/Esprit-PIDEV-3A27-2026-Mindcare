@@ -1,7 +1,7 @@
 import models.Participation;
 import models.Formation;
 import org.junit.jupiter.api.*;
-import services.ParticipationService;
+import services.ParticipationServiceF;
 import services.FormationService;
 
 import java.sql.SQLException;
@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ParticipationTest {
 
-    static ParticipationService ps;
+    static ParticipationServiceF ps;
     static FormationService fs;
     private static int formationId; // ID réel généré pour la formation test
     private int participationId = -1;
@@ -22,7 +22,7 @@ public class ParticipationTest {
 
     @BeforeAll
     public static void setup() throws SQLException {
-        ps = new ParticipationService();
+        ps = new ParticipationServiceF();
         fs = new FormationService();
 
         // Créer une formation test

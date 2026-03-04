@@ -12,7 +12,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import models.User;
-import services.UserService;
+import services.UserServiceF;
 
 import java.io.IOException;
 
@@ -36,7 +36,7 @@ public class SignUpController {
     @FXML
     private Label errorLabel;
 
-    private final UserService userService = new UserService();
+    private final UserServiceF userServiceF = new UserServiceF();
 
     @FXML
     void handleSignUp(ActionEvent event) {
@@ -54,7 +54,7 @@ public class SignUpController {
         User newUser = new User(nom, prenom, email, password, role);
 
         try {
-            int result = userService.create(newUser);
+            int result = userServiceF.create(newUser);
             if (result != -1) {
                 System.out.println("User registered successfully: " + email);
                 // Return to login

@@ -3,7 +3,7 @@ package models;
 import java.time.LocalDateTime;
 
 public class SeanceGroupe {
-    private int id;
+    private int seanceId;
     private String titre;
     private int idFormation;
     private int idUsers;
@@ -16,6 +16,7 @@ public class SeanceGroupe {
     private LocalDateTime createdAt;
     private String titreFormation; // Nom de la formation associée
     private String googleEventId; // ID de l'événement Google Calendar pour suppression/mise à jour
+    private String psychoName; // Nom du psychologue créateur de la séance
 
     public SeanceGroupe() {
     }
@@ -31,18 +32,17 @@ public class SeanceGroupe {
 
     // Générer lien Jitsi unique
     public void genererLienJitsi() {
-        String roomName = "Therapie-" + titre.replaceAll("\\s+", "-")
-                + "-" + id + "-" + System.currentTimeMillis();
-        this.lienJitsi = "https://meet.jit.si/" + roomName;
+        String roomName = "MindCare-Session-" + ((int) (Math.random() * 100000));
+        this.lienJitsi = "https://meet.ffmuc.net/" + roomName;
     }
 
     // Getters & Setters
-    public int getId() {
-        return id;
+    public int getSeanceId() {
+        return seanceId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setSeanceId(int seanceId) {
+        this.seanceId = seanceId;
     }
 
     public String getTitre() {
@@ -123,5 +123,13 @@ public class SeanceGroupe {
 
     public void setGoogleEventId(String googleEventId) {
         this.googleEventId = googleEventId;
+    }
+
+    public String getPsychoName() {
+        return psychoName;
+    }
+
+    public void setPsychoName(String psychoName) {
+        this.psychoName = psychoName;
     }
 }

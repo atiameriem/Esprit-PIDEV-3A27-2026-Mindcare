@@ -23,13 +23,13 @@ import java.util.UUID;
  * Pour Gmail, générez un "Mot de passe d'application" (App Password) :
  * https://myaccount.google.com/apppasswords
  */
-public class EmailService {
+public class EmailServiceF {
 
     // ======================================================
     // 🔧 CONFIGURATION — Modifiez ces deux lignes
     // ======================================================
-    private static final String EMAIL_SENDER = "bouzadimaram1@gmail.com"; // Votre adresse Gmail
-    private static final String EMAIL_PASSWORD = "jsnz ovew djvm ixym"; // Mot de passe d'application Gmail
+    private static final String EMAIL_SENDER = "mindcareservicemdp@gmail.com";
+    private static final String EMAIL_PASSWORD = ""; // Mot de passe d'application Gmail
     // ======================================================
 
     private static final String SMTP_HOST = "smtp.gmail.com";
@@ -37,7 +37,7 @@ public class EmailService {
 
     private final Session mailSession;
 
-    public EmailService() {
+    public EmailServiceF() {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
@@ -86,31 +86,6 @@ public class EmailService {
         return envoyerInvitationsSeance(seance, formationId, "MindCare", EMAIL_SENDER);
     }
 
-    /**
-     * Envoie un email de rappel 24h avant la séance.
-     */
-    public int envoyerRappelSeance(SeanceGroupe seance, int formationId) {
-        List<String[]> participants = getParticipantsForFormation(formationId);
-        int sent = 0;
-
-        String dateFormatee = seance.getDateHeure()
-                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm"));
-
-        for (String[] p : participants) {
-            try {
-                // p[0] = email, p[1] = name
-                Message message = buildMessage(p[0], "MindCare", null);
-                message.setSubject("⏰ Rappel – Séance demain : " + seance.getTitre());
-                message.setContent(buildRappelBody(p[1], seance, dateFormatee), "text/html; charset=utf-8");
-                Transport.send(message);
-                sent++;
-            } catch (Exception e) {
-                System.err.println("❌ Rappel échec pour " + p[0] + " : " + e.getMessage());
-            }
-        }
-        return sent;
-    }
-
     // ─── Méthodes privées ──────────────────────────────────────────────────────
 
     private void envoyerEmail(String toEmail, String toName,
@@ -150,7 +125,11 @@ public class EmailService {
         String dtEnd = seance.getDateHeure().plusMinutes(seance.getDureeMinutes())
                 .toInstant(ZoneOffset.UTC).atOffset(ZoneOffset.UTC).format(icsFormat);
         String dtStamp = java.time.OffsetDateTime.now(ZoneOffset.UTC).format(icsFormat);
-        String uid = UUID.randomUUID().toString() + "@mindcare";
+
+        // IMPORTANT: Utiliser l'ID Google comme UID pour que l'annulation puisse le
+        // retrouver
+        String uid = (seance.getGoogleEventId() != null ? seance.getGoogleEventId() : UUID.randomUUID().toString())
+                + "@mindcare";
         String summary = seance.getTitre() != null ? seance.getTitre() : "Séance MindCare";
         String location = seance.getLienJitsi() != null ? seance.getLienJitsi() : "";
         String desc = "Lien Jitsi pour rejoindre : " + location;
@@ -161,6 +140,7 @@ public class EmailService {
                 "METHOD:REQUEST\r\n" +
                 "BEGIN:VEVENT\r\n" +
                 "UID:" + uid + "\r\n" +
+                "SEQUENCE:0\r\n" + // Version initiale
                 "DTSTAMP:" + dtStamp + "\r\n" +
                 "DTSTART:" + dtStart + "\r\n" +
                 "DTEND:" + dtEnd + "\r\n" +
@@ -176,6 +156,36 @@ public class EmailService {
                 "ACTION:DISPLAY\r\n" +
                 "DESCRIPTION:Rappel séance MindCare dans 30 minutes\r\n" +
                 "END:VALARM\r\n" +
+                "END:VEVENT\r\n" +
+                "END:VCALENDAR\r\n";
+    }
+
+    /**
+     * Génère un fichier ICS avec METHOD:CANCEL pour supprimer l'événement
+     * des calendriers des participants.
+     */
+    private String buildCancelIcsContent(SeanceGroupe seance, String attendeeEmail) {
+        DateTimeFormatter icsFormat = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'");
+        String dtStart = seance.getDateHeure().toInstant(ZoneOffset.UTC).atOffset(ZoneOffset.UTC).format(icsFormat);
+        String dtEnd = seance.getDateHeure().plusMinutes(seance.getDureeMinutes())
+                .toInstant(ZoneOffset.UTC).atOffset(ZoneOffset.UTC).format(icsFormat);
+        String dtStamp = java.time.OffsetDateTime.now(ZoneOffset.UTC).format(icsFormat);
+        String summary = "ANNULÉ : " + (seance.getTitre() != null ? seance.getTitre() : "Séance MindCare");
+
+        return "BEGIN:VCALENDAR\r\n" +
+                "VERSION:2.0\r\n" +
+                "PRODID:-//MindCare//Esprit//FR\r\n" +
+                "METHOD:CANCEL\r\n" +
+                "BEGIN:VEVENT\r\n" +
+                "UID:" + (seance.getGoogleEventId() != null ? seance.getGoogleEventId() : "unknown") + "@mindcare\r\n" +
+                "SEQUENCE:2\r\n" + // On met une séquence plus haute pour forcer la suppression
+                "STATUS:CANCELLED\r\n" +
+                "DTSTAMP:" + dtStamp + "\r\n" +
+                "DTSTART:" + dtStart + "\r\n" +
+                "DTEND:" + dtEnd + "\r\n" +
+                "SUMMARY:" + summary + "\r\n" +
+                "ORGANIZER;CN=MindCare:mailto:" + EMAIL_SENDER + "\r\n" +
+                "ATTENDEE;CN=" + attendeeEmail + ":mailto:" + attendeeEmail + "\r\n" +
                 "END:VEVENT\r\n" +
                 "END:VCALENDAR\r\n";
     }
@@ -223,19 +233,67 @@ public class EmailService {
                 "</div></body></html>";
     }
 
-    private String buildRappelBody(String name, SeanceGroupe seance, String dateFormatee) {
-        return "<!DOCTYPE html><html><body style='font-family:Arial,sans-serif;background:#f4f7fb;padding:20px'>" +
-                "<div style='max-width:600px;margin:auto;background:white;border-radius:12px;padding:32px'>" +
-                "<h2>⏰ Rappel – Séance demain</h2>" +
-                "<p>Bonjour <strong>" + name + "</strong>,</p>" +
-                "<p>Rappel : la séance <strong>\"" + seance.getTitre() + "\"</strong> aura lieu <strong>" + dateFormatee
-                + "</strong>.</p>" +
-                "<div style='text-align:center;margin:24px 0'>" +
-                "<a href='" + seance.getLienJitsi()
-                + "' style='background:#5C98A8;color:white;padding:12px 28px;border-radius:20px;text-decoration:none;font-weight:bold'>🎥 Rejoindre</a>"
-                +
-                "</div></div></body></html>";
+    public int envoyerAnnulationSeance(SeanceGroupe seance, int formationId) {
+        List<String[]> participants = getParticipantsForFormation(formationId);
+        int sent = 0;
+
+        String dateFormatee = seance.getDateHeure()
+                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm"));
+
+        for (String[] p : participants) {
+            try {
+                String toEmail = p[0];
+                String toName = p[1];
+
+                Message message = buildMessage(toEmail, "MindCare", null);
+                message.setSubject("❌ Annulation – Séance MindCare : " + seance.getTitre());
+
+                // Multipart: Corps HTML + Pièce jointe CANCEL .ics
+                MimeMultipart multipart = new MimeMultipart("mixed");
+
+                // 1. Corps HTML
+                MimeBodyPart htmlPart = new MimeBodyPart();
+                htmlPart.setContent(buildAnnulationBody(toName, seance, dateFormatee), "text/html; charset=utf-8");
+                multipart.addBodyPart(htmlPart);
+
+                // 2. ICS CANCEL (Pour supprimer de leur calendrier Google/Outlook)
+                MimeBodyPart icsPart = new MimeBodyPart();
+                String icsContent = buildCancelIcsContent(seance, toEmail);
+                icsPart.setContent(icsContent, "text/calendar; charset=utf-8; method=CANCEL");
+                icsPart.setFileName("annulation_mindcare.ics");
+                multipart.addBodyPart(icsPart);
+
+                message.setContent(multipart);
+                Transport.send(message);
+
+                sent++;
+            } catch (Exception e) {
+                System.err.println("❌ Annulation email échec pour " + p[0] + " : " + e.getMessage());
+            }
+        }
+        return sent;
     }
+
+    // ─── Méthodes privées ──────────────────────────────────────────────────────
+
+    private String buildAnnulationBody(String name, SeanceGroupe seance, String dateFormatee) {
+        return "<!DOCTYPE html><html><body style='font-family:Arial,sans-serif;background:#f4f7fb;padding:20px'>" +
+                "<div style='max-width:600px;margin:auto;background:white;border-radius:12px;padding:32px;border-top:5px solid #ef4444'>"
+                +
+                "<h2>❌ Séance Annulée</h2>" +
+                "<p>Bonjour <strong>" + name + "</strong>,</p>" +
+                "<p>Nous vous informons que la séance <strong>\"" + seance.getTitre() + "\"</strong> prévue le <strong>"
+                + dateFormatee
+                + "</strong> a dû être annulée.</p>" +
+                "<p>Nous nous excusons pour ce changement. N'hésitez pas à consulter vos autres séances ou formations disponibles.</p>"
+                +
+                "<div style='background:#fee2e2;color:#b91c1c;padding:15px;border-radius:8px;margin-top:20px;text-align:center'>"
+                +
+                "<strong>Cette séance n'est plus accessible.</strong>" +
+                "</div>" +
+                "</div></body></html>";
+    }
+
 
     /**
      * Récupère les participants acceptés d'une formation : [email, "Prénom Nom"]

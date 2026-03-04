@@ -11,7 +11,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import models.User;
-import services.UserService;
+import services.UserServiceF;
 import utils.UserSession;
 
 import java.io.IOException;
@@ -27,7 +27,7 @@ public class LoginController {
     @FXML
     private Label errorLabel;
 
-    private final UserService userService = new UserService();
+    private final UserServiceF userServiceF = new UserServiceF();
 
     @FXML
     void handleLogin(ActionEvent event) {
@@ -40,7 +40,7 @@ public class LoginController {
         }
 
         try {
-            User user = userService.login(email, password);
+            User user = userServiceF.login(email, password);
             if (user != null) {
                 // Success! Store session
                 UserSession.getInstance(user);

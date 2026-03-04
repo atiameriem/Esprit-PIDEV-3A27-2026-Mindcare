@@ -4,225 +4,529 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="controllers.FormationController"
-      spacing="20"
-      style="-fx-background-color: white;">
+<!--
+  MINDCARE — Formation View
+  Header ultra-compact · Zone scroll maximisée · Respiration naturelle
+-->
 
-    <padding>
-        <Insets top="20" right="30" bottom="20" left="30"/>
-    </padding>
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="controllers.FormationController"
+           style="-fx-background-color: #F8FAFC;">
 
-    <!-- ===== HEADER ===== -->
-    <HBox fx:id="mainHeader" alignment="CENTER_LEFT" spacing="15"
-          style="-fx-padding: 0 0 10 0;">
-        <Label text="🎓" style="-fx-font-size: 32px;"/>
-        <VBox spacing="5">
-            <Label text="Formations en psychologie"
-                   style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-            <Label text="Votre espace d'apprentissage continu"
-                   style="-fx-font-size: 14px; -fx-text-fill: #5F7F8B;"/>
-        </VBox>
-        <Pane HBox.hgrow="ALWAYS"/>
-        
-        <!-- Cloche de notification -->
-        <StackPane fx:id="notificationBell" onMouseClicked="#showNotificationPopup" 
-                   style="-fx-cursor: hand; -fx-padding: 10;">
-            <Label text="🔔" style="-fx-font-size: 24px;"/>
-            <StackPane fx:id="notificationBadge" alignment="TOP_RIGHT" 
-                       style="-fx-background-color: #EF4444; -fx-background-radius: 10; -fx-min-width: 18; -fx-min-height: 18; -fx-max-width: 18; -fx-max-height: 18;"
-                       StackPane.alignment="TOP_RIGHT" translateX="8" translateY="-5">
-                <Label fx:id="notificationCountLabel" text="3" 
-                       style="-fx-text-fill: white; -fx-font-size: 10px; -fx-font-weight: bold;"/>
+    <VBox spacing="0">
+
+        <!-- ═══════════════════════════════════════
+             HEADER COMPACT — tout en une seule ligne
+             ═══════════════════════════════════════ -->
+        <HBox fx:id="mainHeader" alignment="CENTER_LEFT" spacing="14"
+              style="-fx-padding: 10 24 10 24;
+                     -fx-background-color: white;
+                     -fx-border-color: #E9ECF1;
+                     -fx-border-width: 0 0 1 0;
+                     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+
+            <Label text="🎓" style="-fx-font-size: 20px;"/>
+
+            <VBox spacing="2">
+                <Label text="Formations en psychologie"
+                       style="-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: #1F2A33;"/>
+                <Label text="Espace d'apprentissage continu"
+                       style="-fx-font-size: 12px; -fx-text-fill: #64748B;"/>
+            </VBox>
+
+            <Pane HBox.hgrow="ALWAYS"/>
+
+            <!-- Notification bell -->
+            <StackPane fx:id="notificationBell" onMouseClicked="#showNotificationPopup"
+                       style="-fx-cursor: hand; -fx-background-color: #F1F5F9;
+                              -fx-background-radius: 50%;
+                              -fx-min-width: 36px; -fx-min-height: 36px;
+                              -fx-max-width: 36px; -fx-max-height: 36px;">
+                <Label text="🔔" style="-fx-font-size: 15px;"/>
+                <StackPane fx:id="notificationBadge"
+                           style="-fx-background-color: #E85D8A; -fx-background-radius: 8;
+                                  -fx-min-width: 16; -fx-min-height: 16;
+                                  -fx-max-width: 16; -fx-max-height: 16;"
+                           StackPane.alignment="TOP_RIGHT"
+                           translateX="6" translateY="-6">
+                    <Label fx:id="notificationCountLabel" text="3"
+                           style="-fx-text-fill: white; -fx-font-size: 9px; -fx-font-weight: bold;"/>
+                </StackPane>
             </StackPane>
-        </StackPane>
 
-
-
-        <Button fx:id="addFormationBtn" text="➕ Ajouter une formation"
-                onAction="#openAjouterFormation"
-                style="-fx-background-color: linear-gradient(to right, #5C98A8, #7FB9C7); 
-                       -fx-text-fill: white; 
-                       -fx-padding: 10 25; 
-                       -fx-background-radius: 10; 
-                       -fx-font-weight: bold;
-                       -fx-cursor: hand;"/>
-    </HBox>
-
-    <!-- ===== NAVIGATION TABS ===== -->
-    <HBox fx:id="tabsContainer" spacing="10" style="-fx-padding: 0;">
-        <Button fx:id="allFormationsBtn" text="Toutes les formations"
-                onAction="#showAllFormations"
-                style="-fx-background-color: #5C98A8; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 8 20;"/>
-        <Button fx:id="myFormationsBtn" text="Mes formations"
-                onAction="#showMyFormations"
-                style="-fx-background-color: white; -fx-text-fill: #1F2A33; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 8 20; -fx-border-color: #DDD; -fx-border-radius: 10;"/>
-        <Button fx:id="demandesBtn" text="Gérer les demandes"
-                onAction="#showDemandes"
-                style="-fx-background-color: white; -fx-text-fill: #1F2A33; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 8 20; -fx-border-color: #DDD; -fx-border-radius: 10;"/>
-        <Button fx:id="sessionsTabBtn" text="Séances en ligne"
-                onAction="#showSessionsView"
-                style="-fx-background-color: white; -fx-text-fill: #1F2A33; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 8 20; -fx-border-color: #DDD; -fx-border-radius: 10;"/>
-        <Button fx:id="inscritsBtn" text="Patients Inscrits"
-                onAction="#showInscritsView"
-                style="-fx-background-color: white; -fx-text-fill: #1F2A33; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 8 20; -fx-border-color: #DDD; -fx-border-radius: 10;"/>
-    </HBox>
-
-    <!-- ===== BARRE DE RECHERCHE & FILTRES ===== -->
-    <StackPane style="-fx-padding: 10 0;">
-        <!-- Filtres: Toutes les formations -->
-        <HBox fx:id="filterBar" spacing="15" alignment="CENTER_LEFT">
-            <TextField fx:id="searchField"
-                       promptText="Rechercher une formation..."
-                       prefWidth="350"
-                       style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #DDECEF; -fx-border-radius: 10;"/>
-            <ComboBox fx:id="categoryCombo" prefWidth="150" promptText="Catégorie" style="-fx-background-radius: 10; -fx-border-color: #DDECEF; -fx-border-radius: 10;"/>
-            <CheckBox fx:id="onlyMineCheckbox" text="Voir seulement mes formations" visible="false" managed="false"
-                      style="-fx-text-fill: #1F2A33; -fx-font-weight: bold;"/>
+            <Button fx:id="addFormationBtn" text="➕ Créer une formation"
+                    onAction="#openAjouterFormation"
+                    style="-fx-background-color: #5C98A8;
+                           -fx-text-fill: white;
+                           -fx-padding: 9 20;
+                           -fx-background-radius: 10;
+                           -fx-font-weight: 800;
+                           -fx-font-size: 12px;
+                           -fx-cursor: hand;
+                           -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.30), 8, 0, 0, 3);"/>
         </HBox>
 
-        <!-- Filtres: Mes formations -->
-        <HBox fx:id="myFilterBar" alignment="CENTER_LEFT" visible="false">
-            <TextField fx:id="myParticipationsSearchField"
-                       promptText="Rechercher dans mes formations..."
-                       prefWidth="350"
-                       style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #DDECEF; -fx-border-radius: 10;"/>
-        </HBox>
-    </StackPane>
+        <!-- ═══════════════════════════════════════
+             TABS + SEARCH — fine bande sous le header
+             ═══════════════════════════════════════ -->
+        <HBox fx:id="tabsContainer" spacing="6" alignment="CENTER_LEFT"
+              style="-fx-padding: 8 24;
+                     -fx-background-color: white;
+                     -fx-border-color: #E8E0F5;
+                     -fx-border-width: 0 0 1 0;">
 
-    <!-- ===== VUE SANS SCROLL GLOBAL POUR MEILLEUR AFFICHAGE ===== -->
-    <StackPane VBox.vgrow="ALWAYS">
-        <StackPane>
+            <Button fx:id="allFormationsBtn" text="Toutes les formations"
+                    onAction="#showAllFormations"
+                    style="-fx-background-color: transparent; -fx-text-fill: #5C98A8;
+                           -fx-font-weight: 600; -fx-background-radius: 8;
+                           -fx-padding: 7 18; -fx-font-size: 12px; -fx-cursor: hand;
+                           -fx-border-color: #5C98A8; -fx-border-radius: 8; -fx-border-width: 0 0 2 0;"/>
+            <Button fx:id="myFormationsBtn" text="Mes formations"
+                    onAction="#showMyFormations"
+                    style="-fx-background-color: transparent; -fx-text-fill: #5C98A8;
+                           -fx-font-weight: 600; -fx-background-radius: 8;
+                           -fx-padding: 7 18; -fx-font-size: 12px; -fx-cursor: hand;
+                           -fx-border-color: #DDECEF; -fx-border-radius: 8; -fx-border-width: 1;"/>
+            <Button fx:id="sessionsTabBtn" text="Séances en ligne"
+                    onAction="#showSessionsView"
+                    style="-fx-background-color: transparent; -fx-text-fill: #5C98A8;
+                           -fx-font-weight: 600; -fx-background-radius: 8;
+                           -fx-padding: 7 18; -fx-font-size: 12px; -fx-cursor: hand;
+                           -fx-border-color: #DDECEF; -fx-border-radius: 8; -fx-border-width: 1;"/>
+            <Button fx:id="demandesBtn" text="Patients"
+                    onAction="#showDemandes"
+                    style="-fx-background-color: transparent; -fx-text-fill: #5C98A8;
+                           -fx-font-weight: 600; -fx-background-radius: 8;
+                           -fx-padding: 7 18; -fx-font-size: 12px; -fx-cursor: hand;
+                           -fx-border-color: #DDECEF; -fx-border-radius: 8; -fx-border-width: 1;"/>
+            <Button fx:id="inscritsBtn" text="Patients"
+                    onAction="#showInscritsView"
+                    style="-fx-background-color: transparent; -fx-text-fill: #5C98A8;
+                           -fx-font-weight: 600; -fx-background-radius: 8;
+                           -fx-padding: 7 18; -fx-font-size: 12px; -fx-cursor: hand;
+                           -fx-border-color: #DDECEF; -fx-border-radius: 8; -fx-border-width: 1;"/>
+            <Button fx:id="aiInterviewBtn" visible="false" managed="false" text="🤖 Assistant IA"
+                    onAction="#showAIInterview"
+                    style="-fx-background-color: transparent; -fx-text-fill: #5C98A8;"/>
+
+            <Pane HBox.hgrow="ALWAYS"/>
+
+            <!-- Zone de recherche unifiée -->
+            <StackPane>
+                <TextField fx:id="searchField"
+                           promptText="🔍  Rechercher une formation..."
+                           prefWidth="260"
+                           style="-fx-background-color: #F1F5F9; -fx-background-radius: 8;
+                                  -fx-padding: 7 12; -fx-border-color: transparent;
+                                  -fx-font-size: 12px; -fx-text-fill: #1F2A33;"/>
+                
+                <TextField fx:id="myParticipationsSearchField" visible="false" managed="false"
+                           promptText="🔍  Rechercher dans mes formations..."
+                           prefWidth="260"
+                           style="-fx-background-color: #F5F2FE; -fx-background-radius: 8;
+                                  -fx-padding: 7 12; -fx-border-color: transparent;
+                                  -fx-font-size: 12px; -fx-text-fill: #1F2A33;"/>
+                
+                <TextField fx:id="sessionsSearchField" visible="false" managed="false"
+                           promptText="🔍  Rechercher une séance..."
+                           prefWidth="260"
+                           style="-fx-background-color: #ECFDF5; -fx-background-radius: 8;
+                                  -fx-padding: 7 12; -fx-border-color: transparent;
+                                  -fx-font-size: 12px; -fx-text-fill: #1F2A33;"/>
+            </StackPane>
+
+            <ComboBox fx:id="categoryCombo" prefWidth="130" promptText="Catégorie"
+                      style="-fx-background-color: #F1F5F9; -fx-background-radius: 8;
+                             -fx-border-color: transparent; -fx-font-size: 12px;"/>
+
+            <Button fx:id="btnDictionnaireIA" text="📖 Dictionnaire IA" onAction="#toggleDicoPopup"
+                    style="-fx-background-color: linear-gradient(to right, #22D3EE, #0EA5E9);
+                           -fx-text-fill: white;
+                           -fx-font-weight: 800; -fx-background-radius: 9;
+                           -fx-padding: 7 16; -fx-cursor: hand;
+                           -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.4), 10, 0, 0, 4);"/>
+
+            <CheckBox fx:id="onlyMineCheckbox" visible="false" managed="false"
+                      text="Mes formations seulement"
+                      style="-fx-text-fill: #2D2450; -fx-font-weight: bold; -fx-font-size: 11px;"/>
+        </HBox>
+
+        <!-- ═══════════════════════════════════════
+             ZONE PRINCIPALE — prend TOUT l'espace
+             ═══════════════════════════════════════ -->
+        <StackPane VBox.vgrow="ALWAYS" style="-fx-background-color: #F8FAFC;">
+
             <!-- VIEW 1: TOUTES LES FORMATIONS -->
-            <VBox fx:id="allFormationsView" spacing="0" style="-fx-padding: 0; -fx-background-color: white;">
-                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background: white; -fx-border-color: transparent;">
-                    <VBox spacing="30" style="-fx-padding: 10 5;">
-                        <FlowPane fx:id="formationsFlowPane" hgap="20" vgap="20" alignment="TOP_LEFT" style="-fx-background-color: white;">
-                            <!-- Les cartes sont injectées ici -->
-                        </FlowPane>
-                        <!-- Formations à venir removed as per strict ownership requirements -->
-                    </VBox>
+            <VBox fx:id="allFormationsView" VBox.vgrow="ALWAYS"
+                  style="-fx-background-color: transparent;">
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                            style="-fx-background-color: transparent;
+                                   -fx-background: transparent;
+                                   -fx-border-color: transparent;">
+                    <FlowPane fx:id="formationsFlowPane"
+                              hgap="22" vgap="22"
+                              alignment="TOP_LEFT"
+                              style="-fx-background-color: transparent;
+                                     -fx-padding: 22 24;">
+                    </FlowPane>
                 </ScrollPane>
             </VBox>
 
             <!-- VIEW 2: MES FORMATIONS -->
-            <VBox fx:id="myFormationsView" visible="false" spacing="0" style="-fx-padding: 0; -fx-background-color: white;">
-                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background: white; -fx-border-color: transparent;">
-                    <VBox spacing="20" style="-fx-padding: 10 5;">
+            <VBox fx:id="myFormationsView" visible="false" VBox.vgrow="ALWAYS"
+                  style="-fx-background-color: transparent;">
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                            style="-fx-background-color: transparent;
+                                   -fx-background: transparent;
+                                   -fx-border-color: transparent;">
+                    <VBox spacing="18" style="-fx-padding: 22 24;">
                         <Label text="Retrouvez ici toutes les formations auxquelles vous êtes inscrit."
-                               style="-fx-text-fill: #5F7F8B; -fx-font-size: 14px; -fx-font-style: italic; -fx-padding: 0 0 5 0;"/>
-                        <FlowPane fx:id="participationsFlowPane" hgap="20" vgap="20" alignment="TOP_LEFT" style="-fx-background-color: white;">
-                            <!-- Les participations sont injectées ici -->
-                        </FlowPane>
-                        <VBox fx:id="noParticipationsBox" visible="false" alignment="CENTER" spacing="15" style="-fx-padding: 60 0; -fx-background-color: white;">
-                            <Label text="📚" style="-fx-font-size: 54px; -fx-text-fill: #5C98A8;"/>
+                               style="-fx-text-fill: #64748B; -fx-font-size: 13px; -fx-font-style: italic;"/>
+                        <FlowPane fx:id="participationsFlowPane" hgap="20" vgap="20"
+                                  alignment="TOP_LEFT" style="-fx-background-color: transparent;"/>
+                        <VBox fx:id="noParticipationsBox" visible="false" alignment="CENTER"
+                              spacing="14" style="-fx-padding: 80 0;">
+                            <Label text="📚" style="-fx-font-size: 52px;"/>
                             <Label text="Vous n'êtes inscrit à aucune formation."
-                                   style="-fx-text-fill: #5F7F8B; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+                                   style="-fx-text-fill: #9B7FD4; -fx-font-size: 15px; -fx-font-weight: bold;"/>
                         </VBox>
                     </VBox>
                 </ScrollPane>
             </VBox>
 
-            <!-- VIEW 2.1: GÉRER LES DEMANDES (ADMIN/PSY) -->
-            <VBox fx:id="demandesView" visible="false" spacing="15" style="-fx-padding: 10 0; -fx-background-color: white;">
-                <Label text="Demandes d'inscription en attente" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background: white; -fx-border-color: transparent;">
-                    <VBox fx:id="demandesList" spacing="10" style="-fx-padding: 10 5;">
-                        <!-- Les demandes seront injectées ici -->
-                    </VBox>
+            <!-- VIEW 2.1: DEMANDES -->
+            <VBox fx:id="demandesView" visible="false" style="-fx-background-color: transparent;">
+                <Label text="Demandes d'inscription en attente"
+                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2D2450;
+                              -fx-padding: 20 24 10 24;"/>
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                            style="-fx-background-color: transparent; -fx-background: transparent;
+                                   -fx-border-color: transparent;">
+                    <VBox fx:id="demandesList" spacing="10" style="-fx-padding: 0 24 24 24;"/>
                 </ScrollPane>
             </VBox>
 
-            <!-- VIEW 2.3: SÉANCES EN LIGNE (STYLE MINDCARE) -->
-            <VBox fx:id="sessionsView" visible="false" spacing="20" style="-fx-padding: 15; -fx-background-color: transparent;">
-                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 0 0 10 0;">
-                    <VBox spacing="5" HBox.hgrow="ALWAYS">
-                        <Label text="💻 Séances en ligne" style="-fx-font-size: 22px; -fx-font-weight: 800; -fx-text-fill: #1F2A33;"/>
-                        <Label text="Retrouvez vos prochains rendez-vous et rejoignez les séances en un clic." style="-fx-font-size: 13px; -fx-text-fill: #5F7F8B;"/>
-                    </VBox>
-                    <HBox spacing="10" alignment="CENTER_RIGHT">
-                        <Button text="🔄 Actualiser" onAction="#loadSessions" 
-                                style="-fx-background-color: #EAF3F5; -fx-text-fill: #5C98A8; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 8 15; -fx-cursor: hand;"/>
-                    </HBox>
+            <!-- VIEW 2.2: PATIENTS INSCRITS -->
+            <VBox fx:id="inscritsView" visible="false" style="-fx-background-color: transparent;">
+                <HBox spacing="14" alignment="CENTER_LEFT" style="-fx-padding: 20 24 10 24;">
+                    <Label text="Patients inscrits par formation"
+                           style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2D2450;"/>
+                    <ComboBox fx:id="inscritsFormationCombo" prefWidth="260"
+                              promptText="Choisir une formation"
+                              style="-fx-background-color: white; -fx-background-radius: 10;
+                                     -fx-border-color: #D9D0F0; -fx-border-radius: 10; -fx-border-width: 1.5;"/>
                 </HBox>
-
-                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
-                    <VBox fx:id="sessionsList" spacing="12" style="-fx-padding: 5 10;">
-                        <!-- Les séances sont injectées dynamiquement avec le style MindCare -->
-                    </VBox>
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                            style="-fx-background-color: transparent; -fx-background: transparent;
+                                   -fx-border-color: transparent;">
+                    <VBox fx:id="inscritsList" spacing="10" style="-fx-padding: 0 24 24 24;"/>
                 </ScrollPane>
             </VBox>
 
-            <!-- VIEW 2.2: PATIENTS INSCRITS (ADMIN/PSY) -->
-            <VBox fx:id="inscritsView" visible="false" spacing="15" style="-fx-padding: 10 0; -fx-background-color: white;">
-                <HBox spacing="15" alignment="CENTER_LEFT">
-                    <Label text="Patients inscrits par formation" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-                    <ComboBox fx:id="inscritsFormationCombo" prefWidth="250" promptText="Choisir une formation" style="-fx-background-radius: 10;"/>
+            <!-- VIEW 2.3: SÉANCES EN LIGNE -->
+            <VBox fx:id="sessionsView" visible="false" style="-fx-background-color: transparent;">
+                <HBox spacing="14" alignment="CENTER_LEFT" style="-fx-padding: 20 24 10 24;">
+                    <VBox spacing="2" HBox.hgrow="ALWAYS">
+                        <Label text="💻 Séances en ligne"
+                               style="-fx-font-size: 15px; -fx-font-weight: 800; -fx-text-fill: #1F2A33;"/>
+                        <Label text="Vos prochains rendez-vous — rejoignez en un clic."
+                               style="-fx-font-size: 12px; -fx-text-fill: #64748B;"/>
+                    </VBox>
+                    <Button text="🔄 Actualiser" onAction="#loadSessions"
+                            style="-fx-background-color: white; -fx-text-fill: #5C98A8;
+                                   -fx-font-weight: bold; -fx-background-radius: 9;
+                                   -fx-padding: 7 16; -fx-cursor: hand;
+                                   -fx-border-color: #DDECEF; -fx-border-radius: 9; -fx-border-width: 1;"/>
                 </HBox>
-                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background: white; -fx-border-color: transparent;">
-                    <VBox fx:id="inscritsList" spacing="10" style="-fx-padding: 10 5;">
-                        <!-- Les patients inscrits seront injectés ici -->
-                    </VBox>
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                            style="-fx-background-color: transparent; -fx-background: transparent;
+                                   -fx-border-color: transparent;">
+                    <VBox fx:id="sessionsList" spacing="12" style="-fx-padding: 0 24 24 24;"/>
                 </ScrollPane>
             </VBox>
 
-            <!-- VIEW 3: LISTE DES MODULES -->
-            <VBox fx:id="formationDetailsView" visible="false" spacing="5" style="-fx-padding: 0; -fx-background-color: white;">
-                <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-padding: 0 0 5 0;">
-                    <Button text="← Retour" onAction="#handleBackFromProgramme"
-                            style="-fx-background-color: #F8FBFC; -fx-text-fill: #5C98A8; -fx-background-radius: 10; -fx-border-color: #DDECEF; -fx-cursor: hand; -fx-font-weight: bold;"/>
-                    <Label fx:id="detailFormationTitle" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-                </HBox>
-                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background: white; -fx-border-color: transparent;">
-                    <VBox spacing="15" maxWidth="800" style="-fx-padding: 10 5;">
-                        <Label text="Programme de la formation" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #5C98A8;"/>
-                        <VBox fx:id="modulesLearningList" spacing="12">
-                            <!-- Liste des modules -->
-                        </VBox>
+            <!-- VIEW 2.4: SÉANCE ACTIVE JITSI -->
+            <VBox fx:id="activeSeanceView" visible="false" VBox.vgrow="ALWAYS"
+                   spacing="0" style="-fx-background-color: #0F172A;">
+                <HBox alignment="CENTER_LEFT" spacing="18"
+                      style="-fx-background-color: #1E293B; -fx-padding: 12 22;
+                             -fx-border-color: #334155; -fx-border-width: 0 0 1 0;">
+                    <Button text="← Quitter" onAction="#closeActiveSeance"
+                            style="-fx-background-color: #E11D48; -fx-text-fill: white;
+                                   -fx-background-radius: 9; -fx-cursor: hand;
+                                   -fx-font-weight: bold; -fx-padding: 7 16;"/>
+                    <VBox spacing="2">
+                        <Label fx:id="activeSeanceTitle" text="Séance en cours"
+                               style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #7FB9C7;"/>
+                        <Label fx:id="activeSeanceSubtitle" text="Connexion sécurisée MindCare"
+                               style="-fx-text-fill: #94A3B8; -fx-font-size: 11px;"/>
                     </VBox>
-                </ScrollPane>
-            </VBox>
-
-            <!-- VIEW 4: CONTENU DU MODULE -->
-            <VBox fx:id="moduleDetailsView" visible="false" spacing="5" style="-fx-padding: 0; -fx-background-color: white;">
-                <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-padding: 0 0 5 0;">
-                    <Button text="← Programme" onAction="#backToModules"
-                            style="-fx-background-color: #F8FBFC; -fx-text-fill: #5C98A8; -fx-background-radius: 10; -fx-border-color: #DDECEF; -fx-cursor: hand; -fx-font-weight: bold;"/>
-                    <VBox>
-                        <Label fx:id="selectedModuleTitle" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1F2A33;"/>
-                        <Label fx:id="selectedModuleDesc" style="-fx-text-fill: #5F7F8B; -fx-font-size: 12px;"/>
-                    </VBox>
-                </HBox>
-
-                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background: white; -fx-border-color: transparent;">
-                    <VBox fx:id="contentsLearningContainer" spacing="15" maxWidth="900" style="-fx-padding: 5;">
-                        <!-- Contenus -->
-                    </VBox>
-                </ScrollPane>
-            </VBox>
-
-            <!-- NOTIFICATION POPUP (Hidden by default) -->
-            <VBox fx:id="notificationsPopup" visible="false" spacing="0" 
-                  style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #DDECEF; -fx-border-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 20, 0, 0, 5);"
-                  maxWidth="350" prefWidth="350" maxHeight="450"
-                  StackPane.alignment="TOP_RIGHT">
-                <padding>
-                    <Insets top="0" right="0" bottom="0" left="0"/>
-                </padding>
-                <HBox alignment="CENTER_LEFT" style="-fx-background-color: #F8FBFC; -fx-padding: 15; -fx-background-radius: 12 12 0 0; -fx-border-color: #DDECEF; -fx-border-width: 0 0 1 0;">
-                    <Label text="Notifications" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #1F2A33;"/>
                     <Pane HBox.hgrow="ALWAYS"/>
-                    <Button text="✕" onAction="#closeNotifications" style="-fx-background-color: transparent; -fx-text-fill: #5F7F8B; -fx-font-size: 14px; -fx-cursor: hand;"/>
+                    <Label text="⬤ EN DIRECT"
+                           style="-fx-text-fill: #E85D8A; -fx-font-weight: bold; -fx-font-size: 11px;
+                                  -fx-background-color: #2D1A28; -fx-padding: 5 12; -fx-background-radius: 14;"/>
                 </HBox>
-                <ScrollPane fitToWidth="true" style="-fx-background-color: white; -fx-background: white; -fx-border-color: transparent;">
-                    <VBox fx:id="notificationsList" spacing="10" style="-fx-padding: 15;">
-                        <!-- Notifications injectées ici -->
+                <StackPane fx:id="jitsiContainer" VBox.vgrow="ALWAYS"
+                           minHeight="500" style="-fx-background-color: black;"/>
+            </VBox>
+
+            <!-- VIEW 3: MODULES D'UNE FORMATION -->
+            <VBox fx:id="formationDetailsView" visible="false" style="-fx-background-color: transparent;">
+                <HBox alignment="CENTER_LEFT" spacing="14"
+                      style="-fx-padding: 12 24 10 24; -fx-background-color: white;
+                             -fx-border-color: #E8E0F5; -fx-border-width: 0 0 1 0;">
+                    <Button text="← Retour" onAction="#handleBackFromProgramme"
+                            style="-fx-background-color: #EAF3F5; -fx-text-fill: #5C98A8;
+                                   -fx-background-radius: 9; -fx-cursor: hand;
+                                   -fx-font-weight: 800; -fx-padding: 7 16;
+                                   -fx-border-color: #AACFD9; -fx-border-radius: 9; -fx-border-width: 1;"/>
+                    <VBox spacing="2">
+                        <Label fx:id="detailFormationTitle"
+                               style="-fx-font-size: 15px; -fx-font-weight: 900; -fx-text-fill: #1F2A33;"/>
+                        <Label text="Modules de cette formation"
+                               style="-fx-font-size: 11px; -fx-text-fill: #64748B;"/>
                     </VBox>
+                    <Pane HBox.hgrow="ALWAYS"/>
+                    <Button text="🔄 Actualiser" onAction="#refreshModules"
+                            style="-fx-background-color: transparent; -fx-text-fill: #5C98A8;
+                                   -fx-font-weight: 800; -fx-cursor: hand;"/>
+                    <Button fx:id="btnGenererIA" text="🤖 Générer IA" onAction="#showAIInterview"
+                            style="-fx-background-color: linear-gradient(to right, #22D3EE, #0EA5E9);
+                                   -fx-text-fill: white;
+                                   -fx-font-weight: 800; -fx-background-radius: 9;
+                                   -fx-padding: 7 16; -fx-cursor: hand;
+                                   -fx-effect: dropshadow(gaussian, rgba(34, 211, 238, 0.4), 10, 0, 0, 4);"/>
+                </HBox>
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                            style="-fx-background-color: transparent; -fx-background: transparent;
+                                   -fx-border-color: transparent;">
+                    <VBox fx:id="modulesLearningList" spacing="14" style="-fx-padding: 20 24;"/>
                 </ScrollPane>
             </VBox>
 
+            <!-- VIEW 4: CONTENU D'UN MODULE -->
+            <VBox fx:id="moduleDetailsView" visible="false" style="-fx-background-color: transparent;">
+                <HBox alignment="CENTER_LEFT" spacing="14"
+                      style="-fx-padding: 12 24 10 24; -fx-background-color: white;
+                             -fx-border-color: #DDECEF; -fx-border-width: 0 0 1 0;">
+                    <Button text="← Programme" onAction="#backToModules"
+                            style="-fx-background-color: #EAF3F5; -fx-text-fill: #5C98A8;
+                                   -fx-background-radius: 9; -fx-cursor: hand;
+                                   -fx-font-weight: 800; -fx-padding: 7 16;
+                                   -fx-border-color: #AACFD9; -fx-border-radius: 9; -fx-border-width: 1;"/>
+                    <VBox spacing="2">
+                        <Label fx:id="selectedModuleTitle"
+                               style="-fx-font-size: 15px; -fx-font-weight: 900; -fx-text-fill: #1E3A8A;"/>
+                        <Label fx:id="selectedModuleDesc"
+                               style="-fx-text-fill: #64748B; -fx-font-size: 11px;"/>
+                    </VBox>
+                    <Pane HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnTopEditModule" text="✏️ Modifier" visible="false" managed="false"
+                            style="-fx-background-color: transparent; -fx-text-fill: #5C98A8;
+                                   -fx-font-weight: 800; -fx-cursor: hand;"/>
+                    
+                    <Button fx:id="btnExportWord" text="📄 Word" visible="false" managed="false" onAction="#handleExportWord"
+                            style="-fx-background-color: #EBF8FF; -fx-text-fill: #2B6CB0;
+                                   -fx-font-weight: 800; -fx-background-radius: 9;
+                                   -fx-padding: 7 14; -fx-cursor: hand;
+                                   -fx-border-color: #BEE3F8; -fx-border-radius: 9;"/>
+                                   
+                    <Button fx:id="btnSyncWord" text="🔄 Synchroniser" visible="false" managed="false" onAction="#handleSyncWord"
+                            style="-fx-background-color: #F0FFF4; -fx-text-fill: #2F855A;
+                                   -fx-font-weight: 800; -fx-background-radius: 9;
+                                   -fx-padding: 7 14; -fx-cursor: hand;
+                                   -fx-border-color: #C6F6D5; -fx-border-radius: 9;"/>
+                </HBox>
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                            style="-fx-background-color: transparent; -fx-background: transparent;
+                                   -fx-border-color: transparent;">
+                    <VBox fx:id="contentsLearningContainer" spacing="20" style="-fx-padding: 20 24;"/>
+                </ScrollPane>
+            </VBox>
+
+            <!-- VIEW 5: AI INTERVIEW -->
+            <VBox fx:id="aiInterviewView" visible="false" style="-fx-background-color: white;">
+                <HBox alignment="CENTER_LEFT" spacing="12"
+                      style="-fx-background-color: linear-gradient(to right, #3A6B7E, #5C98A8);
+                             -fx-padding: 15 22;">
+                    <Label text="🧠" style="-fx-font-size: 20px;"/>
+                    <VBox spacing="2">
+                        <Label text="Assistant IA — Créer un programme"
+                               style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                        <Label text="Je vous pose des questions pour générer votre cours"
+                               style="-fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.85);"/>
+                    </VBox>
+                    <Pane HBox.hgrow="ALWAYS"/>
+                    <Button text="← Retour" onAction="#backFromAIInterview"
+                            style="-fx-background-color: rgba(255,255,255,0.18); -fx-text-fill: white;
+                                   -fx-background-radius: 8; -fx-cursor: hand; -fx-font-weight: bold;
+                                   -fx-border-color: rgba(255,255,255,0.25); -fx-border-radius: 8; -fx-border-width: 1;"/>
+                </HBox>
+                <ScrollPane fx:id="aiChatScrollPane" fitToWidth="true" VBox.vgrow="ALWAYS"
+                            style="-fx-background-color: #F8FAFC; -fx-border-color: transparent; -fx-background: #F8FAFC;">
+                    <VBox fx:id="aiChatContainer" spacing="8"
+                          style="-fx-padding: 18; -fx-background-color: #F8FAFC;"/>
+                </ScrollPane>
+                <Button fx:id="btnGenererCours" text="🧠 Rédiger l'article pour le patient"
+                        onAction="#onGenererCours" visible="false" managed="false" maxWidth="Infinity"
+                        style="-fx-background-color: linear-gradient(to right, #3A6B7E, #5C98A8);
+                               -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: 900;
+                               -fx-padding: 12; -fx-cursor: hand;"/>
+                <Label fx:id="aiStatutLabel" text=""
+                       style="-fx-font-size: 11px; -fx-text-fill: #3A6B7E; -fx-padding: 2 18;"/>
+                <HBox spacing="10" alignment="CENTER"
+                      style="-fx-padding: 10 16; -fx-background-color: white;
+                             -fx-border-color: #DDECEF; -fx-border-width: 1 0 0 0;">
+                    <TextArea fx:id="aiMessageField" promptText="Votre réponse..."
+                              HBox.hgrow="ALWAYS" wrapText="true" prefRowCount="2"
+                              style="-fx-font-size: 13px; -fx-padding: 8 12;
+                                      -fx-background-color: #FAFCFD; -fx-background-radius: 10;
+                                      -fx-border-color: #DDECEF; -fx-border-radius: 10; -fx-border-width: 1.5;"/>
+                    <ProgressIndicator fx:id="aiLoading" visible="false" prefWidth="26" prefHeight="26"
+                                       style="-fx-progress-color: #3A6B7E;"/>
+                    <Button fx:id="aiSendBtn" text="➤" onAction="#onAIEnvoyer"
+                            style="-fx-background-color: linear-gradient(to right, #3A6B7E, #5C98A8); -fx-text-fill: white;
+                                   -fx-font-size: 14px; -fx-background-radius: 50%;
+                                   -fx-min-width: 40px; -fx-min-height: 40px; -fx-cursor: hand;"/>
+                </HBox>
+            </VBox>
+
+            <!-- VIEW 6: WORD VIEWER -->
+            <VBox fx:id="wordViewerView" visible="false" style="-fx-background-color: white;">
+                <HBox alignment="CENTER_LEFT" spacing="12"
+                      style="-fx-background-color: linear-gradient(to right, #3A6B7E, #5C98A8);
+                             -fx-padding: 12 22;">
+                    <Label text="📄" style="-fx-font-size: 17px;"/>
+                    <Label fx:id="wordViewerTitre" text="Lecture de l'article"
+                           style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                    <Pane HBox.hgrow="ALWAYS"/>
+                    <Button text="← Retour" onAction="#backFromWordViewer"
+                            style="-fx-background-color: rgba(255,255,255,0.18); -fx-text-fill: white;
+                                   -fx-background-radius: 8; -fx-cursor: hand; -fx-font-weight: bold;
+                                   -fx-border-color: rgba(255,255,255,0.25); -fx-border-radius: 8; -fx-border-width: 1;"/>
+                </HBox>
+                <HBox VBox.vgrow="ALWAYS" spacing="0">
+                    <ScrollPane fx:id="wordScrollPane" fitToWidth="true" HBox.hgrow="ALWAYS"
+                                style="-fx-background-color: white; -fx-border-color: transparent; -fx-background: white;">
+                        <VBox fx:id="wordContentContainer" spacing="5"
+                              style="-fx-padding: 26; -fx-background-color: white;"/>
+                    </ScrollPane>
+                    
+                    <!-- Hidden legacy variables so controller doesn't throw NullPointerException -->
+                    <VBox fx:id="wordExplicationPanel" visible="false" managed="false"/>
+                    <Label fx:id="wordMotLabel" visible="false" managed="false"/>
+                    <Label fx:id="wordTraductionLabel" visible="false" managed="false"/>
+                    <Label fx:id="wordExempleLabel" visible="false" managed="false"/>
+                </HBox>
+
+                <!-- NEW GOOGLE TRANSLATE STYLE UI -->
+                <VBox style="-fx-padding: 16; -fx-background-color: #F8FAFC;
+                             -fx-border-color: #E2E8F0; -fx-border-width: 1 0 0 0;" spacing="12">
+                    <HBox alignment="CENTER_LEFT" spacing="12">
+                         <Label text="🔍 Dictionnaire Thérapeutique IA" style="-fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #3A6B7E;"/>
+                         <Pane HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                    <HBox spacing="16" alignment="TOP_CENTER">
+                        <!-- LEFT BOX: Input -->
+                        <VBox HBox.hgrow="ALWAYS" spacing="10" 
+                              style="-fx-background-color: white; -fx-padding: 14; -fx-border-color: #E8E0F5; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.03), 8, 0, 0, 2);">
+                             <Label text="Que souhaitez-vous comprendre ?" style="-fx-text-fill: #64748B; -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-transform: uppercase;"/>
+                             <TextField fx:id="wordInputField" promptText="Saisissez un mot ou une expression ici (ex: anxiété, thérapie cognitive...)" 
+                                        style="-fx-background-color: #F1F5F9; -fx-border-color: transparent; -fx-padding: 12; -fx-font-size: 14px; -fx-background-radius: 8; -fx-text-fill: #1E293B;"/>
+                             <HBox alignment="CENTER_RIGHT">
+                                  <Button fx:id="wordExpliquerBtn" text="Trouver la définition" onAction="#onExpliquerMot"
+                                          style="-fx-background-color: linear-gradient(to right, #3A6B7E, #5C98A8); -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-padding: 9 18; -fx-background-radius: 8; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(58,107,126,0.2), 6, 0, 0, 2);"/>
+                             </HBox>
+                        </VBox>
+
+                        <!-- RIGHT BOX: Output -->
+                        <VBox HBox.hgrow="ALWAYS" spacing="10" 
+                              style="-fx-background-color: #FFFDF0; -fx-padding: 14; -fx-border-color: #FCE1A8; -fx-border-width: 1.5; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(230,170,50,0.07), 10, 0, 0, 3);">
+                             <HBox alignment="CENTER_LEFT" spacing="8">
+                                  <Label text="Définition simplifiée" style="-fx-text-fill: #A37A17; -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-transform: uppercase;"/>
+                                  <ProgressIndicator fx:id="wordExplicationLoading" visible="false" prefWidth="14" prefHeight="14" style="-fx-progress-color: #A37A17;"/>
+                             </HBox>
+                             <Label fx:id="wordExplicationLabel" text="Votre définition apparaîtra ici de manière claire et bienveillante..." wrapText="true"
+                                    style="-fx-font-size: 14px; -fx-text-fill: #4B3A0D; -fx-line-spacing: 5px;"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+            </VBox>
 
         </StackPane>
-    </StackPane>
+        <!-- FIN ZONE PRINCIPALE -->
 
-</VBox>
+    </VBox>
+
+    <!-- NOTIFICATION POPUP (overlay) -->
+    <VBox fx:id="notificationsPopup" visible="false" spacing="0"
+          style="-fx-background-color: white; -fx-background-radius: 14;
+                 -fx-border-color: #E8E0F5; -fx-border-radius: 14; -fx-border-width: 1;
+                 -fx-effect: dropshadow(gaussian, rgba(124,92,191,0.18), 24, 0, 0, 6);"
+          maxWidth="340" prefWidth="340" maxHeight="420"
+          StackPane.alignment="TOP_RIGHT">
+        <StackPane.margin><Insets top="52" right="24"/></StackPane.margin>
+        <HBox alignment="CENTER_LEFT"
+              style="-fx-background-color: #F5F2FE; -fx-padding: 12 16;
+                     -fx-background-radius: 14 14 0 0;
+                     -fx-border-color: #E8E0F5; -fx-border-width: 0 0 1 0;">
+            <Label text="Notifications"
+                   style="-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #2D2450;"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Button text="✕" onAction="#closeNotifications"
+                    style="-fx-background-color: transparent; -fx-text-fill: #9B7FD4;
+                           -fx-font-size: 13px; -fx-cursor: hand;"/>
+        </HBox>
+        <ScrollPane fitToWidth="true"
+                    style="-fx-background-color: white; -fx-background: white; -fx-border-color: transparent;">
+            <VBox fx:id="notificationsList" spacing="8" style="-fx-padding: 12;"/>
+        </ScrollPane>
+    </VBox>
+
+    <!-- DICO POPUP (overlay) -->
+    <VBox fx:id="dicoPopup" visible="false" spacing="0"
+          style="-fx-background-color: white; -fx-background-radius: 14;
+                 -fx-border-color: #E8E0F5; -fx-border-radius: 14; -fx-border-width: 1;
+                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 30, 0, 0, 10);"
+          maxWidth="650" maxHeight="300"
+          StackPane.alignment="CENTER">
+        <HBox alignment="CENTER_LEFT"
+              style="-fx-background-color: #F8FAFC; -fx-padding: 12 16;
+                     -fx-background-radius: 14 14 0 0;
+                     -fx-border-color: #E2E8F0; -fx-border-width: 0 0 1 0;">
+            <Label text="🔍 Dictionnaire Thérapeutique IA"
+                   style="-fx-font-weight: 800; -fx-font-size: 14px; -fx-text-fill: #3A6B7E;"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Button text="✕" onAction="#toggleDicoPopup"
+                    style="-fx-background-color: transparent; -fx-text-fill: #94A3B8;
+                           -fx-font-size: 14px; -fx-cursor: hand; -fx-font-weight: bold;"/>
+        </HBox>
+        <VBox style="-fx-padding: 16;" spacing="12">
+            <HBox spacing="16" alignment="TOP_CENTER">
+                <!-- LEFT BOX: Input -->
+                <VBox HBox.hgrow="ALWAYS" spacing="10" 
+                      style="-fx-background-color: white; -fx-padding: 14; -fx-border-color: #E8E0F5; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.03), 8, 0, 0, 2);">
+                     <Label text="Que souhaitez-vous comprendre ?" style="-fx-text-fill: #64748B; -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-transform: uppercase;"/>
+                     <TextField fx:id="dicoInputField" promptText="Saisissez un mot ou une expression ici (ex: anxiété, thérapie cognitive...)" 
+                                style="-fx-background-color: #F1F5F9; -fx-border-color: transparent; -fx-padding: 12; -fx-font-size: 14px; -fx-background-radius: 8; -fx-text-fill: #1E293B;"/>
+                     <HBox alignment="CENTER_RIGHT">
+                          <Button fx:id="dicoExpliquerBtn" text="Trouver la définition" onAction="#onDicoTraduire"
+                                  style="-fx-background-color: linear-gradient(to right, #3A6B7E, #5C98A8); -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-padding: 9 18; -fx-background-radius: 8; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(58,107,126,0.2), 6, 0, 0, 2);"/>
+                     </HBox>
+                </VBox>
+
+                <!-- RIGHT BOX: Output -->
+                <VBox HBox.hgrow="ALWAYS" spacing="10" 
+                      style="-fx-background-color: #FFFDF0; -fx-padding: 14; -fx-border-color: #FCE1A8; -fx-border-width: 1.5; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(230,170,50,0.07), 10, 0, 0, 3);">
+                     <HBox alignment="CENTER_LEFT" spacing="8">
+                          <Label text="Définition simplifiée" style="-fx-text-fill: #A37A17; -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-transform: uppercase;"/>
+                          <ProgressIndicator fx:id="dicoLoading" visible="false" prefWidth="14" prefHeight="14" style="-fx-progress-color: #A37A17;"/>
+                     </HBox>
+                     <Label fx:id="dicoExplicationLabel" text="Votre définition apparaîtra ici de manière claire et bienveillante..." wrapText="true"
+                            style="-fx-font-size: 14px; -fx-text-fill: #4B3A0D; -fx-line-spacing: 5px;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </VBox>
+
+</StackPane>

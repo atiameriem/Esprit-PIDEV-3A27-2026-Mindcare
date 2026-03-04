@@ -9,16 +9,14 @@ import java.util.List;
 
 public class FormationService implements IService<Formation> {
 
-    private final Connection connection;
-
     public FormationService() {
-        connection = MyDatabase.getInstance().getConnection();
-        if (connection == null) {
+        Connection conn = MyDatabase.getInstance().getConnection();
+        if (conn == null) {
             System.err.println("❌ FormationService: Connection is null. Migration skipped.");
             return;
         }
         try {
-            DatabaseMetaData dbmd = connection.getMetaData();
+            DatabaseMetaData dbmd = conn.getMetaData();
 
             // Check if id_users exists
             boolean idUsersExists = false;
@@ -28,7 +26,7 @@ public class FormationService implements IService<Formation> {
             }
 
             if (!idUsersExists) {
-                try (Statement st = connection.createStatement()) {
+                try (Statement st = conn.createStatement()) {
                     st.execute("ALTER TABLE formation ADD COLUMN id_users INT NULL");
                     System.out.println("Column id_users added to formation table.");
                 }
@@ -42,7 +40,7 @@ public class FormationService implements IService<Formation> {
             }
 
             if (statusExists) {
-                try (Statement st = connection.createStatement()) {
+                try (Statement st = conn.createStatement()) {
                     st.execute("ALTER TABLE formation DROP COLUMN statut");
                     System.out.println("Column statut removed from formation table.");
                 }
@@ -53,10 +51,14 @@ public class FormationService implements IService<Formation> {
         }
     }
 
+    private Connection getConnection() {
+        return MyDatabase.getInstance().getConnection();
+    }
+
     @Override
     public int create(Formation formation) throws SQLException {
         String query = "INSERT INTO formation (titre, description, duree, niveau, categorie, imagePath, id_users) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement statement = getConnection().prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, formation.getTitre());
             statement.setString(2, formation.getDescription());
             statement.setString(3, formation.getDuree());
@@ -84,7 +86,7 @@ public class FormationService implements IService<Formation> {
     @Override
     public void update(Formation formation) throws SQLException {
         String query = "UPDATE formation SET titre = ?, description = ?, duree = ?, niveau = ?, categorie = ?, imagePath = ? WHERE id_formation = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (PreparedStatement statement = getConnection().prepareStatement(query)) {
             statement.setString(1, formation.getTitre());
             statement.setString(2, formation.getDescription());
             statement.setString(3, formation.getDuree());
@@ -99,7 +101,7 @@ public class FormationService implements IService<Formation> {
     @Override
     public void delete(int id) throws SQLException {
         String query = "DELETE FROM formation WHERE id_formation = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (PreparedStatement statement = getConnection().prepareStatement(query)) {
             statement.setInt(1, id);
             statement.executeUpdate();
         }
@@ -109,7 +111,7 @@ public class FormationService implements IService<Formation> {
     public List<Formation> read() throws SQLException {
         List<Formation> formations = new ArrayList<>();
         String query = "SELECT * FROM formation";
-        try (Statement statement = connection.createStatement();
+        try (Statement statement = getConnection().createStatement();
                 ResultSet resultSet = statement.executeQuery(query)) {
             while (resultSet.next()) {
                 Formation f = mapResultSetToFormation(resultSet);
@@ -122,7 +124,7 @@ public class FormationService implements IService<Formation> {
     public List<Formation> findByOwner(int ownerId) throws SQLException {
         List<Formation> formations = new ArrayList<>();
         String query = "SELECT * FROM formation WHERE id_users = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (PreparedStatement statement = getConnection().prepareStatement(query)) {
             statement.setInt(1, ownerId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
@@ -138,7 +140,7 @@ public class FormationService implements IService<Formation> {
 
     public Formation findById(int id) throws SQLException {
         String query = "SELECT * FROM formation WHERE id_formation = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (PreparedStatement statement = getConnection().prepareStatement(query)) {
             statement.setInt(1, id);
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
@@ -173,7 +175,7 @@ public class FormationService implements IService<Formation> {
 
     private double getAverageRating(int formationId) {
         String query = "SELECT AVG(rating) as avg_r FROM participation WHERE id_formation = ? AND rating > 0";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (PreparedStatement statement = getConnection().prepareStatement(query)) {
             statement.setInt(1, formationId);
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
