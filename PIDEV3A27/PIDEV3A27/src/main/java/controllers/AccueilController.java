@@ -7,6 +7,6 @@ public class AccueilController {
     @FXML
     public void initialize() {
         // Initialisation de la vue Accueil
-        System.out.println("Vue Accueil chargée");
+        System.out.println("bonjppoduisadh");
     }
 }
