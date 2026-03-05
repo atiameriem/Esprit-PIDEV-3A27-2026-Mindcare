@@ -1,0 +1,219 @@
+/* src/main/resources/styles/liste.css */
+
+/* Variables de couleurs */
+.root {
+    -color-body: #EAF3F5;
+    -color-text-primary: #1F2A33;
+    -color-text-secondary: #5F7F8B;
+    -color-button-bg: rgba(255,255,255,0.78);
+    -color-button-hover: rgba(255,255,255,0.90);
+    -color-accent: #5C98A8;
+    -color-shadow: rgba(92,152,168,0.09);
+    -color-card-bg: white;
+    -color-icon-bg: #dce8f0;
+}
+
+/* Conteneur principal */
+.main-container {
+    -fx-background-color: -color-body;
+    -fx-padding: 30;
+}
+
+/* Header */
+.header {
+    -fx-alignment: center-left;
+    -fx-spacing: 20;
+}
+
+.header-title-container {
+    -fx-spacing: 4;
+    -fx-hgrow: always;
+}
+
+.header-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-text-primary;
+}
+
+.header-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: -color-text-secondary;
+}
+
+/* Bouton Nouveau Test */
+.btn-nouveau-test {
+    -fx-background-color: -color-button-bg;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20 10 20;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, -color-shadow, 14, 0, 0, 3);
+}
+
+.btn-nouveau-test:hover {
+    -fx-background-color: -color-button-hover;
+    -fx-effect: dropshadow(gaussian, -color-shadow, 18, 0, 0, 4);
+}
+
+.btn-nouveau-test:pressed {
+    -fx-background-color: derive(-color-button-bg, -10%);
+    -fx-effect: dropshadow(gaussian, -color-shadow, 8, 0, 0, 2);
+}
+
+/* ScrollPane */
+.custom-scrollpane {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+}
+
+.custom-scrollpane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.custom-scrollpane .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 12;
+}
+
+.custom-scrollpane .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.custom-scrollpane .scroll-bar:vertical .thumb {
+    -fx-background-color: derive(-color-text-secondary, 40%);
+    -fx-background-radius: 6;
+}
+
+.custom-scrollpane .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: -color-text-secondary;
+}
+
+.custom-scrollpane .scroll-bar:vertical .increment-button,
+.custom-scrollpane .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* Liste des tests */
+.liste-tests {
+    -fx-background-color: transparent;
+    -fx-spacing: 14;
+}
+
+/* Carte de quiz - Ces styles sont appliqués depuis le contrôleur Java */
+.quiz-card {
+    -fx-background-color: -color-card-bg;
+    -fx-background-radius: 12;
+    -fx-padding: 18 20 18 20;
+    -fx-spacing: 16;
+    -fx-alignment: center-left;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 8, 0, 0, 2);
+    -fx-border-color: transparent;
+    -fx-border-radius: 12;
+}
+
+.quiz-card:hover {
+    -fx-background-color: rgba(220, 232, 240, 0.3);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 12, 0, 0, 4);
+}
+
+/* Icône du quiz */
+.quiz-icon-container {
+    -fx-background-color: -color-icon-bg;
+    -fx-background-radius: 50;
+    -fx-pref-width: 50;
+    -fx-pref-height: 50;
+    -fx-min-width: 50;
+    -fx-min-height: 50;
+    -fx-alignment: center;
+}
+
+.quiz-icon {
+    -fx-font-size: 20px;
+}
+
+/* Informations du quiz */
+.quiz-info-container {
+    -fx-spacing: 4;
+    -fx-hgrow: always;
+}
+
+.quiz-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-text-primary;
+}
+
+.quiz-description {
+    -fx-font-size: 13px;
+    -fx-text-fill: -color-text-secondary;
+    -fx-wrap-text: true;
+}
+
+.quiz-meta {
+    -fx-spacing: 16;
+    -fx-alignment: center-left;
+}
+
+.quiz-meta-item {
+    -fx-font-size: 12px;
+    -fx-text-fill: -color-accent;
+}
+
+/* Actions */
+.quiz-actions {
+    -fx-spacing: 8;
+    -fx-alignment: center-right;
+}
+
+/* Bouton d'édition */
+.btn-edit {
+    -fx-background-color: transparent;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+    -fx-text-fill: -color-text-secondary;
+}
+
+.btn-edit:hover {
+    -fx-text-fill: -color-accent;
+}
+
+/* Bouton de suppression */
+.btn-delete {
+    -fx-background-color: transparent;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+    -fx-text-fill: #e74c3c;
+}
+
+.btn-delete:hover {
+    -fx-text-fill: #c0392b;
+}
+
+/* Bouton Passer */
+.btn-passer {
+    -fx-background-color: #2c4a6e;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 18 8 18;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.btn-passer:hover {
+    -fx-background-color: #3a5f8a;
+}
+
+.btn-passer:pressed {
+    -fx-background-color: #1e3a55;
+}
+
+/* Séparateur */
+.separator {
+    -fx-padding: 24 0 0 0;
+}

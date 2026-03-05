@@ -20,28 +20,34 @@
 <?import javafx.scene.shape.Circle?>
 <?import java.net.URL?>
 
-<ScrollPane xmlns:fx="http://javafx.com/fxml/1"
+<ScrollPane fx:id="scrollRacine"
+            xmlns:fx="http://javafx.com/fxml/1"
             xmlns="http://javafx.com/javafx/21"
-            fx:controller="controllers.SuivieQuizController"
+            fx:controller="controllers.SuivieController"
             fitToWidth="true"
             styleClass="scroll-root">
 
-    <!-- ✅ Lien vers le fichier CSS -->
     <stylesheets>
         <URL value="@../styles/suivie-quiz.css"/>
     </stylesheets>
 
-    <VBox spacing="16">
-        <padding><Insets top="20" right="24" bottom="24" left="24"/></padding>
+    <VBox fx:id="rootVBox" spacing="18">
+        <padding><Insets top="22" right="26" bottom="30" left="26"/></padding>
 
-        <!-- ═══════ 1. HEADER ═══════════════════════════════════════ -->
-        <HBox alignment="CENTER_LEFT" spacing="16">
-            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label fx:id="lblBienvenue" text="Hello ! ✨"
-                       styleClass="lbl-bienvenue"/>
+        <!-- ═══════ 1. HEADER ══════════════════════════════════════ -->
+        <HBox alignment="CENTER_LEFT" spacing="12"
+              style="-fx-background-color:rgba(255,255,255,0.78);
+                     -fx-background-radius:20; -fx-padding:16 20;
+                     -fx-border-color:rgba(92,152,168,0.12);
+                     -fx-border-radius:20; -fx-border-width:1;
+                     -fx-effect:dropshadow(gaussian,rgba(92,152,168,0.08),10,0,0,2);">
+            <VBox spacing="3" HBox.hgrow="ALWAYS">
+                <Label fx:id="lblBienvenue" text="Hello ! ✨" styleClass="lbl-bienvenue"/>
                 <Label text="Tu es sur une super lancée cette semaine ! 🚀"
                        styleClass="lbl-sous-titre"/>
             </VBox>
+            <Label fx:id="lblSessionCount" text="0 session"
+                   styleClass="badge-session-count"/>
             <Button text="🤖 Assistant IA" onAction="#ouvrirChat"
                     styleClass="btn-assistant"/>
             <Button fx:id="btnEspacePsy" text="👨‍⚕️ Espace Psy"
@@ -49,292 +55,334 @@
                     styleClass="btn-espace-psy"/>
         </HBox>
 
-        <HBox>
-            <Label fx:id="lblSessionCount" text="0 session complétée"
-                   styleClass="badge-session-count"/>
-        </HBox>
+        <!-- ═══════ 1.5  AVATAR ═════════════════════════════════════ -->
+        <HBox alignment="CENTER_LEFT" spacing="20"
+              style="-fx-background-color:rgba(255,255,255,0.78);
+                     -fx-background-radius:22; -fx-padding:20;
+                     -fx-border-color:rgba(92,152,168,0.14);
+                     -fx-border-radius:22; -fx-border-width:1.5;
+                     -fx-effect:dropshadow(gaussian,rgba(92,152,168,0.09),14,0,0,3);">
 
-        <!-- ═══════ 1.5  AVATAR & IDENTITÉ VIRTUELLE ═══════════════ -->
-        <HBox alignment="CENTER_LEFT" spacing="18" styleClass="card-lg">
-
-            <!-- Cercle avatar avec halo coloré -->
-            <StackPane prefWidth="110" prefHeight="110">
+            <StackPane prefWidth="100" prefHeight="100">
                 <Circle fx:id="circleAvatarHalo"
-                        centerX="55" centerY="55" radius="54"
-                        styleClass="avatar-halo"/>
-                <Circle centerX="55" centerY="55" radius="49"
-                        styleClass="avatar-cercle"/>
+                        centerX="50" centerY="50" radius="50"
+                        style="-fx-fill:rgba(92,152,168,0.10);"/>
+                <Circle centerX="50" centerY="50" radius="46"
+                        style="-fx-fill:white;
+                               -fx-stroke:rgba(92,152,168,0.20);
+                               -fx-stroke-width:2;
+                               -fx-effect:dropshadow(gaussian,rgba(92,152,168,0.12),8,0,0,2);"/>
                 <ImageView fx:id="imgAvatar"
-                           fitWidth="90" fitHeight="90"
-                           preserveRatio="true"
-                           styleClass="avatar-image"/>
+                           fitWidth="82" fitHeight="82"
+                           preserveRatio="true"/>
             </StackPane>
 
-            <!-- Infos avatar + état émotionnel -->
-            <VBox spacing="8" HBox.hgrow="ALWAYS">
+            <VBox spacing="10" HBox.hgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label fx:id="lblAvatarPseudo"
-                           text="Mon Avatar"
+                    <Label fx:id="lblAvatarPseudo" text="Mon Avatar"
                            styleClass="avatar-pseudo"/>
-                    <Label fx:id="lblAvatarEtat"
-                           text="✨ Chargement..."
+                    <Label fx:id="lblAvatarEtat" text="✨ Chargement..."
                            styleClass="avatar-etat-label"/>
                 </HBox>
-                <VBox fx:id="avatarEtatBox" spacing="6"
-                      styleClass="avatar-etat-box">
+                <VBox fx:id="avatarEtatBox" spacing="6" styleClass="avatar-etat-box">
                     <Label fx:id="lblAvatarMessage"
                            text="Analyse de votre état en cours..."
-                           wrapText="true"
-                           styleClass="avatar-message"/>
+                           wrapText="true" styleClass="avatar-message"/>
                 </VBox>
             </VBox>
 
-            <!-- Boutons côté droit -->
             <VBox alignment="CENTER" spacing="10">
-                <Button fx:id="btnVoixAvatar"
-                        text="🔊"
-                        onAction="#toggleVoixAvatar"
-                        styleClass="btn-voix-active">
-                    <tooltip>
-                        <Tooltip text="Activer / désactiver la voix de l'avatar"/>
-                    </tooltip>
+                <Button fx:id="btnVoixAvatar" text="🔊"
+                        onAction="#toggleVoixAvatar" styleClass="btn-voix-active">
+                    <tooltip><Tooltip text="Activer / désactiver la voix"/></tooltip>
                 </Button>
-                <Button fx:id="btnPersonnaliserAvatar"
-                        text="🎨 Personnaliser"
-                        onAction="#personnaliserAvatar"
-                        styleClass="btn-personnaliser"/>
+                <Button fx:id="btnPersonnaliserAvatar" text="🎨 Personnaliser"
+                        onAction="#personnaliserAvatar" styleClass="btn-personnaliser"/>
             </VBox>
         </HBox>
 
+        <!-- ═══════ 1.8  MÉTÉO — FIX: opacity="1" visible="true" ══ -->
+        <VBox fx:id="meteoBox" spacing="0"
+              visible="true" managed="true" opacity="1"
+              style="-fx-background-color:rgba(255,255,255,0.78);
+                     -fx-background-radius:22;
+                     -fx-border-color:rgba(92,152,168,0.18);
+                     -fx-border-radius:22; -fx-border-width:1.5;
+                     -fx-effect:dropshadow(gaussian,rgba(92,152,168,0.10),16,0,0,3);
+                     -fx-padding:20;">
+
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="🌍 Météo &amp; Bien-être"
+                       style="-fx-font-size:15px; -fx-font-weight:900;
+                              -fx-text-fill:#1F2A33;"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnRefreshMeteo" text="↺ Actualiser"
+                        onAction="#chargerMeteo"
+                        style="-fx-background-color:rgba(92,152,168,0.10);
+                               -fx-text-fill:#5C98A8; -fx-font-size:11px;
+                               -fx-font-weight:700; -fx-background-radius:20;
+                               -fx-border-color:rgba(92,152,168,0.25);
+                               -fx-border-radius:20; -fx-border-width:1;
+                               -fx-padding:6 14; -fx-cursor:hand;"/>
+            </HBox>
+
+            <Pane prefHeight="14"/>
+
+            <HBox alignment="CENTER_LEFT" spacing="18">
+                <StackPane prefWidth="76" prefHeight="76"
+                           style="-fx-background-color:rgba(221,236,239,0.60);
+                                  -fx-background-radius:18;
+                                  -fx-border-color:rgba(92,152,168,0.15);
+                                  -fx-border-radius:18; -fx-border-width:1;">
+                    <Label fx:id="lblMeteoEmoji" text="🌡️"
+                           style="-fx-font-size:36px; -fx-alignment:CENTER;"/>
+                </StackPane>
+                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label fx:id="lblMeteoTemp" text="--°C"
+                               style="-fx-font-size:30px; -fx-font-weight:900;
+                                      -fx-text-fill:#1F2A33;"/>
+                        <Label fx:id="lblMeteoDesc" text="Chargement..."
+                               style="-fx-font-size:13px; -fx-font-weight:600;
+                                      -fx-text-fill:#5C98A8;
+                                      -fx-background-color:rgba(92,152,168,0.10);
+                                      -fx-background-radius:20; -fx-padding:3 10;"/>
+                    </HBox>
+                    <Label fx:id="lblMeteoDetails" text="" wrapText="true"
+                           style="-fx-font-size:11px; -fx-text-fill:#6E8E9A;"/>
+                </VBox>
+            </HBox>
+
+            <Pane prefHeight="12"/>
+
+            <VBox spacing="5"
+                  style="-fx-background-color:rgba(221,236,239,0.45);
+                         -fx-background-radius:14;
+                         -fx-border-color:rgba(16,185,129,0.22);
+                         -fx-border-radius:14; -fx-border-width:1;
+                         -fx-padding:12 14;">
+                <Label text="💡 Conseil bien-être IA"
+                       style="-fx-font-size:10px; -fx-font-weight:700;
+                              -fx-text-fill:#065F46; -fx-opacity:0.75;"/>
+                <Label fx:id="lblMeteoConseil" text="" wrapText="true"
+                       style="-fx-font-size:12px; -fx-font-weight:600;
+                              -fx-text-fill:#065F46; -fx-line-spacing:3;"/>
+            </VBox>
+        </VBox>
+
         <!-- ═══════ 2. SCORES ════════════════════════════════════════ -->
-        <HBox alignment="CENTER" spacing="20">
+        <HBox alignment="CENTER" spacing="12">
 
             <!-- Bien-être -->
-            <VBox alignment="CENTER" spacing="8" styleClass="score-card">
-                <StackPane prefWidth="96" prefHeight="96">
-                    <Arc centerX="48" centerY="48" radiusX="40"
-                         radiusY="40" startAngle="0" length="360"
-                         type="OPEN" styleClass="arc-track-bienetre"/>
-                    <Arc fx:id="arcBienEtre" centerX="48" centerY="48"
-                         radiusX="40" radiusY="40" startAngle="90"
-                         length="0" type="OPEN"
-                         styleClass="arc-fill-bienetre"/>
-                    <Label fx:id="scoreBienEtre" text="0/100"
+            <VBox alignment="CENTER" spacing="10" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color:rgba(255,255,255,0.78);
+                         -fx-background-radius:20; -fx-padding:18 10;
+                         -fx-border-color:rgba(167,139,250,0.18);
+                         -fx-border-radius:20; -fx-border-width:1.5;
+                         -fx-effect:dropshadow(gaussian,rgba(167,139,250,0.10),10,0,0,2);">
+                <StackPane prefWidth="88" prefHeight="88">
+                    <Arc centerX="44" centerY="44" radiusX="38" radiusY="38"
+                         startAngle="0" length="360" type="OPEN"
+                         styleClass="arc-track-bienetre"/>
+                    <Arc fx:id="arcBienEtre" centerX="44" centerY="44"
+                         radiusX="38" radiusY="38" startAngle="90" length="0"
+                         type="OPEN" styleClass="arc-fill-bienetre"/>
+                    <Label fx:id="scoreBienEtre" text="0"
                            styleClass="score-value-bienetre"/>
                 </StackPane>
                 <Label text="Bien-être" styleClass="score-titre-bienetre"/>
-                <Label fx:id="lblTrendBienEtre" text="↑ +0%"
-                       styleClass="trend-positive"/>
+                <Label fx:id="lblTrendBienEtre" text="+0%" styleClass="trend-positive"/>
             </VBox>
 
             <!-- Stress -->
-            <VBox alignment="CENTER" spacing="8" styleClass="score-card">
-                <StackPane prefWidth="96" prefHeight="96">
-                    <Arc centerX="48" centerY="48" radiusX="40"
-                         radiusY="40" startAngle="0" length="360"
-                         type="OPEN" styleClass="arc-track-stress"/>
-                    <Arc fx:id="arcStress" centerX="48" centerY="48"
-                         radiusX="40" radiusY="40" startAngle="90"
-                         length="0" type="OPEN"
-                         styleClass="arc-fill-stress"/>
-                    <Label fx:id="scoreStress" text="0/100"
+            <VBox alignment="CENTER" spacing="10" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color:rgba(255,255,255,0.78);
+                         -fx-background-radius:20; -fx-padding:18 10;
+                         -fx-border-color:rgba(255,107,157,0.18);
+                         -fx-border-radius:20; -fx-border-width:1.5;
+                         -fx-effect:dropshadow(gaussian,rgba(255,107,157,0.09),10,0,0,2);">
+                <StackPane prefWidth="88" prefHeight="88">
+                    <Arc centerX="44" centerY="44" radiusX="38" radiusY="38"
+                         startAngle="0" length="360" type="OPEN"
+                         styleClass="arc-track-stress"/>
+                    <Arc fx:id="arcStress" centerX="44" centerY="44"
+                         radiusX="38" radiusY="38" startAngle="90" length="0"
+                         type="OPEN" styleClass="arc-fill-stress"/>
+                    <Label fx:id="scoreStress" text="0"
                            styleClass="score-value-stress"/>
                 </StackPane>
                 <Label text="Stress" styleClass="score-titre-stress"/>
-                <Label fx:id="lblTrendStress" text="↓ -0%"
-                       styleClass="trend-negative"/>
+                <Label fx:id="lblTrendStress" text="-0%" styleClass="trend-negative"/>
             </VBox>
 
             <!-- Humeur -->
-            <VBox alignment="CENTER" spacing="8" styleClass="score-card">
-                <StackPane prefWidth="96" prefHeight="96">
-                    <Arc centerX="48" centerY="48" radiusX="40"
-                         radiusY="40" startAngle="0" length="360"
-                         type="OPEN" styleClass="arc-track-humeur"/>
-                    <Arc fx:id="arcHumeur" centerX="48" centerY="48"
-                         radiusX="40" radiusY="40" startAngle="90"
-                         length="0" type="OPEN"
-                         styleClass="arc-fill-humeur"/>
-                    <Label fx:id="scoreHumeur" text="0/100"
+            <VBox alignment="CENTER" spacing="10" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color:rgba(255,255,255,0.78);
+                         -fx-background-radius:20; -fx-padding:18 10;
+                         -fx-border-color:rgba(79,172,254,0.18);
+                         -fx-border-radius:20; -fx-border-width:1.5;
+                         -fx-effect:dropshadow(gaussian,rgba(79,172,254,0.09),10,0,0,2);">
+                <StackPane prefWidth="88" prefHeight="88">
+                    <Arc centerX="44" centerY="44" radiusX="38" radiusY="38"
+                         startAngle="0" length="360" type="OPEN"
+                         styleClass="arc-track-humeur"/>
+                    <Arc fx:id="arcHumeur" centerX="44" centerY="44"
+                         radiusX="38" radiusY="38" startAngle="90" length="0"
+                         type="OPEN" styleClass="arc-fill-humeur"/>
+                    <Label fx:id="scoreHumeur" text="0"
                            styleClass="score-value-humeur"/>
                 </StackPane>
                 <Label text="Humeur" styleClass="score-titre-humeur"/>
-                <Label fx:id="lblTrendHumeur" text="↑ +0%"
-                       styleClass="trend-positive"/>
+                <Label fx:id="lblTrendHumeur" text="+0%" styleClass="trend-positive"/>
             </VBox>
 
             <!-- Coins -->
-            <VBox alignment="CENTER" spacing="6" styleClass="score-card">
-                <Label text="🏆" styleClass="coins-emoji"/>
-                <Label fx:id="lblCoinsGagnes" text="🪙 0 coins"
-                       styleClass="coins-valeur"/>
-                <Label text="COINS" styleClass="coins-label"/>
+            <VBox alignment="CENTER" spacing="8" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color:rgba(255,255,255,0.78);
+                         -fx-background-radius:20; -fx-padding:18 10;
+                         -fx-border-color:rgba(251,191,36,0.22);
+                         -fx-border-radius:20; -fx-border-width:1.5;
+                         -fx-effect:dropshadow(gaussian,rgba(251,191,36,0.10),10,0,0,2);">
+                <Label text="🏆" style="-fx-font-size:28px;"/>
+                <Label fx:id="lblCoinsGagnes" text="0 coins"
+                       style="-fx-font-size:14px; -fx-font-weight:900;
+                              -fx-text-fill:#D97706;"/>
+                <Label text="COINS"
+                       style="-fx-font-size:9px; -fx-font-weight:700;
+                              -fx-text-fill:#F59E0B;"/>
             </VBox>
         </HBox>
 
-        <!-- ═══════ 2.5  🏅 BADGES PAR COINS ══════════════════════ -->
-        <VBox fx:id="badgesBox" spacing="14" styleClass="card-lg">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="🏅" styleClass="badge-icone-bg"/>
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Mes Badges" styleClass="badges-section-titre"/>
-                    <Label text="Débloque des badges en accumulant des coins"
-                           styleClass="badges-section-sous"/>
-                </VBox>
-            </HBox>
+        <!-- ═══════ 2.5  BADGES ══════════════════════════════════════ -->
+        <VBox fx:id="badgesBox" spacing="14"
+              style="-fx-background-color:rgba(255,255,255,0.78);
+                     -fx-background-radius:22; -fx-padding:20;
+                     -fx-border-color:rgba(92,152,168,0.10);
+                     -fx-border-radius:22; -fx-border-width:1;
+                     -fx-effect:dropshadow(gaussian,rgba(92,152,168,0.07),12,0,0,2);"/>
 
-            <HBox alignment="CENTER" spacing="8">
-                <VBox alignment="CENTER" spacing="4" prefWidth="56">
-                    <Label text="🧘" styleClass="palier-emoji"/>
-                    <Label text="500"   styleClass="palier-label"/>
-                </VBox>
-                <Pane HBox.hgrow="ALWAYS" styleClass="palier-separateur"/>
-                <VBox alignment="CENTER" spacing="4" prefWidth="56">
-                    <Label text="🌤️" styleClass="palier-emoji"/>
-                    <Label text="1 500" styleClass="palier-label"/>
-                </VBox>
-                <Pane HBox.hgrow="ALWAYS" styleClass="palier-separateur"/>
-                <VBox alignment="CENTER" spacing="4" prefWidth="56">
-                    <Label text="💪" styleClass="palier-emoji"/>
-                    <Label text="3 000" styleClass="palier-label"/>
-                </VBox>
-                <Pane HBox.hgrow="ALWAYS" styleClass="palier-separateur"/>
-                <VBox alignment="CENTER" spacing="4" prefWidth="56">
-                    <Label text="🔥" styleClass="palier-emoji"/>
-                    <Label text="5 000" styleClass="palier-label"/>
-                </VBox>
-                <Pane HBox.hgrow="ALWAYS" styleClass="palier-separateur"/>
-                <VBox alignment="CENTER" spacing="4" prefWidth="56">
-                    <Label text="🌈" styleClass="palier-emoji"/>
-                    <Label text="8 000" styleClass="palier-label"/>
-                </VBox>
-            </HBox>
-
-            <Label text="🎯 Complète des sessions pour débloquer tes badges !"
-                   styleClass="badges-hint"/>
-        </VBox>
-
-        <!-- ═══════ 2.7  🖼️ IMAGE THÉRAPEUTIQUE IA ════════════════ -->
+        <!-- ═══════ 2.7  IMAGE THÉRAPEUTIQUE ══════════════════════════ -->
         <VBox spacing="14" styleClass="image-therapeutique-card">
-
-            <!-- En-tête -->
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Image Thérapeutique IA"
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="🎨 Image Thérapeutique IA"
                            styleClass="image-section-titre"/>
                     <Label fx:id="lblImageMessage"
-                           text="Génération en cours selon votre état émotionnel..."
-                           wrapText="true"
-                           styleClass="image-message"/>
+                           text="Génération selon votre état émotionnel..."
+                           wrapText="true" styleClass="image-message"/>
                 </VBox>
-                <Button fx:id="btnRegeneImage"
-                        text="✨ Nouvelle image"
-                        onAction="#regenererImage"
-                        styleClass="btn-regenere-image"/>
+                <Button fx:id="btnRegeneImage" text="✨ Nouvelle"
+                        onAction="#regenererImage" styleClass="btn-regenere-image"/>
             </HBox>
+            <Separator style="-fx-opacity:0.35;"/>
 
-            <Separator/>
-
-            <!-- Image + overlay chargement -->
-            <StackPane alignment="CENTER">
-
-                <!-- L'image générée par IA -->
+            <StackPane fx:id="paneImageContainer" alignment="CENTER">
                 <ImageView fx:id="imgTherapeutique"
                            fitWidth="340" fitHeight="210"
-                           preserveRatio="true"
-                           styleClass="image-therapeutique"/>
-
-                <!-- Overlay affiché pendant la génération -->
+                           preserveRatio="true" styleClass="image-therapeutique"/>
                 <StackPane fx:id="paneImageLoading"
                            prefWidth="340" prefHeight="210"
-                           visible="true"
-                           styleClass="image-loading-overlay">
+                           visible="true" styleClass="image-loading-overlay">
                     <VBox alignment="CENTER" spacing="10">
                         <Label text="🌸" style="-fx-font-size:32px;"/>
                         <Label text="Génération en cours..."
                                style="-fx-font-size:13px; -fx-font-weight:700;
-                                      -fx-text-fill:#7C3AED;"/>
+                                      -fx-text-fill:#5C98A8;"/>
                         <Label text="Image thérapeutique IA"
-                               style="-fx-font-size:11px; -fx-text-fill:#94a3b8;"/>
+                               style="-fx-font-size:11px; -fx-text-fill:#8AA8B2;"/>
                     </VBox>
                 </StackPane>
             </StackPane>
 
-            <!-- Badge thème (couleur injectée dynamiquement) -->
             <HBox alignment="CENTER_LEFT">
-                <Label fx:id="lblImageTheme"
-                       text=""
-                       styleClass="image-theme-badge"/>
+                <Label fx:id="lblImageTheme" text="" styleClass="image-theme-badge"/>
             </HBox>
-
         </VBox>
 
         <!-- ═══════ 3. GRAPHIQUE ═════════════════════════════════════ -->
-        <VBox spacing="12" styleClass="card">
+        <VBox spacing="14"
+              style="-fx-background-color:rgba(255,255,255,0.78);
+                     -fx-background-radius:22; -fx-padding:20;
+                     -fx-border-color:rgba(92,152,168,0.10);
+                     -fx-border-radius:22; -fx-border-width:1;
+                     -fx-effect:dropshadow(gaussian,rgba(92,152,168,0.07),12,0,0,2);">
             <HBox alignment="CENTER_LEFT">
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="📊 Progression score"
-                           styleClass="graphique-titre"/>
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="📊 Progression"
+                           style="-fx-font-size:15px; -fx-font-weight:900;
+                                  -fx-text-fill:#1F2A33;"/>
                     <Label text="Évolution dans le temps par session"
-                           styleClass="graphique-sous"/>
+                           style="-fx-font-size:11px; -fx-text-fill:#6E8E9A;
+                                  -fx-font-weight:600;"/>
                 </VBox>
-                <ComboBox fx:id="comboPeriode" styleClass="combo-periode"/>
+                <ComboBox fx:id="comboPeriode"
+                          style="-fx-background-color:rgba(221,236,239,0.60);
+                                 -fx-background-radius:10; -fx-font-size:11px;
+                                 -fx-font-weight:600;"/>
             </HBox>
 
             <AreaChart fx:id="evolutionChart" animated="true"
-                       legendVisible="false" prefHeight="190"
-                       styleClass="evolution-chart">
-                <xAxis>
-                    <CategoryAxis tickLabelFill="#9CA3AF"
-                                  style="-fx-font-size:11px;"/>
-                </xAxis>
-                <yAxis>
-                    <NumberAxis lowerBound="0" upperBound="100" tickUnit="20"
-                                tickLabelFill="#9CA3AF"
-                                style="-fx-font-size:11px;"/>
-                </yAxis>
+                       legendVisible="false" prefHeight="180"
+                       style="-fx-background-color:transparent;">
+                <xAxis><CategoryAxis tickLabelFill="#8AA8B2"
+                                     style="-fx-font-size:10px;"/></xAxis>
+                <yAxis><NumberAxis lowerBound="0" upperBound="100" tickUnit="25"
+                                   tickLabelFill="#8AA8B2"
+                                   style="-fx-font-size:10px;"/></yAxis>
             </AreaChart>
 
-            <HBox alignment="CENTER" spacing="24">
+            <HBox alignment="CENTER" spacing="20">
                 <HBox alignment="CENTER_LEFT" spacing="6">
                     <Circle fill="#A78BFA" radius="5"/>
-                    <Label text="Bien-être" styleClass="legende-label"/>
+                    <Label text="Bien-être"
+                           style="-fx-font-size:11px; -fx-font-weight:700;
+                                  -fx-text-fill:#6E8E9A;"/>
                 </HBox>
                 <HBox alignment="CENTER_LEFT" spacing="6">
                     <Circle fill="#FF6B9D" radius="5"/>
-                    <Label text="Stress" styleClass="legende-label"/>
+                    <Label text="Stress"
+                           style="-fx-font-size:11px; -fx-font-weight:700;
+                                  -fx-text-fill:#6E8E9A;"/>
                 </HBox>
                 <HBox alignment="CENTER_LEFT" spacing="6">
                     <Circle fill="#4FACFE" radius="5"/>
-                    <Label text="Humeur" styleClass="legende-label"/>
+                    <Label text="Humeur"
+                           style="-fx-font-size:11px; -fx-font-weight:700;
+                                  -fx-text-fill:#6E8E9A;"/>
                 </HBox>
             </HBox>
         </VBox>
 
-        <!-- ═══════ 4. 🎵 MUSICOTHÉRAPIE ══════════════════════════ -->
-        <VBox spacing="14" styleClass="card">
+        <!-- ═══════ 4. MUSICOTHÉRAPIE ═══════════════════════════════ -->
+        <VBox spacing="14"
+              style="-fx-background-color:rgba(255,255,255,0.78);
+                     -fx-background-radius:22; -fx-padding:20;
+                     -fx-border-color:rgba(92,152,168,0.12);
+                     -fx-border-radius:22; -fx-border-width:1.5;
+                     -fx-effect:dropshadow(gaussian,rgba(92,152,168,0.08),14,0,0,3);">
             <HBox alignment="CENTER_LEFT" spacing="10">
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
                     <Label text="🎵 Musicothérapie IA"
-                           styleClass="musique-titre"/>
+                           style="-fx-font-size:15px; -fx-font-weight:900;
+                                  -fx-text-fill:#1F2A33;"/>
                     <Label fx:id="lblMusiqueMessage"
                            text="Musique thérapeutique adaptée à votre état"
-                           styleClass="musique-sous"/>
+                           style="-fx-font-size:11px; -fx-text-fill:#6E8E9A;
+                                  -fx-font-weight:600;"/>
                 </VBox>
-                <Button fx:id="btnChargerMusique"
-                        text="🎶 Charger" onAction="#chargerMusique"
+                <Button fx:id="btnChargerMusique" text="🎶 Charger"
+                        onAction="#chargerMusique"
                         styleClass="btn-charger-musique"/>
             </HBox>
 
-            <Separator/>
+            <Separator style="-fx-opacity:0.35;"/>
 
-            <VBox fx:id="playerBox" spacing="10" styleClass="player-box">
-                <HBox alignment="CENTER_LEFT" spacing="10">
+            <VBox fx:id="playerBox" spacing="12" styleClass="player-box">
+                <HBox alignment="CENTER_LEFT" spacing="12">
                     <Label fx:id="lblPisteEmoji" text="🎵"
                            styleClass="piste-emoji-bg"/>
                     <VBox spacing="2" HBox.hgrow="ALWAYS">
-                        <Label fx:id="lblPisteNom"
-                               text="Aucune piste sélectionnée"
+                        <Label fx:id="lblPisteNom" text="Aucune piste sélectionnée"
                                styleClass="piste-nom"/>
                         <Label fx:id="lblPisteDuree" text="--"
                                styleClass="piste-duree"/>
@@ -342,8 +390,7 @@
                     <Label fx:id="lblEtatLecture" text="⏸"
                            styleClass="etat-lecture"/>
                 </HBox>
-
-                <HBox alignment="CENTER" spacing="12">
+                <HBox alignment="CENTER" spacing="10">
                     <Button text="⏮" onAction="#pistePrecedente"
                             styleClass="btn-nav-piste"/>
                     <Button fx:id="btnPlayPause" text="▶"
@@ -353,14 +400,15 @@
                             styleClass="btn-nav-piste"/>
                     <Button text="⏹" onAction="#stopMusique"
                             styleClass="btn-stop-piste"/>
-                    <Label text="🔊" styleClass="volume-icon"/>
+                    <Pane HBox.hgrow="ALWAYS"/>
+                    <Label text="🔊"
+                           style="-fx-font-size:13px; -fx-text-fill:#6E8E9A;"/>
                     <Slider fx:id="sliderVolume" min="0" max="1" value="0.8"
-                            prefWidth="80"
-                            styleClass="slider-volume"/>
+                            prefWidth="80" styleClass="slider-volume"/>
                 </HBox>
             </VBox>
 
-            <VBox fx:id="listePistesBox" spacing="6">
+            <VBox fx:id="listePistesBox" spacing="4">
                 <Label text="🎶 Liste de lecture"
                        styleClass="pistes-liste-titre"/>
                 <Label fx:id="lblChargementPistes"
@@ -369,41 +417,43 @@
             </VBox>
         </VBox>
 
-        <!-- ═══════ 5. CONSEILS PERSONNALISÉS ═══════════════════════ -->
-        <VBox spacing="12" styleClass="card">
+        <!-- ═══════ 5. CONSEILS ══════════════════════════════════════ -->
+        <VBox spacing="14"
+              style="-fx-background-color:rgba(255,255,255,0.78);
+                     -fx-background-radius:22; -fx-padding:20;
+                     -fx-border-color:rgba(92,152,168,0.10);
+                     -fx-border-radius:22; -fx-border-width:1;
+                     -fx-effect:dropshadow(gaussian,rgba(92,152,168,0.07),12,0,0,2);">
             <Label text="💡 Conseils personnalisés"
                    styleClass="conseils-titre"/>
             <Label fx:id="lblConseil" wrapText="true"
                    text="Chargement des conseils..."
                    styleClass="conseil-principal"/>
-            <Separator/>
-
-            <HBox spacing="10" alignment="TOP_LEFT">
+            <Separator style="-fx-opacity:0.35;"/>
+            <HBox spacing="12" alignment="TOP_LEFT">
                 <Label fx:id="lblEmoji1" text="🧘"
                        styleClass="conseil-emoji-bienetre"/>
-                <VBox spacing="2">
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
                     <Label fx:id="lblTitre1" text="Chargement..."
                            styleClass="conseil-item-titre"/>
                     <Label fx:id="lblDesc1" text="" wrapText="true"
                            styleClass="conseil-item-desc"/>
                 </VBox>
             </HBox>
-
-            <HBox spacing="10" alignment="TOP_LEFT">
+            <HBox spacing="12" alignment="TOP_LEFT">
                 <Label fx:id="lblEmoji2" text="😮‍💨"
                        styleClass="conseil-emoji-stress"/>
-                <VBox spacing="2">
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
                     <Label fx:id="lblTitre2" text="Chargement..."
                            styleClass="conseil-item-titre"/>
                     <Label fx:id="lblDesc2" text="" wrapText="true"
                            styleClass="conseil-item-desc"/>
                 </VBox>
             </HBox>
-
-            <HBox spacing="10" alignment="TOP_LEFT">
+            <HBox spacing="12" alignment="TOP_LEFT">
                 <Label fx:id="lblEmoji3" text="🌙"
                        styleClass="conseil-emoji-humeur"/>
-                <VBox spacing="2">
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
                     <Label fx:id="lblTitre3" text="Chargement..."
                            styleClass="conseil-item-titre"/>
                     <Label fx:id="lblDesc3" text="" wrapText="true"
@@ -412,8 +462,13 @@
             </HBox>
         </VBox>
 
-        <!-- ═══════ 6. HISTORIQUE DES SESSIONS ═══════════════════════ -->
-        <VBox spacing="10" styleClass="card">
+        <!-- ═══════ 6. HISTORIQUE ════════════════════════════════════ -->
+        <VBox spacing="12"
+              style="-fx-background-color:rgba(255,255,255,0.78);
+                     -fx-background-radius:22; -fx-padding:20;
+                     -fx-border-color:rgba(92,152,168,0.10);
+                     -fx-border-radius:22; -fx-border-width:1;
+                     -fx-effect:dropshadow(gaussian,rgba(92,152,168,0.07),12,0,0,2);">
             <Label text="📅 Dernières sessions"
                    styleClass="historique-titre"/>
             <VBox fx:id="historyBox" spacing="0">
@@ -422,7 +477,7 @@
             </VBox>
         </VBox>
 
-        <Pane prefHeight="12"/>
+        <Pane prefHeight="16"/>
     </VBox>
 
 </ScrollPane>

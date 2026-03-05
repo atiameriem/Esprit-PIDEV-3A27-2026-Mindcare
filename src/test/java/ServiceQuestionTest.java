@@ -1,4 +1,3 @@
-
 import models.Question;
 import models.Quiz;
 import org.junit.jupiter.api.*;
@@ -15,31 +14,31 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ServiceQuestionTest {
 
     static ServiceQuestion sqst;
-    static ServiceQuiz sq;
+    static ServiceQuiz     sq;
 
-    private int idQuiz = -1;
+    private int idQuiz     = -1;
     private int idQuestion = -1;
 
-    private final int idPatient = 4;
+    private final int idPatient     = 4;
     private final int idPsychologue = 6;
 
     @BeforeAll
     static void setup() {
         sqst = new ServiceQuestion();
-        sq = new ServiceQuiz();
+        sq   = new ServiceQuiz();
     }
 
     @AfterEach
     void cleanup() throws SQLException {
         if (idQuestion != -1) {
-            Question q = new Question();
-            q.setIdQuestion(idQuestion);
-            sqst.delete(q);
+            // ✅ delete(int id) au lieu de delete(Question q)
+            sqst.delete(idQuestion);
             idQuestion = -1;
         }
         if (idQuiz != -1) {
             Quiz q = sq.getQuizById(idQuiz);
-            if (q != null) sq.delete(q);
+            // ✅ delete(int id) au lieu de delete(Quiz q)
+            if (q != null) sq.delete(idQuiz);
             idQuiz = -1;
         }
     }
@@ -53,16 +52,18 @@ public class ServiceQuestionTest {
         q.setTypeTest("Test");
         q.setActif(true);
         q.setDateCreation(LocalDateTime.now());
-        sq.add(q);
+        // ✅ create() au lieu de add()
+        sq.create(q);
         idQuiz = q.getIdQuiz();
     }
 
     @Test
     @Order(1)
-    void testAddAndGetQuestion() throws SQLException {
+    void testCreateAndGetQuestion() throws SQLException {
         creerQuiz();
         Question q = new Question(idQuiz, "Question test add/get", 1, "checkbox");
-        sqst.add(q);
+        // ✅ create() au lieu de add()
+        sqst.create(q);
         idQuestion = q.getIdQuestion();
 
         assertTrue(idQuestion > 0);
@@ -79,12 +80,14 @@ public class ServiceQuestionTest {
     void testUpdateQuestion() throws SQLException {
         creerQuiz();
         Question q = new Question(idQuiz, "Avant update", 1, "checkbox");
-        sqst.add(q);
+        // ✅ create() au lieu de add()
+        sqst.create(q);
         idQuestion = q.getIdQuestion();
 
         q.setTexteQuestion("Après update");
         q.setOrdre(2);
         q.setTypeQuestion("radio");
+        // ✅ update() inchangé
         sqst.update(q);
 
         Question qDb = sqst.getQuestionById(idQuestion);
@@ -98,12 +101,15 @@ public class ServiceQuestionTest {
     void testDeleteQuestion() throws SQLException {
         creerQuiz();
         Question q = new Question(idQuiz, "À supprimer", 1, "checkbox");
-        sqst.add(q);
+        // ✅ create() au lieu de add()
+        sqst.create(q);
         idQuestion = q.getIdQuestion();
 
-        sqst.delete(q);
+        // ✅ delete(int id) au lieu de delete(Question q)
+        sqst.delete(idQuestion);
 
         Question qDb = sqst.getQuestionById(idQuestion);
         assertNull(qDb);
+        idQuestion = -1; // déjà supprimé, évite double delete dans cleanup
     }
 }

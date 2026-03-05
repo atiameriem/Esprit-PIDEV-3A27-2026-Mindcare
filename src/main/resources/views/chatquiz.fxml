@@ -7,56 +7,106 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
+<!--
+    chatquiz.fxml — palette MindCare Teal
+    Fond        : #EAF3F5
+    Teal foncé  : #2D6E7E  (bouton envoi, bouton retour)
+    Teal moyen  : #5C98A8  (bordures)
+    Bulles user : #2D6E7E  (teal foncé)
+    Bulles IA   : white
+-->
 <VBox xmlns:fx="http://javafx.com/fxml/1"
       xmlns="http://javafx.com/javafx/21"
       fx:controller="controllers.ChatQuizController"
       spacing="0"
       prefHeight="620"
-      style="-fx-background-color:#F0F9FF;">
+      style="-fx-background-color: #EAF3F5;">
 
-    <!-- ═══ HEADER ═══ -->
-    <HBox alignment="CENTER_LEFT" spacing="12"
-          style="-fx-background-color:white; -fx-padding:16 20;
-                 -fx-effect:dropshadow(gaussian,rgba(0,0,0,0.06),8,0,0,2);">
+    <!-- ═══ HEADER ════════════════════════════════════════════ -->
+    <HBox alignment="CENTER_LEFT" spacing="14"
+          style="-fx-background-color: white;
+                 -fx-padding: 16 20;
+                 -fx-border-color: rgba(92,152,168,0.15);
+                 -fx-border-width: 0 0 1.5 0;
+                 -fx-effect: dropshadow(gaussian, rgba(45,110,126,0.08), 8, 0, 0, 2);">
+
         <Label text="🧠" style="-fx-font-size:22px;"/>
+
         <VBox spacing="2" HBox.hgrow="ALWAYS">
             <Label text="Assistant MindCare IA"
-                   style="-fx-font-size:15px; -fx-font-weight:900; -fx-text-fill:#1F2937;"/>
+                   style="-fx-font-size:15px; -fx-font-weight:900; -fx-text-fill:#1F2A33;"/>
             <Label text="● En ligne"
                    style="-fx-font-size:11px; -fx-text-fill:#10B981; -fx-font-weight:700;"/>
         </VBox>
+
+        <!-- Bouton Voix -->
+        <Button fx:id="btnVoix" text="🔊" onAction="#toggleVoix"
+                style="-fx-background-color: rgba(92,152,168,0.12);
+                       -fx-text-fill: #5C98A8;
+                       -fx-font-size: 14px;
+                       -fx-background-radius: 20;
+                       -fx-border-color: rgba(92,152,168,0.30);
+                       -fx-border-radius: 20;
+                       -fx-border-width: 1.5;
+                       -fx-padding: 6 12;
+                       -fx-cursor: hand;"/>
+
+        <!-- Bouton Retour — style ghost teal -->
         <Button text="← Retour" onAction="#retourSuivie"
-                style="-fx-background-color:rgba(167,139,250,0.12); -fx-text-fill:#7C3AED;
-                       -fx-font-size:11px; -fx-font-weight:700; -fx-padding:8 14;
-                       -fx-background-radius:12; -fx-border-color:rgba(167,139,250,0.25);
-                       -fx-border-radius:12; -fx-cursor:hand;"/>
+                style="-fx-background-color: rgba(92,152,168,0.10);
+                       -fx-text-fill: #2D6E7E;
+                       -fx-font-size: 11px; -fx-font-weight: 700;
+                       -fx-padding: 8 16;
+                       -fx-background-radius: 14;
+                       -fx-border-color: rgba(92,152,168,0.30);
+                       -fx-border-radius: 14;
+                       -fx-border-width: 1.5;
+                       -fx-cursor: hand;"/>
     </HBox>
 
-    <!-- ═══ ZONE CHAT ═══ -->
+    <!-- ═══ ZONE CHAT ══════════════════════════════════════════ -->
     <ScrollPane fx:id="scrollPane" VBox.vgrow="ALWAYS"
                 fitToWidth="true"
-                style="-fx-background:transparent; -fx-background-color:#F0F9FF;
-                       -fx-border-color:transparent;">
-        <VBox fx:id="chatBox" spacing="8">
-            <padding><Insets top="16" right="12" bottom="16" left="12"/></padding>
+                style="-fx-background: transparent;
+                       -fx-background-color: #EAF3F5;
+                       -fx-border-color: transparent;">
+        <VBox fx:id="chatBox" spacing="10">
+            <padding><Insets top="18" right="14" bottom="18" left="14"/></padding>
         </VBox>
     </ScrollPane>
 
-    <!-- ═══ ZONE SAISIE ═══ -->
-    <HBox spacing="10" alignment="CENTER"
-          style="-fx-background-color:white; -fx-padding:12 16;
-                 -fx-effect:dropshadow(gaussian,rgba(0,0,0,0.06),8,0,0,-2);">
+    <!-- ═══ ZONE SAISIE ════════════════════════════════════════ -->
+    <HBox spacing="12" alignment="CENTER"
+          style="-fx-background-color: white;
+                 -fx-padding: 14 18;
+                 -fx-border-color: rgba(92,152,168,0.15);
+                 -fx-border-width: 1.5 0 0 0;
+                 -fx-effect: dropshadow(gaussian, rgba(45,110,126,0.06), 8, 0, 0, -2);">
+
         <TextField fx:id="champMessage"
                    promptText="Écris ton message..."
                    HBox.hgrow="ALWAYS"
                    onAction="#envoyerMessage"
-                   style="-fx-background-color:#F3F4F6; -fx-background-radius:20;
-                          -fx-border-color:transparent; -fx-padding:10 16;
-                          -fx-font-size:13px;"/>
-        <Button text="➤" onAction="#envoyerMessage"
-                style="-fx-background-color:#7C3AED; -fx-text-fill:white;
-                       -fx-font-size:14px; -fx-font-weight:900;
-                       -fx-background-radius:50; -fx-padding:10 16;
-                       -fx-cursor:hand;"/>
+                   style="-fx-background-color: #F0F7F9;
+                          -fx-background-radius: 22;
+                          -fx-border-color: rgba(92,152,168,0.25);
+                          -fx-border-radius: 22;
+                          -fx-border-width: 1.5;
+                          -fx-padding: 11 18;
+                          -fx-font-size: 13px;
+                          -fx-text-fill: #1F2A33;"/>
+
+        <!-- Bouton envoi — teal foncé, couleur forcée via initialize() -->
+        <Button fx:id="btnEnvoyer" text="➤" onAction="#envoyerMessage"
+                style="-fx-background-color: #2D6E7E;
+                       -fx-text-fill: white;
+                       -fx-font-size: 15px; -fx-font-weight: 900;
+                       -fx-background-radius: 50;
+                       -fx-background-insets: 0;
+                       -fx-border-insets: 0;
+                       -fx-padding: 11 18;
+                       -fx-cursor: hand;
+                       -fx-effect: dropshadow(gaussian, rgba(45,110,126,0.35), 8, 0, 0, 2);"/>
     </HBox>
+
 </VBox>

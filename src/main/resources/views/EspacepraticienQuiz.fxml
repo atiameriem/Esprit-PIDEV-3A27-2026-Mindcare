@@ -3,13 +3,6 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<!--
-  ╔══════════════════════════════════════════════════════════════╗
-  ║  Espace Praticien — MindCare Theme                          ║
-  ║  Palette : Teal #4A7C8E · Violet #7C4DFF                   ║
-  ║             Rose  #E91E8C · Cyan  #29B6D8                   ║
-  ╚══════════════════════════════════════════════════════════════╝
--->
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="controllers.EspacePraticienQuizController"
       spacing="0"
@@ -21,65 +14,41 @@
     <HBox alignment="CENTER_LEFT" spacing="14"
           style="-fx-background-color: white;
                  -fx-padding: 0 28 0 22;
-                 -fx-min-height: 68; -fx-pref-height: 68;
+                 -fx-min-height: 62; -fx-pref-height: 62;
                  -fx-border-color: transparent transparent #E2ECF0 transparent;
                  -fx-border-width: 0 0 1 0;
                  -fx-effect: dropshadow(gaussian, rgba(74,124,142,0.08), 10, 0, 0, 3);">
 
-        <!-- ← Retour -->
-        <HBox alignment="CENTER" spacing="6"
-              style="-fx-background-color: #EDF6F9;
-                     -fx-background-radius: 14;
-                     -fx-padding: 7 16;
-                     -fx-cursor: hand;
-                     -fx-border-color: #C0DDE6;
-                     -fx-border-radius: 14;
-                     -fx-border-width: 1;">
-            <Label text="←"
-                   style="-fx-font-size: 12px; -fx-text-fill: #4A7C8E; -fx-font-weight: 800;"/>
-            <Hyperlink text="Retour" onAction="#retourSuivie"
-                       style="-fx-text-fill: #4A7C8E; -fx-font-size: 12px;
-                              -fx-font-weight: 700; -fx-border-color: transparent;
-                              -fx-underline: false; -fx-padding: 0;"/>
-        </HBox>
-
-        <!-- Logo -->
         <Label text="MindCare"
-               style="-fx-font-size: 20px; -fx-font-weight: 900;
-                      -fx-text-fill: #1E3A44; -fx-font-family: 'Segoe UI';"/>
+               style="-fx-font-size: 18px; -fx-font-weight: 900; -fx-text-fill: #1E3A44;"/>
 
-        <!-- Spacer gauche -->
         <Pane HBox.hgrow="ALWAYS"/>
 
-        <!-- Titre centré -->
-        <VBox alignment="CENTER" spacing="2">
+        <VBox alignment="CENTER" spacing="1">
             <Label text="Espace Praticien"
-                   style="-fx-font-size: 16px; -fx-font-weight: 800;
-                          -fx-text-fill: #1E3A44; -fx-font-family: 'Segoe UI';"/>
+                   style="-fx-font-size: 15px; -fx-font-weight: 800; -fx-text-fill: #1E3A44;"/>
             <Label text="Vue d'ensemble de vos patients"
-                   style="-fx-font-size: 11px; -fx-text-fill: #8AA8B2; -fx-font-weight: 500;"/>
+                   style="-fx-font-size: 10px; -fx-text-fill: #8AA8B2; -fx-font-weight: 500;"/>
         </VBox>
 
-        <!-- Spacer droit -->
         <Pane HBox.hgrow="ALWAYS"/>
 
-        <!-- Badge Dr -->
-        <HBox alignment="CENTER" spacing="12"
+        <HBox alignment="CENTER" spacing="10"
               style="-fx-background-color: #EDF6F9;
-                     -fx-background-radius: 26;
-                     -fx-padding: 8 20;
+                     -fx-background-radius: 24;
+                     -fx-padding: 7 18;
                      -fx-border-color: #C0DDE6;
-                     -fx-border-radius: 26;
+                     -fx-border-radius: 24;
                      -fx-border-width: 1;">
             <StackPane style="-fx-background-color: #4A7C8E;
-                              -fx-background-radius: 18;
-                              -fx-min-width: 36; -fx-min-height: 36;
-                              -fx-pref-width: 36; -fx-pref-height: 36;">
+                              -fx-background-radius: 16;
+                              -fx-min-width: 32; -fx-min-height: 32;
+                              -fx-pref-width: 32; -fx-pref-height: 32;">
                 <Label text="Dr"
-                       style="-fx-font-size: 12px; -fx-font-weight: 900; -fx-text-fill: white;"/>
+                       style="-fx-font-size: 11px; -fx-font-weight: 900; -fx-text-fill: white;"/>
             </StackPane>
             <Label fx:id="lblNomPsy" text="Dr. Psychologue"
-                   style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #2C5F6E;"/>
+                   style="-fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: #2C5F6E;"/>
         </HBox>
     </HBox>
 
@@ -91,167 +60,154 @@
                        -fx-background-color: transparent;
                        -fx-border-color: transparent;">
 
-        <VBox spacing="20"
-              style="-fx-padding: 24 28 36 28; -fx-background-color: #EDF2F6;">
+        <VBox spacing="18"
+              style="-fx-padding: 22 26 32 26; -fx-background-color: #EDF2F6;">
 
             <!-- ─────────────────────────────────────────────────
-                 CARTES STATS
+                 CARTES STATS — compactes et raffinées
             ───────────────────────────────────────────────── -->
-            <HBox spacing="16">
+            <HBox spacing="14">
 
                 <!-- Violet — Patients suivis -->
-                <VBox HBox.hgrow="ALWAYS" spacing="10" alignment="CENTER"
+                <HBox HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" spacing="14"
                       style="-fx-background-color: white;
-                             -fx-background-radius: 20;
-                             -fx-padding: 24 20 20 20;
-                             -fx-min-width: 0;
-                             -fx-effect: dropshadow(gaussian, rgba(74,124,142,0.09), 20, 0, 0, 4);
+                             -fx-background-radius: 16;
+                             -fx-padding: 16 20;
+                             -fx-effect: dropshadow(gaussian, rgba(74,124,142,0.09), 14, 0, 0, 3);
                              -fx-border-color: #E8EFF2;
-                             -fx-border-radius: 20;
+                             -fx-border-radius: 16;
                              -fx-border-width: 1;">
                     <StackPane style="-fx-background-color: linear-gradient(to bottom right, #A78BFA, #7C4DFF);
-                                      -fx-background-radius: 14;
-                                      -fx-min-width: 200; -fx-pref-width: 200;
-                                      -fx-min-height: 72; -fx-pref-height: 72;">
-                        <Label text="👥" style="-fx-font-size: 28px;"/>
+                                      -fx-background-radius: 12;
+                                      -fx-min-width: 46; -fx-pref-width: 46;
+                                      -fx-min-height: 46; -fx-pref-height: 46;">
+                        <Label text="👥" style="-fx-font-size: 20px;"/>
                     </StackPane>
-                    <Label fx:id="lblTotalPatients" text="0"
-                           style="-fx-font-size: 38px; -fx-font-weight: 900;
-                                  -fx-text-fill: #7C4DFF; -fx-font-family: 'Segoe UI';"/>
-                    <Label text="Patients suivis"
-                           style="-fx-font-size: 13px; -fx-text-fill: #8AA8B2; -fx-font-weight: 600;"/>
-                    <Label text="↑ actifs"
-                           style="-fx-font-size: 11px; -fx-font-weight: 700;
-                                  -fx-text-fill: #7C4DFF;
-                                  -fx-background-color: #EDE0FF;
-                                  -fx-background-radius: 20;
-                                  -fx-padding: 4 14;
-                                  -fx-border-color: #C4A8FF;
-                                  -fx-border-radius: 20;
-                                  -fx-border-width: 1;"/>
-                </VBox>
+                    <VBox spacing="2">
+                        <Label fx:id="lblTotalPatients" text="0"
+                               style="-fx-font-size: 26px; -fx-font-weight: 900; -fx-text-fill: #7C4DFF;"/>
+                        <Label text="Patients suivis"
+                               style="-fx-font-size: 11px; -fx-text-fill: #8AA8B2; -fx-font-weight: 600;"/>
+                        <Label text="↑ actifs"
+                               style="-fx-font-size: 10px; -fx-font-weight: 700;
+                                      -fx-text-fill: #7C4DFF;
+                                      -fx-background-color: #EDE0FF;
+                                      -fx-background-radius: 20;
+                                      -fx-padding: 2 10;"/>
+                    </VBox>
+                </HBox>
 
                 <!-- Rose — Tests réalisés -->
-                <VBox HBox.hgrow="ALWAYS" spacing="10" alignment="CENTER"
+                <HBox HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" spacing="14"
                       style="-fx-background-color: white;
-                             -fx-background-radius: 20;
-                             -fx-padding: 24 20 20 20;
-                             -fx-min-width: 0;
-                             -fx-effect: dropshadow(gaussian, rgba(74,124,142,0.09), 20, 0, 0, 4);
+                             -fx-background-radius: 16;
+                             -fx-padding: 16 20;
+                             -fx-effect: dropshadow(gaussian, rgba(74,124,142,0.09), 14, 0, 0, 3);
                              -fx-border-color: #E8EFF2;
-                             -fx-border-radius: 20;
+                             -fx-border-radius: 16;
                              -fx-border-width: 1;">
                     <StackPane style="-fx-background-color: linear-gradient(to bottom right, #F472B6, #E91E8C);
-                                      -fx-background-radius: 14;
-                                      -fx-min-width: 200; -fx-pref-width: 200;
-                                      -fx-min-height: 72; -fx-pref-height: 72;">
-                        <Label text="📊" style="-fx-font-size: 28px;"/>
+                                      -fx-background-radius: 12;
+                                      -fx-min-width: 46; -fx-pref-width: 46;
+                                      -fx-min-height: 46; -fx-pref-height: 46;">
+                        <Label text="📊" style="-fx-font-size: 20px;"/>
                     </StackPane>
-                    <Label fx:id="lblTestsSemaine" text="0"
-                           style="-fx-font-size: 38px; -fx-font-weight: 900;
-                                  -fx-text-fill: #E91E8C; -fx-font-family: 'Segoe UI';"/>
-                    <Label text="Tests réalisés"
-                           style="-fx-font-size: 13px; -fx-text-fill: #8AA8B2; -fx-font-weight: 600;"/>
-                    <Label text="↑ +99%"
-                           style="-fx-font-size: 11px; -fx-font-weight: 700;
-                                  -fx-text-fill: #E91E8C;
-                                  -fx-background-color: #FFD6EE;
-                                  -fx-background-radius: 20;
-                                  -fx-padding: 4 14;
-                                  -fx-border-color: #FFB3DC;
-                                  -fx-border-radius: 20;
-                                  -fx-border-width: 1;"/>
-                </VBox>
+                    <VBox spacing="2">
+                        <Label fx:id="lblTestsSemaine" text="0"
+                               style="-fx-font-size: 26px; -fx-font-weight: 900; -fx-text-fill: #E91E8C;"/>
+                        <Label text="Tests réalisés"
+                               style="-fx-font-size: 11px; -fx-text-fill: #8AA8B2; -fx-font-weight: 600;"/>
+                        <Label text="↑ +99%"
+                               style="-fx-font-size: 10px; -fx-font-weight: 700;
+                                      -fx-text-fill: #E91E8C;
+                                      -fx-background-color: #FFD6EE;
+                                      -fx-background-radius: 20;
+                                      -fx-padding: 2 10;"/>
+                    </VBox>
+                </HBox>
 
                 <!-- Cyan — Progression -->
-                <VBox HBox.hgrow="ALWAYS" spacing="10" alignment="CENTER"
+                <HBox HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" spacing="14"
                       style="-fx-background-color: white;
-                             -fx-background-radius: 20;
-                             -fx-padding: 24 20 20 20;
-                             -fx-min-width: 0;
-                             -fx-effect: dropshadow(gaussian, rgba(74,124,142,0.09), 20, 0, 0, 4);
+                             -fx-background-radius: 16;
+                             -fx-padding: 16 20;
+                             -fx-effect: dropshadow(gaussian, rgba(74,124,142,0.09), 14, 0, 0, 3);
                              -fx-border-color: #E8EFF2;
-                             -fx-border-radius: 20;
+                             -fx-border-radius: 16;
                              -fx-border-width: 1;">
                     <StackPane style="-fx-background-color: linear-gradient(to bottom right, #67E8F9, #29B6D8);
-                                      -fx-background-radius: 14;
-                                      -fx-min-width: 200; -fx-pref-width: 200;
-                                      -fx-min-height: 72; -fx-pref-height: 72;">
-                        <Label text="📈" style="-fx-font-size: 28px;"/>
+                                      -fx-background-radius: 12;
+                                      -fx-min-width: 46; -fx-pref-width: 46;
+                                      -fx-min-height: 46; -fx-pref-height: 46;">
+                        <Label text="📈" style="-fx-font-size: 20px;"/>
                     </StackPane>
-                    <Label fx:id="lblProgressionMoyenne" text="N/A"
-                           style="-fx-font-size: 38px; -fx-font-weight: 900;
-                                  -fx-text-fill: #29B6D8; -fx-font-family: 'Segoe UI';"/>
-                    <Label text="Progression moyenne"
-                           style="-fx-font-size: 13px; -fx-text-fill: #8AA8B2; -fx-font-weight: 600;"/>
-                    <Label text="↑ +13%"
-                           style="-fx-font-size: 11px; -fx-font-weight: 700;
-                                  -fx-text-fill: #0099BB;
-                                  -fx-background-color: #CCF2FB;
-                                  -fx-background-radius: 20;
-                                  -fx-padding: 4 14;
-                                  -fx-border-color: #80DDEF;
-                                  -fx-border-radius: 20;
-                                  -fx-border-width: 1;"/>
-                </VBox>
+                    <VBox spacing="2">
+                        <Label fx:id="lblProgressionMoyenne" text="N/A"
+                               style="-fx-font-size: 26px; -fx-font-weight: 900; -fx-text-fill: #29B6D8;"/>
+                        <Label text="Progression moyenne"
+                               style="-fx-font-size: 11px; -fx-text-fill: #8AA8B2; -fx-font-weight: 600;"/>
+                        <Label text="↑ +13%"
+                               style="-fx-font-size: 10px; -fx-font-weight: 700;
+                                      -fx-text-fill: #0099BB;
+                                      -fx-background-color: #CCF2FB;
+                                      -fx-background-radius: 20;
+                                      -fx-padding: 2 10;"/>
+                    </VBox>
+                </HBox>
+
             </HBox>
 
             <!-- ─────────────────────────────────────────────────
                  ONGLETS + FILTRES
             ───────────────────────────────────────────────── -->
-            <VBox spacing="16"
+            <VBox spacing="14"
                   style="-fx-background-color: white;
-                         -fx-background-radius: 20;
-                         -fx-padding: 20 24;
-                         -fx-effect: dropshadow(gaussian, rgba(74,124,142,0.07), 16, 0, 0, 3);
+                         -fx-background-radius: 18;
+                         -fx-padding: 18 22;
+                         -fx-effect: dropshadow(gaussian, rgba(74,124,142,0.07), 14, 0, 0, 3);
                          -fx-border-color: #E8EFF2;
-                         -fx-border-radius: 20;
+                         -fx-border-radius: 18;
                          -fx-border-width: 1;">
 
-                <!-- Onglets -->
                 <HBox spacing="10" alignment="CENTER_LEFT">
                     <Button fx:id="btnTous"
                             text="🛡  Tous les patients"
                             onAction="#afficherTousPatients"
                             style="-fx-background-color: #4A7C8E;
                                    -fx-text-fill: white;
-                                   -fx-font-size: 13px; -fx-font-weight: 800;
-                                   -fx-padding: 11 24;
-                                   -fx-background-radius: 24;
+                                   -fx-font-size: 12px; -fx-font-weight: 800;
+                                   -fx-padding: 10 22;
+                                   -fx-background-radius: 22;
                                    -fx-cursor: hand;
-                                   -fx-effect: dropshadow(gaussian,rgba(74,124,142,0.35),14,0,0,3);"/>
+                                   -fx-effect: dropshadow(gaussian,rgba(74,124,142,0.35),10,0,0,3);"/>
 
                     <Button fx:id="btnMesPatients"
                             text="👤  Mes patients"
                             onAction="#afficherMesPatients"
                             style="-fx-background-color: white;
                                    -fx-text-fill: #4A7C8E;
-                                   -fx-font-size: 13px; -fx-font-weight: 700;
-                                   -fx-padding: 11 24;
-                                   -fx-background-radius: 24;
+                                   -fx-font-size: 12px; -fx-font-weight: 700;
+                                   -fx-padding: 10 22;
+                                   -fx-background-radius: 22;
                                    -fx-border-color: #C0DDE6;
-                                   -fx-border-radius: 24;
+                                   -fx-border-radius: 22;
                                    -fx-border-width: 1.5;
                                    -fx-cursor: hand;"/>
                 </HBox>
 
-                <!-- Barre dégradée -->
                 <Region style="-fx-background-color: linear-gradient(to right, #2C5F6E, #29B6D8, #E91E8C, transparent);
-                               -fx-pref-height: 2; -fx-min-height: 2;
-                               -fx-background-radius: 2;"/>
+                               -fx-pref-height: 2; -fx-min-height: 2; -fx-background-radius: 2;"/>
 
-                <!-- Recherche + filtre -->
                 <HBox spacing="12" alignment="CENTER">
                     <HBox HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" spacing="0"
                           style="-fx-background-color: #F5FAFB;
-                                 -fx-background-radius: 24;
+                                 -fx-background-radius: 22;
                                  -fx-border-color: #C8DDE4;
-                                 -fx-border-radius: 24;
+                                 -fx-border-radius: 22;
                                  -fx-border-width: 1;
-                                 -fx-padding: 0 20;">
-                        <Label text="🔍"
-                               style="-fx-font-size: 14px; -fx-text-fill: #8AA8B2;"/>
-                        <Pane prefWidth="10"/>
+                                 -fx-padding: 0 18;">
+                        <Label text="🔍" style="-fx-font-size: 13px; -fx-text-fill: #8AA8B2;"/>
+                        <Pane prefWidth="8"/>
                         <TextField fx:id="fieldRecherche"
                                    promptText="Rechercher un patient..."
                                    HBox.hgrow="ALWAYS"
@@ -260,16 +216,15 @@
                                           -fx-font-size: 13px;
                                           -fx-text-fill: #1E3A44;
                                           -fx-prompt-text-fill: #A8C4CD;
-                                          -fx-font-family: 'Segoe UI';
-                                          -fx-padding: 12 0;"/>
+                                          -fx-padding: 11 0;"/>
                     </HBox>
 
-                    <ComboBox fx:id="comboFiltre" prefWidth="175"
+                    <ComboBox fx:id="comboFiltre" prefWidth="165"
                               style="-fx-background-color: white;
                                      -fx-border-color: #C8DDE4;
-                                     -fx-border-radius: 24;
-                                     -fx-background-radius: 24;
-                                     -fx-font-size: 13px;
+                                     -fx-border-radius: 22;
+                                     -fx-background-radius: 22;
+                                     -fx-font-size: 12px;
                                      -fx-text-fill: #2C5F6E;
                                      -fx-font-weight: 600;
                                      -fx-padding: 3 10;"/>
@@ -282,16 +237,15 @@
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <Region style="-fx-background-color: linear-gradient(to bottom, #4A7C8E, #29B6D8);
                                -fx-pref-width: 4; -fx-min-width: 4;
-                               -fx-pref-height: 22; -fx-background-radius: 4;"/>
+                               -fx-pref-height: 20; -fx-background-radius: 4;"/>
                 <Label text="Liste des patients"
-                       style="-fx-font-size: 16px; -fx-font-weight: 800;
-                              -fx-text-fill: #1E3A44; -fx-font-family: 'Segoe UI';"/>
+                       style="-fx-font-size: 15px; -fx-font-weight: 800; -fx-text-fill: #1E3A44;"/>
             </HBox>
 
             <!-- ─────────────────────────────────────────────────
-                 LISTE PATIENTS (générée dynamiquement)
+                 LISTE PATIENTS
             ───────────────────────────────────────────────── -->
-            <VBox fx:id="listePatients" spacing="14"
+            <VBox fx:id="listePatients" spacing="12"
                   style="-fx-padding: 0 0 8 0;"/>
 
         </VBox>

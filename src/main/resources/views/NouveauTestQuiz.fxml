@@ -7,111 +7,133 @@
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="controllers.NouveauTestQuizController"
       spacing="16"
-      style="-fx-background-color: #dce8f0;">
+      style="-fx-background-color: #EAF3F5;">
 
-    <padding><Insets top="24" right="30" bottom="24" left="30"/></padding>
+    <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
 
     <!-- ══════════════ BOUTON RETOUR ══════════════ -->
     <HBox>
         <Button text="← Retour"
                 onAction="#retourListe"
-                style="-fx-background-color: transparent;
-                       -fx-text-fill: #2c3e50;
-                       -fx-font-size: 13px;
-                       -fx-font-weight: bold;
+                style="-fx-background-color: rgba(92,152,168,0.10);
+                       -fx-text-fill: #5C98A8;
+                       -fx-font-size: 12px;
+                       -fx-font-weight: 800;
                        -fx-cursor: hand;
-                       -fx-padding: 6 0 6 0;"/>
+                       -fx-padding: 7 14 7 14;
+                       -fx-background-radius: 10;
+                       -fx-border-color: rgba(92,152,168,0.25);
+                       -fx-border-radius: 10;
+                       -fx-border-width: 1;"/>
     </HBox>
 
     <!-- ══════════════ TITRE PAGE ══════════════ -->
-    <VBox spacing="4">
+    <VBox spacing="4"
+          style="-fx-background-color: rgba(255,255,255,0.78);
+                 -fx-background-radius: 20;
+                 -fx-padding: 16 20;
+                 -fx-border-color: rgba(92,152,168,0.12);
+                 -fx-border-radius: 20;
+                 -fx-border-width: 1;
+                 -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.08), 10, 0, 0, 2);">
         <Label fx:id="labelTitrePage"
                text="Nouveau Test Psychologique"
-               style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+               style="-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: #1F2A33;"/>
         <Label fx:id="labelSousTitrePage"
                text="Créez un test avec ses questions et choix de réponses"
-               style="-fx-font-size: 13px; -fx-text-fill: #7f8c8d;"/>
+               style="-fx-font-size: 12px; -fx-text-fill: #6E8E9A; -fx-font-weight: 600;"/>
     </VBox>
 
     <ScrollPane fitToWidth="true"
-                style="-fx-background: transparent; -fx-background-color: transparent;"
+                style="-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent;"
                 VBox.vgrow="ALWAYS">
         <VBox spacing="16" style="-fx-background-color: transparent;">
             <padding><Insets top="4" bottom="4"/></padding>
 
             <!-- ══════════════ INFOS DU QUIZ ══════════════ -->
             <VBox spacing="14"
-                  style="-fx-background-color: white;
-                         -fx-background-radius: 12;
+                  style="-fx-background-color: rgba(255,255,255,0.78);
+                         -fx-background-radius: 20;
                          -fx-padding: 20;
-                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                         -fx-border-color: rgba(92,152,168,0.14);
+                         -fx-border-radius: 20;
+                         -fx-border-width: 1.5;
+                         -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.09), 10, 0, 0, 2);">
 
                 <Label text="Informations du test"
-                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                       style="-fx-font-size: 15px; -fx-font-weight: 900; -fx-text-fill: #1F2A33;"/>
 
                 <!-- Titre -->
                 <VBox spacing="5">
                     <Label text="Titre du test *"
-                           style="-fx-font-size: 12px; -fx-text-fill: #7f8c8d;"/>
+                           style="-fx-font-size: 12px; -fx-text-fill: #6E8E9A; -fx-font-weight: 700;"/>
                     <TextField fx:id="fieldTitre"
                                promptText="Ex: Évaluation de l'anxiété (GAD-7)"
-                               style="-fx-background-color: #f8f9fa;
-                                      -fx-border-color: #e0e0e0;
-                                      -fx-border-radius: 8;
-                                      -fx-background-radius: 8;
+                               style="-fx-background-color: rgba(234,243,245,0.70);
+                                      -fx-border-color: rgba(92,152,168,0.20);
+                                      -fx-border-radius: 10;
+                                      -fx-background-radius: 10;
                                       -fx-padding: 10;
-                                      -fx-font-size: 13px;"/>
+                                      -fx-font-size: 13px;
+                                      -fx-text-fill: #1F2A33;"/>
                 </VBox>
 
                 <!-- Description -->
                 <VBox spacing="5">
                     <Label text="Description"
-                           style="-fx-font-size: 12px; -fx-text-fill: #7f8c8d;"/>
+                           style="-fx-font-size: 12px; -fx-text-fill: #6E8E9A; -fx-font-weight: 700;"/>
                     <TextArea fx:id="fieldDescription"
                               promptText="Ex: Test de dépistage des troubles anxieux généralisés"
                               prefRowCount="2"
-                              style="-fx-background-color: #f8f9fa;
-                                     -fx-border-color: #e0e0e0;
-                                     -fx-border-radius: 8;
-                                     -fx-background-radius: 8;
+                              style="-fx-background-color: rgba(234,243,245,0.70);
+                                     -fx-border-color: rgba(92,152,168,0.20);
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
                                      -fx-padding: 10;
-                                     -fx-font-size: 13px;"/>
+                                     -fx-font-size: 13px;
+                                     -fx-text-fill: #1F2A33;"/>
                 </VBox>
 
                 <!-- Type test -->
                 <VBox spacing="5">
                     <Label text="Type de test"
-                           style="-fx-font-size: 12px; -fx-text-fill: #7f8c8d;"/>
+                           style="-fx-font-size: 12px; -fx-text-fill: #6E8E9A; -fx-font-weight: 700;"/>
                     <ComboBox fx:id="comboTypeTest"
                               maxWidth="300"
-                              style="-fx-background-color: #f8f9fa;
-                                     -fx-border-color: #e0e0e0;
-                                     -fx-border-radius: 8;
-                                     -fx-background-radius: 8;
+                              style="-fx-background-color: rgba(234,243,245,0.70);
+                                     -fx-border-color: rgba(92,152,168,0.20);
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
                                      -fx-font-size: 13px;"/>
                 </VBox>
             </VBox>
 
             <!-- ══════════════ SECTION QUESTIONS ══════════════ -->
             <VBox spacing="12"
-                  style="-fx-background-color: white;
-                         -fx-background-radius: 12;
+                  style="-fx-background-color: rgba(255,255,255,0.78);
+                         -fx-background-radius: 20;
                          -fx-padding: 20;
-                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                         -fx-border-color: rgba(92,152,168,0.14);
+                         -fx-border-radius: 20;
+                         -fx-border-width: 1.5;
+                         -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.09), 10, 0, 0, 2);">
 
                 <HBox alignment="CENTER_LEFT">
                     <Label text="Questions"
                            HBox.hgrow="ALWAYS"
-                           style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                           style="-fx-font-size: 15px; -fx-font-weight: 900; -fx-text-fill: #1F2A33;"/>
                     <Pane HBox.hgrow="ALWAYS"/>
                     <Button text="+ Ajouter une question"
                             onAction="#ajouterQuestion"
-                            style="-fx-background-color: #eaf2fb;
-                                   -fx-text-fill: #2c4a6e;
+                            style="-fx-background-color: rgba(92,152,168,0.10);
+                                   -fx-text-fill: #5C98A8;
                                    -fx-font-size: 12px;
-                                   -fx-font-weight: bold;
-                                   -fx-padding: 8 14 8 14;
-                                   -fx-background-radius: 8;
+                                   -fx-font-weight: 800;
+                                   -fx-padding: 8 16 8 16;
+                                   -fx-background-radius: 10;
+                                   -fx-border-color: rgba(92,152,168,0.25);
+                                   -fx-border-radius: 10;
+                                   -fx-border-width: 1;
                                    -fx-cursor: hand;"/>
                 </HBox>
 
@@ -121,7 +143,8 @@
                 <!-- Message si aucune question -->
                 <Label fx:id="labelAucuneQuestion"
                        text="Aucune question. Cliquez sur '+ Ajouter une question'."
-                       style="-fx-font-size: 12px; -fx-text-fill: #95a5a6; -fx-padding: 10 0 10 0;"/>
+                       style="-fx-font-size: 12px; -fx-text-fill: #8AA8B2;
+                              -fx-font-style: italic; -fx-padding: 10 0 10 0;"/>
 
             </VBox>
 
@@ -132,25 +155,28 @@
     <HBox alignment="CENTER_RIGHT" spacing="12">
         <Button text="Annuler"
                 onAction="#retourListe"
-                style="-fx-background-color: white;
-                       -fx-text-fill: #2c3e50;
-                       -fx-font-size: 13px;
-                       -fx-font-weight: bold;
-                       -fx-padding: 10 24 10 24;
-                       -fx-background-radius: 8;
-                       -fx-border-color: #dce0e3;
-                       -fx-border-radius: 8;
+                style="-fx-background-color: rgba(255,255,255,0.78);
+                       -fx-text-fill: #6E8E9A;
+                       -fx-font-size: 12px;
+                       -fx-font-weight: 800;
+                       -fx-padding: 10 22 10 22;
+                       -fx-background-radius: 12;
+                       -fx-border-color: rgba(92,152,168,0.25);
+                       -fx-border-radius: 12;
+                       -fx-border-width: 1.5;
                        -fx-cursor: hand;"/>
         <Button fx:id="btnSauvegarder"
                 text="💾  Sauvegarder le test"
                 onAction="#sauvegarderTest"
-                style="-fx-background-color: #2c4a6e;
+                style="-fx-background-color: #5C98A8;
                        -fx-text-fill: white;
                        -fx-font-size: 13px;
-                       -fx-font-weight: bold;
+                       -fx-font-weight: 800;
                        -fx-padding: 10 24 10 24;
-                       -fx-background-radius: 8;
-                       -fx-cursor: hand;"/>
+                       -fx-background-radius: 12;
+                       -fx-border-color: transparent;
+                       -fx-cursor: hand;
+                       -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.30), 8, 0, 0, 2);"/>
     </HBox>
 
 </VBox>

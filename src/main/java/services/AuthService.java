@@ -10,13 +10,10 @@ import java.sql.SQLException;
 
 public class AuthService {
 
-
-    // ✅ Plus de connexion stockée comme champ
     public boolean login(String email, String password) throws SQLException {
         String sql = "SELECT id_users, nom, prenom, role FROM users " +
                 "WHERE email = ? AND mot_de_passe = ?";
 
-        // ✅ try-with-resources — connexion fraîche et fermée automatiquement
         try (Connection cnx = MyDatabase.getInstance().getConnection();
              PreparedStatement pst = cnx.prepareStatement(sql)) {
 
@@ -35,6 +32,12 @@ public class AuthService {
                         + (nom != null ? nom : "");
 
                 Session.Role role = mapRole(roleDb);
+
+                // ✅ Log pour vérifier le mapping
+                System.out.println("🔐 Login : " + nomComplet.trim()
+                        + " | DB role='" + roleDb + "'"
+                        + " | Session.Role=" + role);
+
                 Session.login(id, role, nomComplet.trim());
                 return true;
             }
@@ -45,15 +48,21 @@ public class AuthService {
         if (roleDb == null) return Session.Role.USER;
 
         switch (roleDb.toLowerCase().trim()) {
+
             case "admin":
                 return Session.Role.ADMIN;
+
             case "psychologue":
                 return Session.Role.PSYCHOLOGUE;
+
+            // ✅ CORRECTION PRINCIPALE : "responsablec" ajouté
+            case "responsablec":         // ← valeur réelle en DB
             case "responsable_centre":
             case "responsable-centre":
             case "responsablecentre":
-                return Session.Role.RESPONSABLE_CENTRE;
-            case "patient": // ✅ BDD utilise "patient" pas "user"
+                return Session.Role.RESPONSABLEC;
+
+            case "patient":
             case "user":
             default:
                 return Session.Role.USER;

@@ -8,8 +8,8 @@ import java.util.List;
 
 public class ServiceChatQuiz {
 
-   // même clé que ServiceGemini
-    private static final String API_URL = "";
+    private static final String API_KEY = "key"; // même clé que ServiceGemini
+    private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 
 

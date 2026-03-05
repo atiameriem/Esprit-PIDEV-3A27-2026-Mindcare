@@ -51,7 +51,7 @@ import java.util.Base64;
  */
 public class AvatarService {
 
-    private static final String DICEBEAR_BASE = "";
+    private static final String DICEBEAR_BASE = "https://api.dicebear.com/9.x/";
     private static final String PREFS_DIR =
             System.getProperty("user.home") + "/.mindcare/avatars/";
 

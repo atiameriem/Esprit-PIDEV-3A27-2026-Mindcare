@@ -7,37 +7,56 @@
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="controllers.listQuizController"
       spacing="0"
-      style="-fx-background-color: #dce8f0;">
+      style="-fx-background-color: #EAF3F5;">
 
-    <padding><Insets top="30" right="30" bottom="30" left="30"/></padding>
+    <padding><Insets top="26" right="26" bottom="30" left="26"/></padding>
 
     <!-- ══════════════ HEADER ══════════════ -->
-    <HBox alignment="CENTER_LEFT" spacing="20">
-        <VBox spacing="4" HBox.hgrow="ALWAYS">
+    <HBox alignment="CENTER_LEFT" spacing="20"
+          style="-fx-background-color: rgba(255,255,255,0.78);
+                 -fx-background-radius: 20;
+                 -fx-padding: 16 20;
+                 -fx-border-color: rgba(92,152,168,0.12);
+                 -fx-border-radius: 20;
+                 -fx-border-width: 1;
+                 -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.08), 10, 0, 0, 2);">
+
+        <VBox spacing="3" HBox.hgrow="ALWAYS">
             <Label text="Tests Psychologiques"
-                   style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                   style="-fx-font-size: 24px;
+                          -fx-font-weight: 900;
+                          -fx-text-fill: #1F2A33;"/>
             <Label text="Sélectionnez un test à passer"
-                   style="-fx-font-size: 13px; -fx-text-fill: #7f8c8d;"/>
+                   style="-fx-font-size: 12px;
+                          -fx-text-fill: #6E8E9A;
+                          -fx-font-weight: 600;"/>
         </VBox>
+
         <Button fx:id="btnNouveauTest"
                 text="+ Nouveau Test"
                 onAction="#ouvrirNouveauTest"
-                style="-fx-background-color: #2c4a6e;
+                style="-fx-background-color: #5C98A8;
                        -fx-text-fill: white;
-                       -fx-font-size: 13px;
-                       -fx-font-weight: bold;
-                       -fx-padding: 10 20 10 20;
-                       -fx-background-radius: 8;
-                       -fx-cursor: hand;"/>
+                       -fx-font-size: 12px;
+                       -fx-font-weight: 800;
+                       -fx-padding: 9 18 9 18;
+                       -fx-background-radius: 12;
+                       -fx-border-color: transparent;
+                       -fx-border-radius: 12;
+                       -fx-cursor: hand;
+                       -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.30), 8, 0, 0, 2);"/>
     </HBox>
 
     <VBox spacing="0">
-        <padding><Insets top="24"/></padding>
+        <padding><Insets top="18"/></padding>
     </VBox>
 
     <!-- ══════════════ LISTE DES TESTS ══════════════ -->
-    <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-background-color: transparent;">
-        <VBox fx:id="listeTests" spacing="14"
+    <ScrollPane fitToWidth="true"
+                style="-fx-background: transparent;
+                       -fx-background-color: transparent;
+                       -fx-border-color: transparent;">
+        <VBox fx:id="listeTests" spacing="12"
               style="-fx-background-color: transparent;">
             <!-- Les cartes de quiz sont générées dynamiquement par le controller -->
         </VBox>

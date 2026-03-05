@@ -11,9 +11,9 @@ public class ServiceGroqQuiz {
 
     // ✅ Coller ta clé ici — format : gsk_xxxxx
     private static final String API_KEY =
-            "g";
-
-            "";
+            "key";
+    private static final String API_URL =
+            "https://api.groq.com/openai/v1/chat/completions";
 
     // ══════════════════════════════════════════════════════════════
     // Conseil principal
@@ -255,4 +255,52 @@ public class ServiceGroqQuiz {
 
         return emotion;
     }
+    /**
+     * Envoie un prompt libre à Groq et retourne la réponse texte.
+     * Utilisé par SuivieQuizController pour le conseil météo × psy.
+     */
+    public String envoyerPromptLibre(String prompt) {
+        try {
+            String body = "{"
+                    + "\"model\":\"llama3-8b-8192\","
+                    + "\"messages\":[{\"role\":\"user\",\"content\":"
+                    + jsonEscape(prompt) + "}],"
+                    + "\"max_tokens\":200,\"temperature\":0.7}";
+
+            URL url = new URL("https://api.groq.com/openai/v1/chat/completions");
+            HttpURLConnection c = (HttpURLConnection) url.openConnection();
+            c.setRequestMethod("POST"); c.setDoOutput(true);
+            c.setConnectTimeout(12000); c.setReadTimeout(20000);
+            c.setRequestProperty("Content-Type","application/json");
+            c.setRequestProperty("Authorization","Bearer " + API_KEY);
+            c.getOutputStream().write(body.getBytes(StandardCharsets.UTF_8));
+
+            if (c.getResponseCode() != 200) return null;
+            BufferedReader br = new BufferedReader(
+                    new InputStreamReader(c.getInputStream(), StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            String line; while ((line = br.readLine()) != null) sb.append(line);
+
+            String json = sb.toString();
+            int ci = json.indexOf("\"content\"");
+            if (ci < 0) return null;
+            int d = json.indexOf("\"", ci + 10) + 1;
+            int f = d;
+            while (f < json.length()) {
+                if (json.charAt(f) == '"' && json.charAt(f-1) != '\\') break;
+                f++;
+            }
+            return json.substring(d, f)
+                    .replace("\\n","\n").replace("\\\"","\"").trim();
+        } catch (Exception e) {
+            System.err.println("❌ envoyerPromptLibre : " + e.getMessage());
+            return null;
+        }
+    }
+
+    private String jsonEscape(String s) {
+        return "\"" + s.replace("\\","\\\\").replace("\"","\\\"")
+                .replace("\n","\\n").replace("\r","\\r") + "\"";
+    }
+
 }

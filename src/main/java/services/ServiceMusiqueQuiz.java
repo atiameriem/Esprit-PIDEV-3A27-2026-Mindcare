@@ -8,7 +8,9 @@ import java.util.*;
 public class ServiceMusiqueQuiz {
 
     // ✅ COLLER TES CLÉS ICI
-    private static final String FREESOUND_KEY = "Is";
+    private static final String FREESOUND_KEY = "key";
+    private static final String GROQ_KEY      = "key";
+
 
     // ══════════════════════════════════════════════════════════════
     // Classe Piste

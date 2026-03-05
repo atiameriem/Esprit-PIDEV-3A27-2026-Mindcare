@@ -1,4 +1,3 @@
-
 import models.Quiz;
 import org.junit.jupiter.api.*;
 import services.ServiceQuiz;
@@ -14,8 +13,8 @@ public class ServiceQuizTest {
 
     static ServiceQuiz sq;
 
-    private int idQuiz = -1;
-    private final int idPatient = 4;
+    private int idQuiz          = -1;
+    private final int idPatient     = 4;
     private final int idPsychologue = 6;
 
     @BeforeAll
@@ -27,7 +26,8 @@ public class ServiceQuizTest {
     void cleanup() throws SQLException {
         if (idQuiz != -1) {
             Quiz q = sq.getQuizById(idQuiz);
-            if (q != null) sq.delete(q);
+            // ✅ delete(int id) au lieu de delete(Quiz q)
+            if (q != null) sq.delete(idQuiz);
             idQuiz = -1;
         }
     }
@@ -41,13 +41,14 @@ public class ServiceQuizTest {
         quiz.setTypeTest("Stress");
         quiz.setActif(true);
         quiz.setDateCreation(LocalDateTime.now());
-        sq.add(quiz);
+        // ✅ create() au lieu de add()
+        sq.create(quiz);
         idQuiz = quiz.getIdQuiz();
     }
 
     @Test
     @Order(1)
-    void testAddQuiz() throws SQLException {
+    void testCreateQuiz() throws SQLException {
         creerQuiz();
         assertTrue(idQuiz > 0);
 
@@ -64,6 +65,7 @@ public class ServiceQuizTest {
         q.setTitre("Quiz Modifié");
         q.setTypeTest("Anxiété");
         q.setActif(false);
+        // ✅ update() inchangé
         sq.update(q);
 
         Quiz updated = sq.getQuizById(idQuiz);
@@ -74,9 +76,10 @@ public class ServiceQuizTest {
 
     @Test
     @Order(3)
-    void testGetAll() throws SQLException {
+    void testRead() throws SQLException {
         creerQuiz();
-        List<Quiz> list = sq.getAll();
+        // ✅ read() au lieu de getAll()
+        List<Quiz> list = sq.read();
         assertTrue(list.stream().anyMatch(q -> q.getIdQuiz() == idQuiz));
     }
 
@@ -84,8 +87,8 @@ public class ServiceQuizTest {
     @Order(4)
     void testDeleteQuiz() throws SQLException {
         creerQuiz();
-        Quiz q = sq.getQuizById(idQuiz);
-        sq.delete(q);
+        // ✅ delete(int id) au lieu de delete(Quiz q)
+        sq.delete(idQuiz);
 
         Quiz deleted = sq.getQuizById(idQuiz);
         assertNull(deleted);

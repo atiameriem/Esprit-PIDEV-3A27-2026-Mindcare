@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -25,18 +26,71 @@ public class ProfilControllerQuiz {
     @FXML private Label  lblTitrePatient;
 
     private int idPatient;
-    private static final int SCORE_MAX = 6; // 3 questions × valeur max 2
+
+    // ── Palette MindCare EspacePraticien ─────────────────────────
+    private static final String TEAL_DARK   = "#2D6E7E";
+    private static final String TEAL_HOVER  = "#225A69";
+    private static final String TEAL_MED    = "#5C98A8";
+    private static final String TEAL_LIGHT  = "#D4EBF0";
+    private static final String BG_PAGE     = "#EAF3F5";
+    private static final String TEXT_DARK   = "#1F2A33";
+    private static final String TEXT_GREY   = "#6E8E9A";
+
+    // ── Couleurs par type de quiz ─────────────────────────────────
+    private static final String[][] QUIZ_COLORS = {
+            { "stress",  "#E07A7A", "#FAE5E5", "🌸 " },
+            { "humeur",  "#4A90BE", "#D9EDF8", "💙 " },
+            { "bien",    "#5E9E82", "#D4EFE4", "🌿 " },
+            { "etre",    "#5E9E82", "#D4EFE4", "🌿 " },
+            { "anxiete", "#9B7EC8", "#EDE5F8", "🧠 " },
+            { "anxiété", "#9B7EC8", "#EDE5F8", "🧠 " },
+            { "motiv",   "#D4822A", "#FAEBD7", "⚡ " },
+    };
 
     private final ServiceReponse serviceReponse = new ServiceReponse();
 
-    // ✅ Dans setIdPatient() — vérification rôle
+    // ════════════════════════════════════════════════════════════
+    //  initialize() — Platform.runLater force le style APRÈS
+    //  que JavaFX applique son CSS Modena par défaut
+    // ════════════════════════════════════════════════════════════
+    @FXML
+    public void initialize() {
+        Platform.runLater(() -> {
+            CornerRadii radius = new CornerRadii(20);
+
+            btnRetour.setBackground(new Background(
+                    new BackgroundFill(Color.web(TEAL_DARK), radius, Insets.EMPTY)
+            ));
+            btnRetour.setBorder(Border.EMPTY);
+            btnRetour.setTextFill(Color.WHITE);
+            btnRetour.setStyle(
+                    "-fx-font-size: 12px;" +
+                            "-fx-font-weight: 800;" +
+                            "-fx-padding: 10 20 10 20;" +
+                            "-fx-cursor: hand;" +
+                            "-fx-background-insets: 0;" +
+                            "-fx-border-insets: 0;" +
+                            "-fx-background-radius: 20;"
+            );
+
+            // Hover
+            btnRetour.setOnMouseEntered(e -> btnRetour.setBackground(new Background(
+                    new BackgroundFill(Color.web(TEAL_HOVER), radius, Insets.EMPTY))));
+            btnRetour.setOnMouseExited(e -> btnRetour.setBackground(new Background(
+                    new BackgroundFill(Color.web(TEAL_DARK), radius, Insets.EMPTY))));
+        });
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  Vérification rôle + chargement
+    // ════════════════════════════════════════════════════════════
     public void setIdPatient(int idPatient) {
         var role = utils.Session.getRoleConnecte();
         if (role != null
                 && role != utils.Session.Role.PSYCHOLOGUE
                 && role != utils.Session.Role.ADMIN) {
             Label lbl = new Label("⛔ Accès réservé aux psychologues.");
-            lbl.setStyle("-fx-font-size:14px; -fx-text-fill:#e74c3c; -fx-padding:20;");
+            lbl.setStyle("-fx-font-size:14px; -fx-text-fill:#E07A7A; -fx-padding:20;");
             containerReponses.getChildren().add(lbl);
             return;
         }
@@ -51,12 +105,8 @@ public class ProfilControllerQuiz {
                     getClass().getResource("/views/EspacepraticienQuiz.fxml")
             );
             Node vue = loader.load();
-
             VBox contentArea = (VBox) btnRetour.getScene().lookup("#contentArea");
-            if (contentArea != null) {
-                contentArea.getChildren().setAll(vue);
-            }
-
+            if (contentArea != null) contentArea.getChildren().setAll(vue);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -73,27 +123,23 @@ public class ProfilControllerQuiz {
 
             if (details.isEmpty()) {
                 Label lblVide = new Label("Aucun résultat disponible pour ce patient.");
-                lblVide.setStyle("-fx-font-size: 13px; -fx-text-fill: #9CA3AF; -fx-padding: 20;");
+                lblVide.setStyle("-fx-font-size:13px; -fx-text-fill:" + TEXT_GREY + "; -fx-padding:20;");
                 containerReponses.getChildren().add(lblVide);
                 return;
             }
 
-            // ── Grouper les lignes par quiz ───────────────────────
-            // Structure : Map<titreQuiz, List<ligne>>
+            // Grouper par quiz
             Map<String, List<String>> parQuiz = new LinkedHashMap<>();
-
             for (String ligne : details) {
-                // Format : "Quiz: nom | Question: texte | Réponse: texte | Valeur: x"
                 String[] parts   = ligne.split("\\|");
                 String titreQuiz = parts[0].replace("Quiz:", "").trim();
-
                 parQuiz.computeIfAbsent(titreQuiz, k -> new ArrayList<>()).add(ligne);
             }
 
-            // ── Créer une carte par quiz ──────────────────────────
             for (Map.Entry<String, List<String>> entry : parQuiz.entrySet()) {
+                int scoreMaxReel = serviceReponse.getScoreMaxQuiz(entry.getKey());
                 containerReponses.getChildren().add(
-                        creerCarteQuiz(entry.getKey(), entry.getValue())
+                        creerCarteQuiz(entry.getKey(), entry.getValue(), scoreMaxReel)
                 );
             }
 
@@ -103,53 +149,59 @@ public class ProfilControllerQuiz {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Carte d'un quiz complet avec toutes ses questions
+    //  Carte quiz — palette EspacePraticien
     // ════════════════════════════════════════════════════════════
-    private VBox creerCarteQuiz(String titreQuiz, List<String> lignes) {
+    private VBox creerCarteQuiz(String titreQuiz, List<String> lignes, int scoreMax) {
         String titreLow = titreQuiz.toLowerCase();
 
-        // Calculer score total du quiz
+        // Score obtenu
         int scoreBrut = 0;
-        for (String ligne : lignes) {
-            scoreBrut += extraireValeur(ligne);
-        }
+        for (String ligne : lignes) scoreBrut += extraireValeur(ligne);
 
-        // Conversion en pourcentage réel
+        // Sécurité division par zéro
+        if (scoreMax <= 0) scoreMax = Math.max(scoreBrut, 1);
+
+        // Pourcentage
         int scorePourcent;
         if (titreLow.contains("stress") || titreLow.contains("humeur")) {
-            scorePourcent = (int) Math.max(0, 100 - (scoreBrut * 100.0) / SCORE_MAX);
+            scorePourcent = (int) Math.max(0, 100 - (scoreBrut * 100.0) / scoreMax);
         } else {
-            scorePourcent = (int) Math.min(100, (scoreBrut * 100.0) / SCORE_MAX);
+            scorePourcent = (int) Math.min(100, (scoreBrut * 100.0) / scoreMax);
         }
 
-        // Couleurs MindCare selon le type
-        String couleur, couleurFond, emoji;
-        if (titreLow.contains("stress")) {
-            couleur = "#FF6B9D"; couleurFond = "#FFD4E5"; emoji = "🌸 ";
-        } else if (titreLow.contains("humeur")) {
-            couleur = "#4FACFE"; couleurFond = "#D4F1FF"; emoji = "💙 ";
-        } else if (titreLow.contains("bien") || titreLow.contains("etre")) {
-            couleur = "#A78BFA"; couleurFond = "#E9D5FF"; emoji = "🌿 ";
-        } else {
-            couleur = "#A78BFA"; couleurFond = "#E9D5FF"; emoji = "📝 ";
+        int nombreQuestions = lignes.size();
+
+        // Couleur selon type
+        String couleur    = TEAL_MED;
+        String couleurFond = TEAL_LIGHT;
+        String emoji      = "📝 ";
+        for (String[] c : QUIZ_COLORS) {
+            if (titreLow.contains(c[0])) {
+                couleur = c[1]; couleurFond = c[2]; emoji = c[3];
+                break;
+            }
         }
 
-        // ── Carte principale blanche ──────────────────────────────
+        // ── Carte blanche avec bordure teal ───────────────────────
         VBox carte = new VBox(12);
-        carte.setPadding(new Insets(18));
+        carte.setPadding(new Insets(20));
         carte.setStyle(
                 "-fx-background-color: white;" +
-                        "-fx-background-radius: 20;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);"
+                        "-fx-background-radius: 18;" +
+                        "-fx-border-color: rgba(92,152,168,0.22);" +
+                        "-fx-border-radius: 18;" +
+                        "-fx-border-width: 1.2;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(45,110,126,0.08), 12, 0, 0, 3);"
         );
 
-        // ── HEADER : arc + titre + score ──────────────────────────
-        HBox header = new HBox(14);
+        // ── Header ────────────────────────────────────────────────
+        HBox header = new HBox(16);
         header.setAlignment(Pos.CENTER_LEFT);
 
         // Arc de progression
         StackPane arcPane = new StackPane();
         arcPane.setPrefSize(72, 72);
+        arcPane.setMinSize(72, 72);
 
         Arc arcFond = new Arc(36, 36, 28, 28, 0, 360);
         arcFond.setType(ArcType.OPEN);
@@ -165,74 +217,81 @@ public class ProfilControllerQuiz {
         arcScore.setStrokeLineCap(StrokeLineCap.ROUND);
 
         Label lblPct = new Label(scorePourcent + "%");
-        lblPct.setStyle("-fx-font-size: 12px; -fx-font-weight: 900; -fx-text-fill: " + couleur + ";");
+        lblPct.setStyle("-fx-font-size:12px; -fx-font-weight:900; -fx-text-fill:" + couleur + ";");
         arcPane.getChildren().addAll(arcFond, arcScore, lblPct);
 
-        // Titre + badge
-        VBox titreBox = new VBox(5);
+        // Titre + badges
+        VBox titreBox = new VBox(6);
         HBox.setHgrow(titreBox, Priority.ALWAYS);
 
         Label lblTitre = new Label(emoji + titreQuiz);
-        lblTitre.setStyle("-fx-font-size: 14px; -fx-font-weight: 900; -fx-text-fill: " + couleur + ";");
+        lblTitre.setStyle(
+                "-fx-font-size:15px; -fx-font-weight:900; -fx-text-fill:" + TEXT_DARK + ";"
+        );
 
-        HBox badgeBox = new HBox(8);
+        HBox badgeBox = new HBox(10);
         badgeBox.setAlignment(Pos.CENTER_LEFT);
 
-        Label lblBrut = new Label("Score : " + scoreBrut + "/" + SCORE_MAX);
-        lblBrut.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF; -fx-font-weight: 600;");
+        Label lblBrut = new Label("Score : " + scoreBrut + "/" + scoreMax);
+        lblBrut.setStyle("-fx-font-size:11px; -fx-text-fill:" + TEXT_GREY + "; -fx-font-weight:600;");
 
         // Badge niveau
-        String niveauTexte, niveauStyle;
+        String niveauTexte, niveauBg, niveauFg;
         if (scorePourcent >= 70) {
             niveauTexte = "↑ Bon";
-            niveauStyle = "-fx-background-color:rgba(16,185,129,0.1); -fx-text-fill:#065F46;";
+            niveauBg = "rgba(94,158,130,0.15)"; niveauFg = "#2E7D5A";
         } else if (scorePourcent >= 40) {
             niveauTexte = "→ Moyen";
-            niveauStyle = "-fx-background-color:rgba(245,158,11,0.1); -fx-text-fill:#92400E;";
+            niveauBg = "rgba(212,130,42,0.12)";  niveauFg = "#8A5A1A";
         } else {
             niveauTexte = "↓ À suivre";
-            niveauStyle = "-fx-background-color:rgba(239,68,68,0.1); -fx-text-fill:#991B1B;";
+            niveauBg = "rgba(224,122,122,0.15)"; niveauFg = "#8B3030";
         }
         Label lblNiveau = new Label(niveauTexte);
-        lblNiveau.setStyle("-fx-font-size:11px; -fx-font-weight:700; -fx-padding:3 10 3 10;" +
-                "-fx-background-radius:20;" + niveauStyle);
+        lblNiveau.setStyle(
+                "-fx-font-size:11px; -fx-font-weight:700;" +
+                        "-fx-padding:4 12 4 12; -fx-background-radius:20;" +
+                        "-fx-background-color:" + niveauBg + "; -fx-text-fill:" + niveauFg + ";"
+        );
 
-        badgeBox.getChildren().addAll(lblBrut, lblNiveau);
+        Label lblNbQ = new Label(nombreQuestions + " question" + (nombreQuestions > 1 ? "s" : ""));
+        lblNbQ.setStyle("-fx-font-size:10px; -fx-text-fill:" + TEXT_GREY + "; -fx-font-weight:500;");
+
+        badgeBox.getChildren().addAll(lblBrut, lblNiveau, lblNbQ);
         titreBox.getChildren().addAll(lblTitre, badgeBox);
         header.getChildren().addAll(arcPane, titreBox);
         carte.getChildren().add(header);
 
-        // ── SÉPARATEUR ────────────────────────────────────────────
+        // ── Séparateur ────────────────────────────────────────────
         Separator sep = new Separator();
-        sep.setStyle("-fx-background-color: #F3F4F6;");
+        sep.setStyle("-fx-background-color: rgba(92,152,168,0.20);");
         carte.getChildren().add(sep);
 
-        // ── QUESTIONS / RÉPONSES ──────────────────────────────────
+        // ── Questions / Réponses ──────────────────────────────────
         for (String ligne : lignes) {
             String question = extraireQuestion(ligne);
             String reponse  = extraireReponse(ligne);
             int    valeur   = extraireValeur(ligne);
 
-            HBox ligneBox = new HBox(10);
+            HBox ligneBox = new HBox(12);
             ligneBox.setAlignment(Pos.CENTER_LEFT);
-            ligneBox.setPadding(new Insets(4, 0, 4, 0));
+            ligneBox.setPadding(new Insets(5, 0, 5, 0));
 
-            // Point coloré
             Label dot = new Label("●");
-            dot.setStyle("-fx-text-fill: " + couleur + "; -fx-font-size: 10px;");
+            dot.setStyle("-fx-text-fill:" + couleur + "; -fx-font-size:10px;");
 
-            // Question
             Label lblQ = new Label(question);
             lblQ.setWrapText(true);
-            lblQ.setStyle("-fx-font-size: 12px; -fx-text-fill: #374151; -fx-font-weight: 600;");
+            lblQ.setStyle("-fx-font-size:12px; -fx-text-fill:" + TEXT_DARK + "; -fx-font-weight:600;");
             HBox.setHgrow(lblQ, Priority.ALWAYS);
 
-            // Réponse + valeur
             Label lblR = new Label(reponse + "  (" + valeur + "pt)");
-            lblR.setStyle("-fx-font-size: 12px; -fx-font-weight: 700;" +
-                    "-fx-padding: 3 10 3 10; -fx-background-radius: 12;" +
-                    "-fx-background-color: " + couleurFond + ";" +
-                    "-fx-text-fill: " + couleur + ";");
+            lblR.setStyle(
+                    "-fx-font-size:12px; -fx-font-weight:700;" +
+                            "-fx-padding:4 12 4 12; -fx-background-radius:14;" +
+                            "-fx-background-color:" + couleurFond + ";" +
+                            "-fx-text-fill:" + couleur + ";"
+            );
 
             ligneBox.getChildren().addAll(dot, lblQ, lblR);
             carte.getChildren().add(ligneBox);
@@ -242,29 +301,18 @@ public class ProfilControllerQuiz {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Extraction depuis les lignes
-    //  Format : "Quiz: nom | Question: texte | Réponse: texte | Valeur: x"
+    //  Extraction
     // ════════════════════════════════════════════════════════════
     private String extraireQuestion(String ligne) {
-        try {
-            int start = ligne.indexOf("Question:") + 9;
-            int end   = ligne.indexOf("|", start);
-            return ligne.substring(start, end).trim();
-        } catch (Exception e) { return "Question inconnue"; }
+        try { int s = ligne.indexOf("Question:") + 9; return ligne.substring(s, ligne.indexOf("|", s)).trim(); }
+        catch (Exception e) { return "Question inconnue"; }
     }
-
     private String extraireReponse(String ligne) {
-        try {
-            int start = ligne.indexOf("Réponse:") + 8;
-            int end   = ligne.indexOf("|", start);
-            return ligne.substring(start, end).trim();
-        } catch (Exception e) { return "?"; }
+        try { int s = ligne.indexOf("Réponse:") + 8; return ligne.substring(s, ligne.indexOf("|", s)).trim(); }
+        catch (Exception e) { return "?"; }
     }
-
     private int extraireValeur(String ligne) {
-        try {
-            int start = ligne.indexOf("Valeur:") + 7;
-            return Integer.parseInt(ligne.substring(start).trim());
-        } catch (Exception e) { return 0; }
+        try { return Integer.parseInt(ligne.substring(ligne.indexOf("Valeur:") + 7).trim()); }
+        catch (Exception e) { return 0; }
     }
 }

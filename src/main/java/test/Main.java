@@ -31,7 +31,7 @@ public class Main {
                 "psychologique",
                 true
         );
-        serviceQuiz.add(quiz);
+        serviceQuiz.create(quiz);
         System.out.println("Quiz créé : " + quiz);
 
         // ══════════════════════════════════════════════════════
@@ -99,7 +99,7 @@ public class Main {
                     choixSel.getTexteReponse(),
                     choixSel.getValeur()
             );
-            serviceReponse.add(reponsePatient);
+            serviceReponse.create(reponsePatient);
 
             System.out.println("Q" + (i+1) + " → " +
                     q.getTexteQuestion() + " : " + choixSel.getTexteReponse() +

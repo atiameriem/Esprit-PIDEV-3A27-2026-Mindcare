@@ -5,42 +5,49 @@
 <?import javafx.geometry.*?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="controllers.PassageQuizController"
+      fx:controller="controllers.PasserTestsController"
       spacing="16"
-      style="-fx-background-color: #dce8f0;">
+      style="-fx-background-color: #EAF3F5;">
 
-    <padding><Insets top="24" right="30" bottom="24" left="30"/></padding>
+    <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
 
     <!-- ══════════════ BOUTON RETOUR ══════════════ -->
     <HBox>
         <Button fx:id="btnRetour"
                 text="← Retour"
                 onAction="#retourListe"
-                style="-fx-background-color: transparent;
-                       -fx-text-fill: #2c3e50;
-                       -fx-font-size: 13px;
-                       -fx-font-weight: bold;
+                style="-fx-background-color: rgba(92,152,168,0.10);
+                       -fx-text-fill: #5C98A8;
+                       -fx-font-size: 12px;
+                       -fx-font-weight: 800;
                        -fx-cursor: hand;
-                       -fx-padding: 6 0 6 0;"/>
+                       -fx-padding: 7 14 7 14;
+                       -fx-background-radius: 10;
+                       -fx-border-color: rgba(92,152,168,0.25);
+                       -fx-border-radius: 10;
+                       -fx-border-width: 1;"/>
     </HBox>
 
     <!-- ══════════════ CARTE TITRE QUIZ ══════════════ -->
     <VBox spacing="6"
-          style="-fx-background-color: white;
-                 -fx-background-radius: 12;
+          style="-fx-background-color: rgba(255,255,255,0.78);
+                 -fx-background-radius: 20;
                  -fx-padding: 20;
-                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                 -fx-border-color: rgba(92,152,168,0.14);
+                 -fx-border-radius: 20;
+                 -fx-border-width: 1.5;
+                 -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.09), 10, 0, 0, 2);">
         <Label fx:id="labelTitreQuiz"
                text="Titre du quiz"
-               style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+               style="-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: #1F2A33;"/>
         <Label fx:id="labelDescriptionQuiz"
                text="Description du quiz"
-               style="-fx-font-size: 13px; -fx-text-fill: #7f8c8d;"/>
+               style="-fx-font-size: 12px; -fx-text-fill: #6E8E9A; -fx-font-weight: 600;"/>
     </VBox>
 
     <!-- ══════════════ LISTE DES QUESTIONS ══════════════ -->
     <ScrollPane fitToWidth="true"
-                style="-fx-background: transparent; -fx-background-color: transparent;"
+                style="-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent;"
                 VBox.vgrow="ALWAYS">
         <VBox fx:id="listeQuestions" spacing="14"
               style="-fx-background-color: transparent;">
@@ -51,15 +58,17 @@
     <!-- ══════════════ BOUTON SOUMETTRE ══════════════ -->
     <HBox alignment="CENTER_RIGHT">
         <Button fx:id="btnSoumettre"
-                text="Soumettre le test"
+                text="Soumettre le test  ›"
                 onAction="#soumettreTest"
-                style="-fx-background-color: #2c4a6e;
+                style="-fx-background-color: #5C98A8;
                        -fx-text-fill: white;
-                       -fx-font-size: 14px;
-                       -fx-font-weight: bold;
-                       -fx-padding: 12 30 12 30;
-                       -fx-background-radius: 8;
-                       -fx-cursor: hand;"/>
+                       -fx-font-size: 13px;
+                       -fx-font-weight: 800;
+                       -fx-padding: 11 28 11 28;
+                       -fx-background-radius: 12;
+                       -fx-border-color: transparent;
+                       -fx-cursor: hand;
+                       -fx-effect: dropshadow(gaussian, rgba(92,152,168,0.30), 8, 0, 0, 2);"/>
     </HBox>
 
 </VBox>

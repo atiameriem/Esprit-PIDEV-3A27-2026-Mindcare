@@ -3,47 +3,43 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.shape.*?>
 
 <ScrollPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.ProfilControllerQuiz"
             fitToWidth="true"
-            prefWidth="500" prefHeight="600"
-            style="-fx-background: #F0F9FF;
-                   -fx-background-color: #F0F9FF;
+            prefWidth="520" prefHeight="650"
+            style="-fx-background: #EAF3F5;
+                   -fx-background-color: #EAF3F5;
                    -fx-border-color: transparent;">
 
-    <VBox spacing="16">
-        <padding><Insets top="20" right="24" bottom="24" left="24"/></padding>
+    <VBox spacing="18">
+        <padding><Insets top="24" right="26" bottom="28" left="26"/></padding>
 
-        <!-- ═══ HEADER ══════════════════════════════════════════ -->
-        <HBox alignment="CENTER_LEFT" spacing="16">
-            <Button fx:id="btnRetour" text="← Retour" onAction="#handleRetour"
-                    style="-fx-background-color: rgba(59,130,246,0.12);
-                           -fx-text-fill: #3B82F6;
-                           -fx-font-size: 12px; -fx-font-weight: 800;
-                           -fx-padding: 10 18 10 18;
-                           -fx-background-radius: 14;
-                           -fx-border-color: rgba(59,130,246,0.25);
-                           -fx-border-radius: 14;
-                           -fx-cursor: hand;"/>
-            <VBox spacing="2" HBox.hgrow="ALWAYS">
+        <HBox alignment="CENTER_LEFT" spacing="18"
+              style="-fx-background-color: white;
+                     -fx-background-radius: 18;
+                     -fx-border-color: rgba(92,152,168,0.20);
+                     -fx-border-radius: 18;
+                     -fx-border-width: 1.2;
+                     -fx-padding: 16 20 16 20;
+                     -fx-effect: dropshadow(gaussian, rgba(45,110,126,0.07), 10, 0, 0, 2);">
+
+            <!-- PAS DE STYLE — géré par Platform.runLater() dans initialize() -->
+            <Button fx:id="btnRetour" text="← Retour" onAction="#handleRetour"/>
+
+            <VBox spacing="3" HBox.hgrow="ALWAYS">
                 <Label fx:id="lblTitrePatient" text="Résultats du patient 📋"
-                       style="-fx-font-size: 20px; -fx-font-weight: 900;
-                              -fx-text-fill: #1F2937;"/>
+                       style="-fx-font-size: 20px; -fx-font-weight: 900; -fx-text-fill: #1F2A33;"/>
                 <Label text="Détail des scores par quiz"
-                       style="-fx-font-size: 12px; -fx-text-fill: #6B7280;
-                              -fx-font-weight: 600;"/>
+                       style="-fx-font-size: 12px; -fx-text-fill: #6E8E9A; -fx-font-weight: 600;"/>
             </VBox>
         </HBox>
 
-        <!-- ═══ CONTENU DYNAMIQUE ════════════════════════════════ -->
-        <!-- Rempli par ProfilControllerQuiz.afficherResultats()   -->
-        <VBox fx:id="containerReponses" spacing="12">
+        <VBox fx:id="containerReponses" spacing="14">
             <Label text="Chargement des résultats..."
-                   style="-fx-font-size: 12px; -fx-text-fill: #9CA3AF;"/>
+                   style="-fx-font-size: 12px; -fx-text-fill: #6E8E9A; -fx-padding: 10;"/>
         </VBox>
 
-        <Pane prefHeight="12"/>
+        <Pane prefHeight="16"/>
     </VBox>
 </ScrollPane>

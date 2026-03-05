@@ -13,7 +13,7 @@ public class Session {
     // ── Enum des 4 rôles ──────────────────────────────────────────
     public enum Role {
         USER,
-        RESPONSABLE_CENTRE,
+        RESPONSABLEC,
         ADMIN,
         PSYCHOLOGUE
     }
@@ -126,12 +126,12 @@ public class Session {
      */
     public static boolean isPatient() {
         return roleConnecte == Role.USER
-                || roleConnecte == Role.RESPONSABLE_CENTRE;
+                || roleConnecte == Role.RESPONSABLEC;
     }
 
     /** true si rôle = RESPONSABLE_CENTRE */
     public static boolean isResponsableCentre() {
-        return roleConnecte == Role.RESPONSABLE_CENTRE;
+        return roleConnecte == Role.RESPONSABLEC;
     }
 
     /** true si rôle = ADMIN */
@@ -147,7 +147,7 @@ public class Session {
     /** true si USER ou RESPONSABLE_CENTRE → interface /MindCareLayout.fxml */
     public static boolean isInterfaceUtilisateur() {
         return roleConnecte == Role.USER
-                || roleConnecte == Role.RESPONSABLE_CENTRE;
+                || roleConnecte == Role.RESPONSABLEC;
     }
 
     /** true si ADMIN ou PSYCHOLOGUE → interface /MindCareLayoutPsy.fxml */
