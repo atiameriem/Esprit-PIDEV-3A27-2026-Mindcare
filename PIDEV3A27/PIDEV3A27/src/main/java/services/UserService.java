@@ -183,6 +183,52 @@ public class UserService implements IService<User> {
         return null;
     }
 
+    /**
+     * Compatibilité Forum — récupère le rôle (String) depuis la DB.
+     * Utilisé par utils.forum.Permissions en fallback.
+     */
+    public String fetchRoleFromDb(int idUsers, String email) {
+        final String sqlById = "SELECT role FROM users WHERE id_users = ? LIMIT 1";
+        final String sqlByEmail = "SELECT role FROM users WHERE email = ? LIMIT 1";
+        try {
+            Connection c = getConnection();
+            if (c == null) return null;
+            if (idUsers > 0) {
+                try (PreparedStatement ps = c.prepareStatement(sqlById)) {
+                    ps.setInt(1, idUsers);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) return rs.getString("role");
+                    }
+                }
+            }
+            if (email != null && !email.isBlank()) {
+                try (PreparedStatement ps = c.prepareStatement(sqlByEmail)) {
+                    ps.setString(1, email.trim());
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) return rs.getString("role");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[USER] fetchRoleFromDb: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Compatibilité Forum — récupère l'email d'un utilisateur par ID.
+     */
+    public String fetchEmailById(int idUsers) throws SQLException {
+        String sql = "SELECT email FROM users WHERE id_users=? LIMIT 1";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setInt(1, idUsers);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("email");
+            }
+        }
+        return null;
+    }
+
     public void updatePassword(String email, String newPassword) throws SQLException {
         String sql = "UPDATE users SET mot_de_passe = ? WHERE email = ?";
         try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {

@@ -102,6 +102,8 @@ public class LoginHistoryService {
         }
     }
 
+    // ================= HELPERS =================
+
     private String getHostname() {
         try {
             return java.net.InetAddress.getLocalHost().getHostName();

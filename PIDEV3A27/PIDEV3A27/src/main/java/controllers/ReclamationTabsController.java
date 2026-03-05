@@ -26,15 +26,18 @@ public class ReclamationTabsController {
             User.Role role = currentUser.getRole();
             System.out.println("🔑 Role connecté : " + role);
 
-            if (role == User.Role.Admin) {
-                // Admin ONLY: sees administration panel, cannot add or view own reclamations
+            if (role == User.Role.Admin || role == User.Role.ResponsableC) {
+                // Le ResponsableC (et l'Admin) peuvent gérer les réclamations
                 addTabBtn.setManaged(false);
                 addTabBtn.setVisible(false);
                 myReclamationsTabBtn.setManaged(false);
                 myReclamationsTabBtn.setVisible(false);
+
+                adminTabBtn.setManaged(true);
+                adminTabBtn.setVisible(true);
                 showAdminTab();
             } else {
-                // ResponsableC, Patient, Psychologue: standard view
+                // Patient, Psychologue : vue standard (ajouter / mes réclamations)
                 adminTabBtn.setManaged(false);
                 adminTabBtn.setVisible(false);
                 showAddTab();

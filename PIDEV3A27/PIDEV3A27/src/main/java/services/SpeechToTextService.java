@@ -1,176 +1,188 @@
 package services;
 
-import javafx.application.Platform;
 import org.vosk.Model;
 import org.vosk.Recognizer;
 
 import javax.sound.sampled.*;
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.function.Consumer;
-
+import java.nio.charset.StandardCharsets;
+/**
+ * Speech-to-Text offline (Vosk).
+ *
+ * Utilisation:
+ * - start(text -> ...)  // callback sur texte reconnu
+ * - stop()
+ */
 public class SpeechToTextService {
 
-    private static Model model; // ✅ chargé une seule fois
-    private boolean isRecording = false;
-    private TargetDataLine microphone;
-    private Thread recognitionThread;
+    private volatile boolean running;
+    private Thread worker;
 
-    public SpeechToTextService() {
-        loadModel();
+    // Dernier résultat final complet retourné par Vosk.
+    private String lastFinalText = "";
+
+    public boolean isRunning() {
+        return running;
     }
 
-    private void loadModel() {
-        try {
-            if (model == null) {
-                String path1 = java.nio.file.Paths
-                        .get("src", "main", "resources", "vosk_resources", "vosk-model-small-fr-0.22").toAbsolutePath()
-                        .toString();
-                String path2 = java.nio.file.Paths.get("PIDEV3A27", "PIDEV3A27", "src", "main", "resources",
-                        "vosk_resources", "vosk-model-small-fr-0.22").toAbsolutePath().toString();
-                String path3 = "C:\\Users\\eyabd\\OneDrive\\Bureau\\service_user_rec\\PIDEV3A27\\PIDEV3A27\\src\\main\\resources\\vosk_resources\\vosk-model-small-fr-0.22";
+    public void start(Consumer<String> onText) {
+        if (running) return;
+        running = true;
+        lastFinalText = "";
 
-                String modelPath = null;
-                if (new File(path1).exists()) {
-                    modelPath = path1;
-                } else if (new File(path2).exists()) {
-                    modelPath = path2;
-                } else if (new File(path3).exists()) {
-                    modelPath = path3;
-                }
+        worker = new Thread(() -> {
+            Path modelDir = resolveModelDir();
 
-                if (modelPath == null || !new File(modelPath).exists()) {
-                    System.err.println("❌ VOSK: Modèle introuvable. Chemins testés :");
-                    System.err.println("1: " + path1);
-                    System.err.println("2: " + path2);
-                    System.err.println("3: " + path3);
-                    return; // On ne lance pas d'exception fatale ici, on quitte juste
-                }
+            AudioFormat format = new AudioFormat(16000.0f, 16, 1, true, false);
+            DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
 
-                model = new Model(modelPath);
-                System.out.println("✅ Modèle chargé une seule fois");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+            try (Model model = new Model(modelDir.toString())) {
 
-    public void startListening(Consumer<String> onResult, Consumer<String> onError) {
+                TargetDataLine mic = (TargetDataLine) AudioSystem.getLine(info);
+                mic.open(format);
+                mic.start();
 
-        if (isRecording)
-            return;
+                try (Recognizer rec = new Recognizer(model, 16000.0f)) {
+                    byte[] buffer = new byte[4096];
 
-        isRecording = true;
+                    while (running) {
+                        int n = mic.read(buffer, 0, buffer.length);
+                        if (n <= 0) continue;
 
-        recognitionThread = new Thread(() -> {
-            try {
-                // S'assurer que le modèle est bien chargé avant de le donner à Recognizer
-                // (sinon crash JNA memory access)
-                if (model == null) {
-                    loadModel();
-                    if (model == null) {
-                        Platform.runLater(
-                                () -> onError.accept("Erreur : Impossible de charger le dossier du modèle vocal."));
-                        isRecording = false;
-                        return;
+                        boolean isFinal = rec.acceptWaveForm(buffer, n);
+                        if (!isFinal) continue; // ignore partialResult
+
+                        // Uniquement les résultats finaux
+                        String json = rec.getResult();
+                        String full = extractValue(json, "text");
+                        if (full == null) continue;
+
+                        full = fixUtf8IfBroken(full).trim();
+                        if (full.isBlank()) continue;
+
+                        // Anti-duplication: Vosk peut répéter / renvoyer l'historique.
+                        String delta = computeDelta(lastFinalText, full);
+                        lastFinalText = full;
+                        delta = fixUtf8IfBroken(delta);
+                        if (!delta.isBlank()) onText.accept(delta);
                     }
+
+                } finally {
+                    mic.stop();
+                    mic.close();
                 }
-
-                Recognizer recognizer = new Recognizer(model, 16000.0f);
-
-                AudioFormat format = new AudioFormat(16000, 16, 1, true, false);
-                DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
-
-                if (!AudioSystem.isLineSupported(info)) {
-                    // Fallback to searching all mixers for a compatible line
-                    boolean found = false;
-                    for (Mixer.Info mixerInfo : AudioSystem.getMixerInfo()) {
-                        Mixer mixer = AudioSystem.getMixer(mixerInfo);
-                        if (mixer.isLineSupported(info)) {
-                            microphone = (TargetDataLine) mixer.getLine(info);
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        throw new RuntimeException(
-                                "Microphone non supporté avec le format 16000Hz Mono 16bit ! Vérifiez vos paramètres système.");
-                    }
-                } else {
-                    microphone = (TargetDataLine) AudioSystem.getLine(info);
-                }
-
-                microphone.open(format);
-                microphone.start();
-
-                byte[] buffer = new byte[4096];
-
-                while (isRecording) {
-
-                    int bytesRead = microphone.read(buffer, 0, buffer.length);
-
-                    if (bytesRead > 0) {
-
-                        if (recognizer.acceptWaveForm(buffer, bytesRead)) {
-
-                            String result = recognizer.getResult();
-                            String text = extractText(result);
-
-                            if (!text.isEmpty()) {
-                                // Fix encoding if the system default isn't UTF-8
-                                String utf8Text = new String(
-                                        text.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1),
-                                        java.nio.charset.StandardCharsets.UTF_8);
-                                Platform.runLater(() -> onResult.accept(utf8Text));
-                            }
-                        }
-                    }
-                }
-
-                String finalResult = recognizer.getFinalResult();
-                String finalText = extractText(finalResult);
-
-                if (!finalText.isEmpty()) {
-                    String utf8FinalText = new String(finalText.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1),
-                            java.nio.charset.StandardCharsets.UTF_8);
-                    Platform.runLater(() -> onResult.accept(utf8FinalText));
-                }
-
-                microphone.stop();
-                microphone.close();
-                recognizer.close(); // ✅ on ferme seulement le recognizer
 
             } catch (Exception e) {
-
-                Platform.runLater(() -> onError.accept("Erreur reconnaissance vocale : " + e.getMessage()));
-
-                e.printStackTrace();
+                onText.accept("[STT ERROR] " + e.getMessage());
             }
+        }, "vosk-stt");
 
-            isRecording = false;
-        });
-
-        recognitionThread.setDaemon(true);
-        recognitionThread.start();
+        worker.setDaemon(true);
+        worker.start();
     }
 
-    public void stopListening() {
-        isRecording = false;
+    public void stop() {
+        running = false;
     }
 
+    // =========================================================
+    // Alias — API utilisée par ReclamationController (module officiel)
+    // Délègue vers les méthodes existantes du module Forum.
+    // =========================================================
+
+    /** Alias de {@link #isRunning()} — compatibilité ReclamationController. */
     public boolean isRecording() {
-        return isRecording;
+        return isRunning();
     }
 
-    private String extractText(String json) {
-        try {
-            int start = json.indexOf("\"text\"");
-            if (start != -1) {
-                int firstQuote = json.indexOf("\"", start + 7);
-                int secondQuote = json.indexOf("\"", firstQuote + 1);
-                return json.substring(firstQuote + 1, secondQuote).trim();
+    /**
+     * Alias de {@link #start(java.util.function.Consumer)} avec gestion d'erreur séparée.
+     * Compatibilité ReclamationController (module officiel).
+     */
+    public void startListening(java.util.function.Consumer<String> onResult,
+                               java.util.function.Consumer<String> onError) {
+        start(text -> {
+            if (text != null && text.startsWith("[STT ERROR]")) {
+                if (onError != null) onError.accept(text);
+            } else {
+                if (onResult != null) onResult.accept(text);
             }
-        } catch (Exception ignored) {
+        });
+    }
+
+    /** Alias de {@link #stop()} — compatibilité ReclamationController. */
+    public void stopListening() {
+        stop();
+    }
+
+    private static String computeDelta(String prevFull, String newFull) {
+        if (prevFull == null) prevFull = "";
+        if (newFull == null) return "";
+        prevFull = prevFull.trim();
+        newFull = newFull.trim();
+        if (newFull.isEmpty()) return "";
+
+        if (prevFull.isEmpty()) return newFull;
+        if (newFull.equals(prevFull)) return "";
+
+        // Cas simple: le nouveau commence par l'ancien
+        if (newFull.startsWith(prevFull)) {
+            return newFull.substring(prevFull.length()).trim();
         }
-        return "";
+
+        // Déduplication par mots (longest common prefix sur tokens)
+        String[] a = prevFull.split("\\s+");
+        String[] b = newFull.split("\\s+");
+        int i = 0;
+        while (i < a.length && i < b.length && a[i].equalsIgnoreCase(b[i])) i++;
+        if (i >= b.length) return "";
+
+        StringBuilder sb = new StringBuilder();
+        for (int j = i; j < b.length; j++) {
+            if (sb.length() > 0) sb.append(' ');
+            sb.append(b[j]);
+        }
+        return sb.toString().trim();
+    }
+
+    private Path resolveModelDir() {
+        // 1) chemin dev (recommandé)
+        Path p1 = Path.of("src/main/resources/vosk/vosk-model-small-fr-0.22");
+        if (Files.exists(p1.resolve("conf").resolve("model.conf"))) return p1;
+
+        // 2) alternative: dossier à côté du projet
+        Path p2 = Path.of("vosk-model-small-fr-0.22");
+        if (Files.exists(p2.resolve("conf").resolve("model.conf"))) return p2;
+
+        throw new IllegalStateException(
+                "Modèle Vosk introuvable. Place le dossier 'vosk-model-small-fr-0.22' dans " +
+                        "src/main/resources/vosk/ (ou à la racine du projet)."
+        );
+    }
+
+    private String extractValue(String json, String key) {
+        // parsing JSON minimal (sans dépendance)
+        if (json == null) return null;
+        String k = "\"" + key + "\"";
+        int i = json.indexOf(k);
+        if (i < 0) return null;
+        int colon = json.indexOf(':', i);
+        if (colon < 0) return null;
+        int q1 = json.indexOf('"', colon + 1);
+        if (q1 < 0) return null;
+        int q2 = json.indexOf('"', q1 + 1);
+        if (q2 < 0) return null;
+        return json.substring(q1 + 1, q2);
+    }
+    private static String fixUtf8IfBroken(String s) {
+        if (s == null) return null;
+
+        // Heuristique : si on voit Ã / â etc, c'est souvent un UTF-8 lu comme ISO-8859-1
+        if (s.contains("Ã") || s.contains("â") || s.contains("€") || s.contains("™")) {
+            return new String(s.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        }
+        return s;
     }
 }

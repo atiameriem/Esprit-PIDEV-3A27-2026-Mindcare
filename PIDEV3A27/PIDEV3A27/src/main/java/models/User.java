@@ -132,6 +132,22 @@ public class User {
         this.dateNaissance = dateNaissance;
     }
 
+    /**
+     * Méthode de compatibilité : retourne "Prénom Nom"
+     */
+    public String getFullname() {
+        String p = prenom == null ? "" : prenom.trim();
+        String n = nom == null ? "" : nom.trim();
+        return (p + " " + n).trim();
+    }
+
+    /**
+     * Méthode de compatibilité : alias de getId() pour le module Forum.
+     */
+    public int getIdUsers() {
+        return id;
+    }
+
     @Override
     public String toString() {
         return "User{" +

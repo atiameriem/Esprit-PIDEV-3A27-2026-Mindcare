@@ -60,36 +60,18 @@ public class MindCareLayoutController {
 
     private void applyRoleConstraints() {
         User currentUser = UserSession.getInstance().getUser();
-        if (currentUser != null) {
-            String name = (currentUser.getPrenom() != null ? currentUser.getPrenom() : "") + " " +
-                    (currentUser.getNom() != null ? currentUser.getNom() : "");
-            usernameLabel.setText(name.trim().isEmpty() ? "Utilisateur" : name);
+        if (currentUser == null) return;
 
-            if (currentUser.getRole() == User.Role.Admin) {
-                // Admin specific view: Focus on Management
-                consultationPane.setVisible(false);
-                consultationPane.setManaged(false);
-                forumPane.setVisible(false);
-                forumPane.setManaged(false);
-                testPane.setVisible(false);
-                testPane.setManaged(false);
-                formationPane.setVisible(false);
-                formationPane.setManaged(false);
-            }
+        // Afficher le nom de l'utilisateur connecté
+        String name = (currentUser.getPrenom() != null ? currentUser.getPrenom() : "") + " " +
+                (currentUser.getNom() != null ? currentUser.getNom() : "");
+        usernameLabel.setText(name.trim().isEmpty() ? "Utilisateur" : name);
 
-            if (currentUser.getRole() == User.Role.ResponsableC) {
-                // ResponsableC : accès limité à Profil/Réclamation, Locaux et Test
-                // psychologique
-                consultationPane.setVisible(false);
-                consultationPane.setManaged(false);
-                forumPane.setVisible(false);
-                forumPane.setManaged(false);
-                formationPane.setVisible(false);
-                formationPane.setManaged(false);
-            }
-
-            if (currentUser.getRole() == User.Role.Psychologue) {
-                // Psychologue : même interface que Patient + Statistiques visible
+        // Tous les rôles voient la sidebar complète (comportement Forum).
+        // Seule exception : Statistiques réservé aux Psychologues et Admins.
+        if (currentUser.getRole() == User.Role.Psychologue
+                || currentUser.getRole() == User.Role.Admin) {
+            if (statistiquesBtn != null) {
                 statistiquesBtn.setVisible(true);
                 statistiquesBtn.setManaged(true);
             }
