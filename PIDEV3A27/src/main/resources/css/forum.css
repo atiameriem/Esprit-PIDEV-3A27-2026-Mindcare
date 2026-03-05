@@ -19,6 +19,8 @@
 
 .leftColumn {
     -fx-padding: 0 6 6 0;
+    /* cards should align to the left and use the full width */
+    -fx-alignment: TOP_LEFT;
 }
 
 .rightColumn {
@@ -80,6 +82,16 @@
     -fx-padding: 14;
 }
 
+/* Carte post: use full width of the column */
+.card {
+    -fx-max-width: 99999;
+}
+
+/* Cards used for recommended/profile sections (now inside the main column) */
+.sideCard {
+    -fx-max-width: 99999;
+}
+
 .avatar {
     -fx-min-width: 42;
     -fx-min-height: 42;
@@ -118,12 +130,45 @@
     -fx-font-size: 11px;
 }
 
+.sectionTitle {
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #2b3a49;
+    -fx-padding: 6 2 6 2;
+}
+
 .pill {
     -fx-background-color: #e6f4f7;
     -fx-text-fill: #2b8ea6;
     -fx-background-radius: 999;
     -fx-padding: 4 10;
     -fx-font-size: 11px;
+}
+
+/* Rank badges (next to post creator name) */
+.rankBadge {
+    -fx-padding: 3 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-opacity: 1;
+}
+.rankNew {
+    -fx-background-color: #eef2f6;
+    -fx-text-fill: #60707f;
+}
+.rankBronze {
+    -fx-background-color: #D39A6A;
+    -fx-text-fill: #2b3a49;
+}
+.rankSilver {
+    -fx-background-color: #C0C7D1;
+    -fx-text-fill: #1f2a37;
+}
+.rankGold {
+    -fx-background-color: #FFD54A;
+    -fx-text-fill: #1f2a37;
 }
 
 .postTitle {
@@ -174,6 +219,25 @@
     -fx-background-color: #f6f8fb;
 }
 
+/* Custom popup variants (used by PopupUtil) */
+.forumDialog.popup {
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-color: #e8eef5;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 18, 0.12, 0, 6);
+}
+.popupIcon {
+    -fx-font-size: 20px;
+}
+.popupText {
+    -fx-font-size: 13px;
+    -fx-text-fill: #2b3a49;
+}
+.forumDialog.popupSuccess { -fx-border-color: rgba(46,125,50,0.25); }
+.forumDialog.popupError { -fx-border-color: rgba(211,47,47,0.25); }
+.forumDialog.popupInfo { -fx-border-color: rgba(43,142,166,0.25); }
+.forumDialog.popupConfirm { -fx-border-color: rgba(96,112,127,0.25); }
+
 .forumDialog .content {
     -fx-font-size: 13px;
     -fx-text-fill: #2b3a49;
@@ -203,6 +267,156 @@
     -fx-text-fill: #60707f;
     -fx-padding: 6 8;
 }
+
+/* ------------------------- */
+/* Chatbot UI */
+/* ------------------------- */
+.chatbotRoot {
+    -fx-background-color: white;
+    -fx-padding: 18;
+}
+.chatbotTitle {
+    -fx-font-size: 20px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #2b3a49;
+}
+.chatbotSubtitle {
+    -fx-text-fill: #6b7c8f;
+    -fx-font-size: 13px;
+}
+.chatScroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+.chatMessages {
+    -fx-background-color: transparent;
+}
+.bubble {
+    -fx-padding: 10 12;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 12, 0.12, 0, 4);
+    -fx-font-size: 13px;
+}
+.bubbleUser {
+    -fx-background-color: #e8f0fe;
+    -fx-text-fill: #1f2a37;
+}
+.bubbleBot {
+    -fx-background-color: #f3f6f9;
+    -fx-text-fill: #2b3a49;
+}
+.typingDots {
+    -fx-font-weight: 900;
+}
+.chatInputBar {
+    -fx-background-color: #f6f8fb;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-color: #e8eef5;
+    -fx-padding: 10;
+}
+.chatInput {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-padding: 6 8;
+}
+.sendBtn {
+    -fx-background-color: #2b8ea6;
+    -fx-text-fill: white;
+    -fx-background-radius: 12;
+    -fx-padding: 10 14;
+    -fx-font-weight: 800;
+    -fx-cursor: hand;
+}
+.sendBtn:hover {
+    -fx-opacity: 0.92;
+}
+.secondaryBtn {
+    -fx-background-color: #e9f0f7;
+    -fx-text-fill: #2b3a49;
+    -fx-background-radius: 12;
+    -fx-padding: 10 14;
+    -fx-font-weight: 800;
+    -fx-cursor: hand;
+}
+.secondaryBtn:hover {
+    -fx-opacity: 0.92;
+}
+
+/* ------------------------- */
+/* View Post dialog (Voir Post) */
+/* ------------------------- */
+.dialogHeader {
+    -fx-background-color: linear-gradient(to right, #2b8ea6, #2f6fd6);
+    -fx-background-radius: 16 16 0 0;
+    -fx-padding: 14 18;
+}
+.dialogHeaderTitle {
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+}
+
+.viewPostCard {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-color: #e8eef5;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 16, 0.12, 0, 6);
+}
+
+.viewPostTitle {
+    -fx-font-size: 20px;
+    -fx-font-weight: 900;
+}
+
+.viewPostText {
+    -fx-font-size: 13px;
+    -fx-text-fill: #2b3a49;
+}
+
+/* Mail button used in dialogs */
+.mailBtn {
+    -fx-background-color: #e8f0fe;
+    -fx-text-fill: #1f2a37;
+    -fx-background-radius: 12;
+    -fx-padding: 10 14;
+    -fx-font-weight: 800;
+    -fx-cursor: hand;
+}
+.mailBtn:hover {
+    -fx-opacity: 0.92;
+}
+
+/* Draft panel under the reformulation */
+.draftCard {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: #e8eef5;
+    -fx-padding: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 12, 0.12, 0, 4);
+}
+.draftTitle {
+    -fx-font-weight: 900;
+    -fx-text-fill: #233445;
+}
+.draftBody {
+    -fx-text-fill: #435466;
+}
+.dangerBtn {
+    -fx-background-color: #ffe9ec;
+    -fx-text-fill: #d32f2f;
+    -fx-background-radius: 12;
+    -fx-padding: 10 14;
+    -fx-font-weight: 800;
+    -fx-cursor: hand;
+}
+.dangerBtn:hover { -fx-opacity: 0.92; }
 
 .postImage, .sideImage {
     -fx-background-radius: 12;
@@ -271,4 +485,336 @@
 .error-text {
     -fx-text-fill: #e74c3c;
     -fx-font-size: 12px;
+}
+
+/* Notifications (bouton + badge) */
+.notifBtn {
+    -fx-background-color: white;
+    -fx-border-color: #dfe7ef;
+    -fx-border-radius: 18;
+    -fx-background-radius: 18;
+    -fx-min-width: 42;
+    -fx-min-height: 42;
+    -fx-font-size: 16px;
+}
+
+.notifBtn:hover {
+    -fx-background-color: #f5f7fa;
+}
+
+.notifBadge {
+    -fx-background-color: #e74c3c;
+    -fx-text-fill: white;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 2 6 2 6;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-translate-x: 14;
+    -fx-translate-y: -14;
+}
+
+/* Recommended cards */
+.excerpt {
+    -fx-text-fill: #3a4a5a;
+    -fx-font-size: 12.5px;
+}
+
+.scoreBadge {
+    -fx-background-color: #eef2ff;
+    -fx-text-fill: #3949ab;
+    -fx-font-weight: 800;
+    -fx-padding: 4 10;
+    -fx-background-radius: 999;
+}
+
+/* Top contributor badge */
+.topBadge {
+    -fx-background-color: #fff3cd;
+    -fx-text-fill: #8a6d00;
+    -fx-font-weight: 900;
+    -fx-font-size: 11px;
+    -fx-padding: 3 8;
+    -fx-background-radius: 999;
+}
+
+/* Contributor badge */
+.contribBadge {
+    -fx-background-color: #e6f4ff;
+    -fx-text-fill: #0b4a6f;
+    -fx-font-weight: 900;
+    -fx-font-size: 11px;
+    -fx-padding: 3 8;
+    -fx-background-radius: 999;
+}
+
+/* Admin dashboard */
+.dashboard {
+    -fx-background-color: transparent;
+}
+
+.statCard {
+    -fx-background-color: white;
+    -fx-border-color: #dde6ef;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 14;
+    -fx-min-width: 220;
+}
+
+.statTitle {
+    -fx-text-fill: #60707f;
+    -fx-font-weight: 800;
+    -fx-font-size: 12px;
+}
+
+.statValue {
+    -fx-text-fill: #233445;
+    -fx-font-weight: 900;
+    -fx-font-size: 26px;
+}
+
+.subTitle {
+    -fx-text-fill: #2b3a49;
+    -fx-font-weight: 900;
+    -fx-font-size: 14px;
+}
+
+.pill {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #334155;
+    -fx-font-weight: 800;
+    -fx-padding: 3 10;
+    -fx-background-radius: 999;
+}
+
+.activityScroll {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+}
+
+
+/* Medal next to username */
+.medal {
+    -fx-font-size: 14px;
+    -fx-padding: 1 0 0 0;
+}
+
+/* Profile sidebar */
+.profileName {
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #23313f;
+}
+
+.rankLine {
+    -fx-font-size: 13px;
+    -fx-text-fill: #2f3b48;
+    -fx-font-weight: 600;
+}
+
+.profileProgress {
+    -fx-accent: #2b8ea6;
+}
+
+.scaleHint {
+    -fx-font-size: 11px;
+    -fx-text-fill: #7a8795;
+    -fx-padding: 6 0 0 0;
+}
+
+
+/* =========================
+   UI improvements v13
+   ========================= */
+
+/* Use MindCare palette when available */
+.root {
+    -fx-font-family: "Segoe UI";
+}
+
+/* Cards: cleaner, more depth */
+.card, .sideCard {
+    -fx-background-color: rgba(255,255,255,0.82);
+    -fx-border-color: rgba(0,0,0,0.06);
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 20, 0.12, 0, 6);
+}
+
+.card:hover, .sideCard:hover {
+    -fx-border-color: rgba(92,152,168,0.35); /* -accent */
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.14), 26, 0.14, 0, 10);
+}
+
+/* Title & text */
+.postTitle {
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #1f2b36;
+}
+.postText {
+    -fx-font-size: 13px;
+    -fx-text-fill: #2b3a49;
+    -fx-line-spacing: 2px;
+}
+
+/* Better dots / icon buttons */
+.actionBtn, .actionMenuBtn, .ghostBtn {
+    -fx-background-radius: 999px;
+    -fx-padding: 6 10;
+}
+.actionBtn:hover, .actionMenuBtn:hover, .ghostBtn:hover {
+    -fx-background-color: rgba(92,152,168,0.12);
+}
+
+/* STT (VCL) mic button */
+.micBtn {
+    -fx-background-color: rgba(92,152,168,0.10);
+    -fx-text-fill: #2b3a49;
+    -fx-background-radius: 999px;
+    -fx-padding: 6 10;
+    -fx-min-width: 38;
+    -fx-min-height: 34;
+}
+.micBtn:hover {
+    -fx-background-color: rgba(92,152,168,0.18);
+}
+
+/* Translation combo as a pill */
+.langCombo {
+    -fx-background-color: rgba(255,255,255,0.9);
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-border-color: rgba(0,0,0,0.10);
+    -fx-padding: 2 10;
+    -fx-font-size: 11px;
+}
+.langCombo .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 6 0 6;
+}
+.langCombo:hover {
+    -fx-border-color: rgba(92,152,168,0.35);
+}
+
+/* Dialogs (Ajouter / Modifier): modern card look */
+.forumDialog {
+    -fx-background-color: rgba(255,255,255,0.88);
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-color: rgba(0,0,0,0.08);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.14), 26, 0.14, 0, 10);
+}
+.forumDialog .header-panel {
+    -fx-background-color: transparent;
+}
+.forumDialog:header .header-panel .label,
+.forumDialog .header-panel .label {
+    -fx-font-size: 15px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #1f2b36;
+}
+.forumDialog .text-field, .forumDialog .text-area {
+    -fx-background-color: rgba(255,255,255,0.95);
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: rgba(0,0,0,0.10);
+    -fx-padding: 10 12;
+}
+.forumDialog .text-area .content {
+    -fx-background-color: transparent;
+}
+.forumDialog .text-field:focused, .forumDialog .text-area:focused {
+    -fx-border-color: rgba(92,152,168,0.45);
+}
+
+/* Buttons inside dialogs */
+.forumDialog .button-bar .button {
+    -fx-background-radius: 12;
+    -fx-padding: 10 16;
+    -fx-font-weight: 800;
+}
+.forumDialog .button-bar .button:default {
+    -fx-background-color: #5C98A8; /* MindCare -accent */
+    -fx-text-fill: white;
+}
+.forumDialog .button-bar .button:hover:default {
+    -fx-background-color: #7FB9C7; /* MindCare -accent2 */
+}
+.forumDialog .button-bar .button:cancel {
+    -fx-background-color: rgba(0,0,0,0.06);
+    -fx-text-fill: #2b3a49;
+}
+
+
+/* ---------------------------
+   Modern form dialogs (Add/Edit Post)
+   Inspired by "Gestion Utilisateur" layout
+----------------------------*/
+.mcDialogPane {
+    -fx-background-color: transparent;
+}
+
+.mcDialogRoot {
+    -fx-background-color: white;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-color: #e8eef5;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 18, 0.2, 0, 6);
+    -fx-min-width: 640;
+}
+
+.mcDialogHeader {
+    -fx-background-color: linear-gradient(to right, #5F7F8B, #2b8ea6);
+    -fx-background-radius: 18 18 0 0;
+}
+
+.mcDialogTitle {
+    -fx-text-fill: white;
+    -fx-font-size: 22px;
+    -fx-font-weight: 900;
+}
+
+.mcDialogUnderline {
+    -fx-background-color: rgba(255,255,255,0.85);
+    -fx-background-radius: 999;
+}
+
+.mcDialogForm {
+    -fx-background-color: white;
+}
+
+.mcFormLabel {
+    -fx-text-fill: #2b3a49;
+    -fx-font-weight: 800;
+}
+
+.mcTextField, .mcTextArea {
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-background-color: #f7fafc;
+    -fx-border-color: #e3ecf5;
+    -fx-padding: 10 12;
+}
+
+.mcTextArea {
+    -fx-padding: 10 12;
+}
+
+.mcHint {
+    -fx-text-fill: #8a97a6;
+}
+
+/* Translation dropdown as a pill button */
+.translateCombo {
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-background-color: #f3f6f9;
+    -fx-border-color: #dde6ef;
+    -fx-padding: 2 8;
+}
+.translateCombo:hover {
+    -fx-border-color: #2b8ea6;
 }

@@ -1,26 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
-      spacing="20"
-      style="-fx-background-color: white;">
-    <padding>
-        <javafx.geometry.Insets top="30" right="30" bottom="30" left="30"/>
-    </padding>
+      fx:controller="controllers.ChatbotController"
+      stylesheets="@../css/forum.css"
+      styleClass="chatbotRoot"
+      spacing="10">
 
+    <Label text="Chatbot 🤖" styleClass="chatbotTitle"/>
 
-    <!-- Bouton visible (test) -->
-    <HBox alignment="CENTER_RIGHT">
-        <Button text="Bouton" />
+    <Label text="Discute avec le chatbot pour préparer ton post. Clique sur Regenerate post pour générer un post et le publier directement."
+           styleClass="chatbotSubtitle" wrapText="true"/>
+
+    <ScrollPane fx:id="scrollPane" fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="chatScroll">
+        <content>
+            <VBox fx:id="messagesBox" spacing="10" fillWidth="true" styleClass="chatMessages"/>
+        </content>
+    </ScrollPane>
+
+    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="chatInputBar">
+        <TextArea fx:id="inputArea" promptText="Écris ton message… (Ctrl+Enter pour envoyer)" prefRowCount="2" HBox.hgrow="ALWAYS" wrapText="true" styleClass="chatInput"/>
+        <Button fx:id="sendBtn" text="Envoyer" styleClass="sendBtn"/>
+        <Button fx:id="draftBtn" text="Regenerate post" styleClass="secondaryBtn"/>
     </HBox>
 
-
-    <Label text="🚧 Vue en construction" 
-           style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-    
-    <Label text="Cette section sera bientôt disponible." 
-           style="-fx-font-size: 16px; -fx-text-fill: #666;"/>
-
+    <Label fx:id="statusLabel" text="" styleClass="meta" wrapText="true"/>
 </VBox>

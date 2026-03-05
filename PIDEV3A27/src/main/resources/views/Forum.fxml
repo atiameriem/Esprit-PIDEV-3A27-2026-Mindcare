@@ -23,6 +23,12 @@
                           prefWidth="160"
                           styleClass="combo"/>
 
+                <StackPane>
+                    <Button fx:id="notifButton" text="🔔" onAction="#onNotifClick" styleClass="notifBtn"/>
+                    <!-- mouseTransparent pour éviter de bloquer le clic sur le bouton -->
+                    <Label fx:id="notifBadge" text="0" visible="false" managed="false" mouseTransparent="true" styleClass="notifBadge"/>
+                </StackPane>
+
                 <Button fx:id="addPostButton"
                         text="+ Ajouter un Post"
                         styleClass="primaryBtn"/>
@@ -50,6 +56,11 @@
                               text="Signalements"
                               toggleGroup="$tabsGroup"
                               styleClass="tabBtn"/>
+
+                <ToggleButton fx:id="tabDashboard"
+                              text="Dashboard"
+                              toggleGroup="$tabsGroup"
+                              styleClass="tabBtn"/>
             </HBox>
 
             <Separator/>
@@ -58,15 +69,20 @@
 
     <!-- CENTER -->
     <center>
-        <HBox spacing="16" styleClass="contentArea">
+        <!-- Two-column layout: posts on the left, recommended/profile on the right.
+             The controller will:
+              - fill the right column with Recommended (All posts) or Profile (My posts)
+              - hide the right column for admin tabs (Reports / Dashboard)
+         -->
+        <HBox spacing="18" styleClass="contentArea">
 
-            <!-- LEFT COLUMN : VIDE, rempli par le controller depuis DB -->
-            <ScrollPane fitToWidth="true" HBox.hgrow="ALWAYS" styleClass="scroll">
+            <!-- LEFT: scrollable posts list (full width) -->
+            <ScrollPane fx:id="scrollPosts" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="scroll" HBox.hgrow="ALWAYS">
                 <VBox fx:id="postsContainer" spacing="12" styleClass="leftColumn"/>
             </ScrollPane>
 
-            <!-- RIGHT COLUMN : optionnel (si tu ne la remplis pas par code, laisse vide) -->
-            <VBox spacing="12" prefWidth="280" styleClass="rightColumn"/>
+            <!-- RIGHT: recommended/profile (hidden on admin tabs) -->
+            <VBox fx:id="recommendedContainer" spacing="12" styleClass="rightColumn" prefWidth="320" minWidth="260"/>
         </HBox>
     </center>
 
