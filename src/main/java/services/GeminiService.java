@@ -16,12 +16,12 @@ import java.nio.charset.StandardCharsets;
 public class GeminiService {
 
     // REMPLACER PAR VOTRE CLÉ API GEMINI
-    private static final String API_KEY = "AIzaSyBmHo9ao8yAKZneM7JF-x4d9x94hNxM3hI";
+    private static final String API_KEY = "";
     private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
             + API_KEY;
 
     public String getAiInsights(int totalTime, double avgProgression) {
-        if ("AIzaSyBmHo9ao8yAKZneM7JF-x4d9x94hNxM3hI".equals(API_KEY)) {
+        if ("".equals(API_KEY)) {
             return "Note : Configurez votre clé API Gemini dans GeminiService.java pour recevoir des suggestions personnalisées basées sur votre temps passé ("
                     + totalTime + " min).";
         }

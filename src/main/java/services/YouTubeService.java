@@ -10,7 +10,7 @@ import org.json.JSONObject;
 
 public class YouTubeService {
 
-    private static final String API_KEY = "AIzaSyDE5CRGEe0nqmrP6G9X2bVhRihcVAN6tmE";
+    private static final String API_KEY = "";
 
     public static JsonArray search(String query) throws Exception {
         OkHttpClient client = new OkHttpClient();

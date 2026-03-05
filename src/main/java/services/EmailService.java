@@ -29,7 +29,7 @@ public class EmailService {
     // 🔧 CONFIGURATION — Modifiez ces deux lignes
     // ======================================================
     private static final String EMAIL_SENDER = "bouzadimaram1@gmail.com"; // Votre adresse Gmail
-    private static final String EMAIL_PASSWORD = "jsnz ovew djvm ixym"; // Mot de passe d'application Gmail
+    private static final String EMAIL_PASSWORD = ""; // Mot de passe d'application Gmail
     // ======================================================
 
     private static final String SMTP_HOST = "smtp.gmail.com";
