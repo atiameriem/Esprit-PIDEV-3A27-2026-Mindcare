@@ -107,35 +107,6 @@ public class ReclamationService {
         }
     }
 
-    // ================= FIND BY ID =================
-    public Reclamation findById(int id) throws SQLException {
-        String sql = "SELECT * FROM reclamation WHERE id_reclamation = ?";
-        Connection conn = getConnection();
-        if (conn == null)
-            return null;
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    Reclamation r = new Reclamation();
-                    r.setId(rs.getInt("id_reclamation"));
-                    r.setIdUser(rs.getInt("id_users"));
-                    r.setObjet(rs.getString("objet"));
-                    r.setUrgence(rs.getString("urgence"));
-                    r.setDescription(rs.getString("description"));
-                    r.setStatut(rs.getString("statut"));
-                    r.setDate(rs.getDate("date"));
-                    r.setReponse(rs.getString("reponse"));
-                    r.setCategorie(rs.getString("categorie"));
-                    r.setResume(rs.getString("resume"));
-                    return r;
-                }
-            }
-        }
-        return null;
-    }
-
     // ================= DELETE =================
     public void delete(int id) throws SQLException {
 
@@ -148,3 +119,4 @@ public class ReclamationService {
     }
 
 }
+// final
