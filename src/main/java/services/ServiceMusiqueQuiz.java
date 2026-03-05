@@ -4,12 +4,13 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import utils.EnvConfig;
 
 public class ServiceMusiqueQuiz {
 
     // ✅ COLLER TES CLÉS ICI
-    private static final String FREESOUND_KEY = "key";
-    private static final String GROQ_KEY      = "key";
+    private static final String FREESOUND_KEY = EnvConfig.get("FREESOUND_API_KEY");
+    private static final String GROQ_KEY      = EnvConfig.get("GROQ_API_KEY");
 
 
     // ══════════════════════════════════════════════════════════════

@@ -3,12 +3,13 @@ package services;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
 import java.util.Properties;
+import utils.EnvConfig;
 
 public class ServiceEmailQuiz {
 
     // ⚠️ Remplacez par votre Gmail + App Password
-    private static final String EXPEDITEUR   = "mindcare563@gmail.com";
-    private static final String APP_PASSWORD = "key";
+    private static final String EXPEDITEUR   = EnvConfig.get("GMAIL_EMAIL");
+    private static final String APP_PASSWORD = EnvConfig.get("GMAIL_APP_PASSWORD");
 
 
     // ══════════════════════════════════════════════════════════════

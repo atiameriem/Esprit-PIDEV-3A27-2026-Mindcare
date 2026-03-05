@@ -5,10 +5,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import utils.EnvConfig;
 
 public class ServiceChatQuiz {
 
-    private static final String API_KEY = "key"; // même clé que ServiceGemini
+    private static final String API_KEY = EnvConfig.get("GROQ_API_KEY");
     private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 

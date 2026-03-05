@@ -3,6 +3,7 @@ package services;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import utils.EnvConfig;
 
 /**
  * ServiceMeteo — APIs OpenWeatherMap GRATUITES
@@ -11,7 +12,7 @@ import java.nio.charset.StandardCharsets;
  */
 public class ServiceMeteo {
 
-    private static final String API_KEY     = "key"; // ← votre clé
+    private static final String API_KEY     = EnvConfig.get("OPENWEATHERMAP_API_KEY");
     private static final String URL_CURRENT = "https://api.openweathermap.org/data/2.5/weather";
     private static final String URL_FORECAST= "https://api.openweathermap.org/data/2.5/forecast";
     private static final int    CONNECT_TO  = 10_000;
