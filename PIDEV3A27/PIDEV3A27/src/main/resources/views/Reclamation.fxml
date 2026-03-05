@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.ReclamationController"
+      spacing="22"
+      style="-fx-background-color: white; -fx-padding: 35 40;">
+
+    <!-- ===== HEADER BADGE ===== -->
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Label text="✉ 📱" style="-fx-font-size: 18px; -fx-opacity: 0.4;"/>
+        <HBox alignment="CENTER_LEFT" spacing="14"
+              style="-fx-background-color: #DBEAFE;
+                     -fx-background-radius: 20;
+                     -fx-padding: 13 24;
+                     -fx-effect: dropshadow(gaussian,rgba(59,130,246,0.12),8,0,0,2);">
+            <Label text="💬" style="-fx-font-size: 24px;"/>
+            <VBox spacing="2">
+                <Label text="Réclamation"
+                       style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1E293B;"/>
+                <Label text="Nous sommes à votre écoute 🖤"
+                       style="-fx-font-size: 12px; -fx-text-fill: #64748B;"/>
+            </VBox>
+        </HBox>
+    </HBox>
+
+    <!-- ===== OBJET ===== -->
+    <VBox spacing="7">
+        <Label text="Objet"
+               style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1E293B;"/>
+        <HBox alignment="CENTER_LEFT" spacing="12"
+              style="-fx-background-color: #F8FAFC;
+                     -fx-border-color: #E2E8F0;
+                     -fx-border-radius: 12;
+                     -fx-background-radius: 12;
+                     -fx-border-width: 1.5;
+                     -fx-padding: 11 16;
+                     -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.04),6,0,0,2);">
+            <Label text="📋" style="-fx-font-size: 16px;"/>
+            <TextField fx:id="objetField"
+                       promptText="Sujet de votre réclamation..."
+                       HBox.hgrow="ALWAYS"
+                       style="-fx-background-color: transparent;
+                              -fx-border-color: transparent;
+                              -fx-font-size: 14px;
+                              -fx-text-fill: #374151;
+                              -fx-prompt-text-fill: #9CA3AF;"/>
+        </HBox>
+    </VBox>
+
+    <!-- ===== URGENCE (ToggleButtons - no radio circles) ===== -->
+    <VBox spacing="9">
+        <Label text="Urgence"
+               style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1E293B;"/>
+        <HBox spacing="12">
+            <ToggleButton fx:id="highToggle" text="🔴  High"/>
+            <ToggleButton fx:id="mediumToggle" text="🟠  Medium"/>
+            <ToggleButton fx:id="lowToggle" text="🟢  Low"/>
+        </HBox>
+    </VBox>
+
+    <!-- ===== DESCRIPTION ===== -->
+    <VBox spacing="7" VBox.vgrow="ALWAYS">
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Description"
+                   style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1E293B;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <!-- Single mic button -->
+            <HBox spacing="8" alignment="CENTER">
+                <Label text="🎙️" style="-fx-font-size: 13px; -fx-opacity: 0.6;"/>
+                <Button fx:id="micButton"
+                        text="🎤 Dictée vocale"
+                        onAction="#handleMicrophone"
+                        style="-fx-background-color: #EFF6FF;
+                               -fx-background-radius: 10;
+                               -fx-border-color: #BFDBFE;
+                               -fx-border-radius: 10;
+                               -fx-border-width: 1;
+                               -fx-text-fill: #2563EB;
+                               -fx-font-size: 12px;
+                               -fx-font-weight: bold;
+                               -fx-padding: 5 12;
+                               -fx-cursor: hand;"/>
+                <Label fx:id="micStatusLabel" text=""
+                       style="-fx-font-size: 12px; -fx-text-fill: #9CA3AF; -fx-font-style: italic;"/>
+            </HBox>
+        </HBox>
+
+        <StackPane>
+            <TextArea fx:id="descriptionArea"
+                      promptText="Vos problèmes s'agit de..."
+                      prefHeight="145" wrapText="true"
+                      style="-fx-background-color: #F8FAFC;
+                             -fx-border-color: #E2E8F0;
+                             -fx-border-radius: 12;
+                             -fx-background-radius: 12;
+                             -fx-border-width: 1.5;
+                             -fx-padding: 12;
+                             -fx-font-size: 14px;
+                             -fx-text-fill: #374151;
+                             -fx-prompt-text-fill: #9CA3AF;"/>
+            <Label text="🎙️ 📋"
+                   style="-fx-font-size: 17px; -fx-opacity: 0.2; -fx-padding: 0 10 8 0;"
+                   StackPane.alignment="BOTTOM_RIGHT"/>
+        </StackPane>
+    </VBox>
+
+    <!-- ===== BUTTONS ===== -->
+    <HBox spacing="14" alignment="CENTER_RIGHT" style="-fx-padding: 6 0 0 0;">
+        <Button text="✕  Annuler"
+                onAction="#handleAnnuler"
+                style="-fx-background-color: white;
+                       -fx-background-radius: 14;
+                       -fx-border-color: #E2E8F0;
+                       -fx-border-radius: 14;
+                       -fx-border-width: 1.5;
+                       -fx-padding: 12 32;
+                       -fx-font-size: 14px;
+                       -fx-font-weight: bold;
+                       -fx-text-fill: #64748B;
+                       -fx-cursor: hand;"/>
+        <Button text="✈  Envoyer"
+                onAction="#handleEnvoyer"
+                style="-fx-background-color: #3B82F6;
+                       -fx-background-radius: 14;
+                       -fx-text-fill: white;
+                       -fx-font-size: 14px;
+                       -fx-font-weight: bold;
+                       -fx-padding: 12 32;
+                       -fx-cursor: hand;
+                       -fx-effect: dropshadow(gaussian,rgba(59,130,246,0.45),12,0,0,4);"/>
+    </HBox>
+
+</VBox>

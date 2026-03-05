@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="0" xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.ProfilController"
+      style="-fx-background-color: #f4f7fa;">
+
+    <!-- HEADER SECTION -->
+    <HBox spacing="20" alignment="CENTER_LEFT"
+          style="-fx-background-color: white; -fx-padding: 30; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);">
+        <StackPane style="-fx-background-color: #1a73e8; -fx-background-radius: 12; -fx-min-width: 65; -fx-min-height: 65; -fx-max-width: 65; -fx-max-height: 65;">
+            <Label text="👤" style="-fx-text-fill: white; -fx-font-size: 32px;"/>
+        </StackPane>
+        <VBox spacing="5" alignment="CENTER_LEFT">
+            <Label text="Paramètres du Profil" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #202124;"/>
+            <Label text="Gérez vos informations personnelles et votre sécurité" style="-fx-font-size: 15px; -fx-text-fill: #5f6368;"/>
+        </VBox>
+    </HBox>
+
+    <VBox spacing="25" style="-fx-padding: 30;">
+
+        <!-- CUSTOM TABS BAR -->
+        <HBox spacing="15" alignment="CENTER_LEFT">
+            <Button fx:id="monProfilTabBtn" text="👤  Mon Profil" onAction="#showMonProfil"
+                    style="-fx-background-color: #e8f0fe; -fx-text-fill: #1a73e8; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 25; -fx-cursor: hand; -fx-border-color: #1a73e8; -fx-border-radius: 25; -fx-border-width: 1;"/>
+
+            <Button fx:id="historiqueTabBtn" text="🕐  Historique Connexions" onAction="#showHistorique"
+                    style="-fx-background-color: white; -fx-text-fill: #5f6368; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 25; -fx-cursor: hand; -fx-border-color: #dadce0; -fx-border-radius: 25; -fx-border-width: 1;"/>
+
+            <Button fx:id="gestionUsersTabBtn" text="👥  Gestion Utilisateurs" onAction="#showGestionUsers" visible="false" managed="false"
+                    style="-fx-background-color: white; -fx-text-fill: #5f6368; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 25; -fx-cursor: hand; -fx-border-color: #dadce0; -fx-border-radius: 25; -fx-border-width: 1;"/>
+        </HBox>
+
+        <!-- MAIN CONTENT AREA -->
+        <StackPane VBox.vgrow="ALWAYS">
+
+            <!-- MON PROFIL VIEW -->
+            <VBox fx:id="monProfilView" spacing="30">
+                <HBox spacing="30">
+                    <!-- Personal Info Card -->
+                    <VBox spacing="20" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 15, 0, 0, 10);">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="👤" style="-fx-text-fill: #1a73e8; -fx-font-size: 20px;"/>
+                            <Label text="Informations Personnelles" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #202124;"/>
+                        </HBox>
+
+                        <GridPane vgap="15" hgap="20">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="ALWAYS" />
+                                <ColumnConstraints hgrow="ALWAYS" />
+                            </columnConstraints>
+
+                            <VBox spacing="8" GridPane.rowIndex="0" GridPane.columnIndex="0">
+                                <Label text="Nom *" style="-fx-text-fill: #5f6368; -fx-font-weight: bold;"/>
+                                <TextField fx:id="nomField" style="-fx-background-color: #f8f9fa; -fx-border-color: #dadce0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12;"/>
+                            </VBox>
+
+                            <VBox spacing="8" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                                <Label text="Prénom *" style="-fx-text-fill: #5f6368; -fx-font-weight: bold;"/>
+                                <TextField fx:id="prenomField" style="-fx-background-color: #f8f9fa; -fx-border-color: #dadce0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12;"/>
+                            </VBox>
+
+                            <VBox spacing="8" GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.columnSpan="2">
+                                <Label text="Email *" style="-fx-text-fill: #5f6368; -fx-font-weight: bold;"/>
+                                <TextField fx:id="emailField" editable="false" style="-fx-background-color: #f1f3f4; -fx-border-color: #dadce0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12; -fx-text-fill: #80868b;"/>
+                            </VBox>
+
+                            <VBox spacing="8" GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="2">
+                                <Label text="Téléphone *" style="-fx-text-fill: #5f6368; -fx-font-weight: bold;"/>
+                                <TextField fx:id="telephoneField" style="-fx-background-color: #f8f9fa; -fx-border-color: #dadce0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12;"/>
+                            </VBox>
+                        </GridPane>
+
+                        <Button text="💾  Enregistrer les modifications" onAction="#handleUpdateProfile" maxWidth="Infinity"
+                                style="-fx-background-color: #1a73e8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 12; -fx-background-radius: 8; -fx-cursor: hand;"/>
+
+                        <Label fx:id="profileMsgLabel" visible="false"/>
+                    </VBox>
+
+                    <!-- Security Card -->
+                    <VBox spacing="20" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 15, 0, 0, 10);">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="🔒" style="-fx-text-fill: #1a73e8; -fx-font-size: 20px;"/>
+                            <Label text="Sécurité" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #202124;"/>
+                        </HBox>
+
+                        <VBox spacing="15">
+                            <VBox spacing="8">
+                                <Label text="Mot de passe actuel *" style="-fx-text-fill: #5f6368; -fx-font-weight: bold;"/>
+                                <PasswordField fx:id="oldPasswordField" style="-fx-background-color: #f8f9fa; -fx-border-color: #dadce0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12;"/>
+                            </VBox>
+
+                            <VBox spacing="8">
+                                <Label text="Nouveau mot de passe *" style="-fx-text-fill: #5f6368; -fx-font-weight: bold;"/>
+                                <PasswordField fx:id="newPasswordField" style="-fx-background-color: #f8f9fa; -fx-border-color: #dadce0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12;"/>
+                            </VBox>
+
+                            <VBox spacing="8">
+                                <Label text="Confirmez le nouveau mot de passe *" style="-fx-text-fill: #5f6368; -fx-font-weight: bold;"/>
+                                <PasswordField fx:id="confirmPasswordField" style="-fx-background-color: #f8f9fa; -fx-border-color: #dadce0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12;"/>
+                            </VBox>
+                        </VBox>
+
+                        <Button text="🔐  Changer le mot de passe" onAction="#handleChangePassword" maxWidth="Infinity"
+                                style="-fx-background-color: #1a73e8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 12; -fx-background-radius: 8; -fx-cursor: hand;"/>
+
+                        <Label fx:id="passwordMsgLabel" visible="false"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- HISTORIQUE CONNEXIONS VIEW -->
+            <VBox fx:id="historiqueView" spacing="20" visible="false" managed="false">
+
+                <!-- Summary Bar -->
+                <HBox spacing="15" alignment="CENTER_LEFT"
+                      style="-fx-background-color: white; -fx-padding: 18 25; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);">
+                    <Label text="🕐" style="-fx-font-size: 22px;"/>
+                    <VBox spacing="3">
+                        <Label text="Historique des connexions" style="-fx-font-size: 17px; -fx-font-weight: bold; -fx-text-fill: #202124;"/>
+                        <Label text="Appareils et sessions récentes sur votre compte" style="-fx-font-size: 13px; -fx-text-fill: #5f6368;"/>
+                    </VBox>
+                    <HBox HBox.hgrow="ALWAYS"/>
+                    <Button text="🗑️  Effacer l'historique" onAction="#handleClearHistory"
+                            style="-fx-background-color: #fce8e6; -fx-text-fill: #d93025; -fx-font-weight: bold; -fx-padding: 8 18; -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: #f28b82; -fx-border-radius: 8;"/>
+                </HBox>
+
+                <!-- History List -->
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                            style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
+                    <VBox fx:id="historyListContainer" spacing="12" style="-fx-padding: 2;"/>
+                </ScrollPane>
+
+            </VBox>
+
+            <!-- GESTION UTILISATEURS VIEW -->
+            <VBox fx:id="gestionUsersView" spacing="20" visible="false" managed="false">
+                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);">
+                    <TextField fx:id="searchUserField" promptText="Rechercher par nom ou email..." HBox.hgrow="ALWAYS"
+                               style="-fx-background-color: #f8f9fa; -fx-border-color: #dadce0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;"/>
+
+                    <ComboBox fx:id="roleFilterCombo" promptText="Filtrer par rôle" prefWidth="150"
+                              style="-fx-background-color: white; -fx-border-color: #dadce0; -fx-border-radius: 8; -fx-background-radius: 8;"/>
+
+                    <Button text="➕  Ajouter" onAction="#handleAddUser"
+                            style="-fx-background-color: #1a73e8; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                </HBox>
+
+                <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+                    <FlowPane fx:id="usersGrid" hgap="20" vgap="20" style="-fx-padding: 5;"/>
+                </ScrollPane>
+            </VBox>
+
+        </StackPane>
+    </VBox>
+</VBox>

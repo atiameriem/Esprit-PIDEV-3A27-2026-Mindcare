@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.MesReclamationsController"
+      spacing="30"
+      style="-fx-background-color: #F8FAFC; -fx-padding: 35 40;">
+
+    <!-- Header Section -->
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <StackPane style="-fx-background-color: #DBEAFE; -fx-background-radius: 12; -fx-min-width: 54; -fx-min-height: 54;">
+            <Label text="📂" style="-fx-font-size: 26px;"/>
+        </StackPane>
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label text="Mes Réclamations"
+                   style="-fx-font-size: 30px; -fx-font-weight: 900; -fx-text-fill: #1E293B;"/>
+            <Label text="Suivez l'état d'avancement de vos demandes de support"
+                   style="-fx-font-size: 14px; -fx-text-fill: #64748B;"/>
+        </VBox>
+    </HBox>
+
+    <!-- Search Tool -->
+    <HBox alignment="CENTER_LEFT" spacing="15" 
+          style="-fx-background-color: white; -fx-padding: 12 20; -fx-background-radius: 16; 
+                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.03), 10, 0, 0, 4);">
+        <Label text="🔍" style="-fx-font-size: 16px; -fx-opacity: 0.5;"/>
+        <TextField fx:id="searchField" promptText="Rechercher par mot-clé, objet..." 
+                   HBox.hgrow="ALWAYS" 
+                   style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+    </HBox>
+
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" 
+                style="-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0; -fx-border-color: transparent;">
+        <content>
+            <FlowPane fx:id="reclamationGrid" hgap="30" vgap="30" alignment="TOP_LEFT">
+                <padding>
+                    <Insets top="10" right="10" bottom="35" left="10"/>
+                </padding>
+            </FlowPane>
+        </content>
+    </ScrollPane>
+
+</VBox>

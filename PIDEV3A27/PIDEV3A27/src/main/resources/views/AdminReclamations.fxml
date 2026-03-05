@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" 
+      fx:controller="controllers.AdminReclamationsController"
+      spacing="30" style="-fx-background-color: #F8FAFC; -fx-padding: 35 40;">
+    
+    <!-- Header Section -->
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label text="Gestion des Réclamations" 
+                   style="-fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: #1E293B;"/>
+            <Label text="Consultez et répondez aux demandes de vos patients" 
+                   style="-fx-font-size: 14px; -fx-text-fill: #64748B;"/>
+        </VBox>
+        <Button text="🔄 Rafraîchir" onAction="#refresh" 
+                style="-fx-background-color: white; -fx-text-fill: #475569; -fx-font-weight: 800; 
+                       -fx-padding: 12 25; -fx-background-radius: 12; -fx-border-color: #E2E8F0; 
+                       -fx-border-radius: 12; -fx-cursor: hand;"/>
+    </HBox>
+
+    <!-- Filter Bar -->
+    <HBox alignment="CENTER_LEFT" spacing="20" 
+          style="-fx-background-color: white; -fx-padding: 15 20; -fx-background-radius: 18; 
+                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.03), 10, 0, 0, 4);">
+        
+        <HBox alignment="CENTER_LEFT" spacing="12" HBox.hgrow="ALWAYS" 
+              style="-fx-background-color: #F8FAFC; -fx-padding: 10 16; -fx-background-radius: 12; 
+                     -fx-border-color: #E2E8F0; -fx-border-radius: 12;">
+            <Label text="🔍" style="-fx-font-size: 16px; -fx-opacity: 0.5;"/>
+            <TextField fx:id="searchField" promptText="Rechercher un patient, un objet ou un statut..." 
+                       HBox.hgrow="ALWAYS" 
+                       style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+        </HBox>
+
+        <ComboBox fx:id="sortComboBox" promptText="Toutes les priorités" 
+                  style="-fx-background-color: #F8FAFC; -fx-background-radius: 12; -fx-border-color: #E2E8F0; 
+                         -fx-border-radius: 12; -fx-padding: 8 15; -fx-font-weight: bold; -fx-min-width: 200;"/>
+    </HBox>
+
+    <!-- Grid Content -->
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" 
+                style="-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0;">
+        <content>
+            <FlowPane fx:id="reclamationsGrid" hgap="30" vgap="30" alignment="TOP_LEFT">
+                <padding>
+                    <Insets top="10" right="10" bottom="30" left="10"/>
+                </padding>
+            </FlowPane>
+        </content>
+    </ScrollPane>
+
+</VBox>

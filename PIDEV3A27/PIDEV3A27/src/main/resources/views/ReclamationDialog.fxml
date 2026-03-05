@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.ReclamationDialogController"
+      spacing="20"
+      prefWidth="450"
+      style="-fx-background-color: white; -fx-padding: 30;">
+
+    <Label text="Modifier la réclamation" 
+           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    
+    <Separator/>
+
+    <VBox spacing="10">
+        <Label text="Objet" style="-fx-font-weight: bold;"/>
+        <TextField fx:id="objetField" prefWidth="400" promptText="Objet de la réclamation"/>
+    </VBox>
+
+    <VBox spacing="10">
+        <Label text="Urgence" style="-fx-font-weight: bold;"/>
+        <HBox spacing="20">
+            <RadioButton fx:id="highRadio" text="High"/>
+            <RadioButton fx:id="mediumRadio" text="Medium"/>
+            <RadioButton fx:id="lowRadio" text="Low"/>
+        </HBox>
+    </VBox>
+
+    <VBox spacing="10">
+        <Label text="Description" style="-fx-font-weight: bold;"/>
+        <TextArea fx:id="descriptionArea" prefHeight="100" wrapText="true" 
+                  promptText="Entrez les détails de votre réclamation..."/>
+    </VBox>
+
+    <HBox spacing="15" alignment="CENTER_RIGHT">
+        <Button text="Annuler" onAction="#handleCancel"
+                style="-fx-background-color: #f1f2f6; -fx-text-fill: #2c3e50; -fx-padding: 10 20;"/>
+        <Button text="Enregistrer" onAction="#handleSave"
+                style="-fx-background-color: #1976D2; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;"/>
+    </HBox>
+
+</VBox>

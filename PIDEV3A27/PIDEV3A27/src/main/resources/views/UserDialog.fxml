@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="0" alignment="TOP_CENTER" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.UserDialogController"
+      style="-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
+
+    <VBox spacing="5" alignment="CENTER" style="-fx-background-color: linear-gradient(to right, #6a11cb, #2575fc); -fx-padding: 30; -fx-background-radius: 15 15 0 0;">
+        <Label text="Gestion Utilisateur" style="-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: 900; -fx-letter-spacing: 1px;"/>
+        <Region style="-fx-background-color: rgba(255,255,255,0.3); -fx-min-height: 2; -fx-max-height: 2; -fx-max-width: 100;"/>
+    </VBox>
+
+    <VBox spacing="25" style="-fx-padding: 40;">
+        <GridPane vgap="20" hgap="30">
+            <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="100"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="100"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+            </columnConstraints>
+
+            <VBox spacing="8" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2">
+                <Label text="Nom" style="-fx-text-fill: #4A5568; -fx-font-weight: bold; -fx-font-size: 13px;"/>
+                <TextField fx:id="nomField" promptText="Votre nom" 
+                           style="-fx-background-color: #F7FAFC; -fx-border-color: #E2E8F0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10; -fx-font-size: 14px;"/>
+            </VBox>
+
+            <VBox spacing="8" GridPane.rowIndex="0" GridPane.columnIndex="2" GridPane.columnSpan="2">
+                <Label text="Prénom" style="-fx-text-fill: #4A5568; -fx-font-weight: bold; -fx-font-size: 13px;"/>
+                <TextField fx:id="prenomField" promptText="Votre prénom" 
+                           style="-fx-background-color: #F7FAFC; -fx-border-color: #E2E8F0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10; -fx-font-size: 14px;"/>
+            </VBox>
+
+            <VBox spacing="8" GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.columnSpan="4">
+                <Label text="Adresse Email" style="-fx-text-fill: #4A5568; -fx-font-weight: bold; -fx-font-size: 13px;"/>
+                <TextField fx:id="emailField" promptText="exemple@email.com" 
+                           style="-fx-background-color: #F7FAFC; -fx-border-color: #E2E8F0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10; -fx-font-size: 14px;"/>
+            </VBox>
+
+            <VBox spacing="8" GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="2">
+                <Label text="Téléphone" style="-fx-text-fill: #4A5568; -fx-font-weight: bold; -fx-font-size: 13px;"/>
+                <TextField fx:id="telephoneField" promptText="55 123 456" 
+                           style="-fx-background-color: #F7FAFC; -fx-border-color: #E2E8F0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10; -fx-font-size: 14px;"/>
+            </VBox>
+
+            <VBox spacing="8" GridPane.rowIndex="2" GridPane.columnIndex="2" GridPane.columnSpan="2">
+                <Label text="Date de Naissance" style="-fx-text-fill: #4A5568; -fx-font-weight: bold; -fx-font-size: 13px;"/>
+                <DatePicker fx:id="dobPicker" promptText="JJ/MM/AAAA" maxWidth="Infinity"
+                            style="-fx-background-color: #F7FAFC; -fx-border-color: #E2E8F0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-size: 14px;"/>
+            </VBox>
+
+            <VBox spacing="8" GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="4">
+                <Label text="Mot de passe" style="-fx-text-fill: #4A5568; -fx-font-weight: bold; -fx-font-size: 13px;"/>
+                <PasswordField fx:id="passwordField" promptText="Minimum 8 caractères" 
+                               style="-fx-background-color: #F7FAFC; -fx-border-color: #E2E8F0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10; -fx-font-size: 14px;"/>
+            </VBox>
+
+            <VBox spacing="10" GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.columnSpan="4">
+                <Label text="Rôle de l'utilisateur" style="-fx-text-fill: #4A5568; -fx-font-weight: bold; -fx-font-size: 13px;"/>
+                <HBox spacing="25" alignment="CENTER_LEFT">
+                    <fx:define>
+                        <ToggleGroup fx:id="roleToggleGroup"/>
+                    </fx:define>
+                    <RadioButton fx:id="patientRadio" text="Patient" toggleGroup="$roleToggleGroup" selected="true" style="-fx-font-size: 14px; -fx-text-fill: #2D3748;"/>
+                    <RadioButton fx:id="psychologueRadio" text="Psychologue" toggleGroup="$roleToggleGroup" style="-fx-font-size: 14px; -fx-text-fill: #2D3748;"/>
+                    <RadioButton fx:id="adminRadio" text="Admin" toggleGroup="$roleToggleGroup" style="-fx-font-size: 14px; -fx-text-fill: #2D3748;"/>
+                    <RadioButton fx:id="responsableRadio" text="Responsable C" toggleGroup="$roleToggleGroup" style="-fx-font-size: 14px; -fx-text-fill: #2D3748;"/>
+                </HBox>
+            </VBox>
+        </GridPane>
+
+        <HBox spacing="20" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+            <Button text="Annuler" fx:id="cancelButton" onAction="#handleCancel"
+                    style="-fx-background-color: #EDF2F7; -fx-text-fill: #4A5568; -fx-font-weight: bold; -fx-padding: 12 30; -fx-background-radius: 10; -fx-cursor: hand;"/>
+            <Button text="Enregistrer l'utilisateur" fx:id="saveButton" onAction="#handleSave"
+                    style="-fx-background-color: linear-gradient(to right, #6a11cb, #2575fc); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 12 40; -fx-background-radius: 10; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(37,117,252,0.3), 10, 0, 0, 4);"/>
+        </HBox>
+    </VBox>
+
+</VBox>

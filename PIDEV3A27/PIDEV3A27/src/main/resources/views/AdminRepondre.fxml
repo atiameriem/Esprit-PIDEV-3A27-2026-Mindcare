@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.AdminRepondreController"
+      spacing="25"
+      style="-fx-background-color: white; -fx-padding: 35; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 20, 0, 0, 10);"
+      prefWidth="520">
+
+    <!-- Header Section -->
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <StackPane style="-fx-background-color: #DBEAFE; -fx-background-radius: 12; -fx-min-width: 50; -fx-min-height: 50;">
+            <Label text="✍️" style="-fx-font-size: 24px;"/>
+        </StackPane>
+        <VBox spacing="2">
+            <Label text="Réponse Administrative"
+                   style="-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: #1E293B;"/>
+            <Label fx:id="objetHeaderLabel" text="Sujet de la demande"
+                   style="-fx-font-size: 13px; -fx-text-fill: #64748B; -fx-font-weight: bold;"/>
+        </VBox>
+    </HBox>
+
+    <Separator style="-fx-opacity: 0.4;"/>
+
+    <!-- Context Details (Read-only) -->
+    <VBox spacing="15" style="-fx-background-color: #F8FAFC; -fx-background-radius: 16; -fx-padding: 20; -fx-border-color: #E2E8F0; -fx-border-radius: 16; -fx-border-width: 1;">
+        <VBox spacing="6">
+            <Label text="PATIENT" style="-fx-font-weight: 900; -fx-font-size: 10px; -fx-text-fill: #94A3B8; -fx-letter-spacing: 1px;"/>
+            <Label fx:id="userNameDetail" text="Nom du patient" style="-fx-text-fill: #1E293B; -fx-font-size: 14px; -fx-font-weight: 800;"/>
+        </VBox>
+
+        <VBox spacing="6">
+            <Label text="OBJET" style="-fx-font-weight: 900; -fx-font-size: 10px; -fx-text-fill: #94A3B8; -fx-letter-spacing: 1px;"/>
+            <Label fx:id="objetDetail" text="Objet de la réclamation" style="-fx-text-fill: #1E293B; -fx-font-size: 14px; -fx-font-weight: 800;"/>
+        </VBox>
+
+        <VBox fx:id="categorieBox" spacing="6">
+            <Label text="CATÉGORIE" style="-fx-font-weight: 900; -fx-font-size: 10px; -fx-text-fill: #94A3B8; -fx-letter-spacing: 1px;"/>
+            <HBox spacing="6" alignment="CENTER_LEFT">
+                <Label text="🏷️" style="-fx-font-size: 12px;"/>
+                <Label fx:id="categorieDetail" text="N/A" style="-fx-text-fill: #475569; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-color: #F1F5F9; -fx-padding: 3 10; -fx-background-radius: 8;"/>
+            </HBox>
+        </VBox>
+
+        <VBox spacing="6">
+            <Label text="DESCRIPTION INITIALE" style="-fx-font-weight: 900; -fx-font-size: 10px; -fx-text-fill: #94A3B8; -fx-letter-spacing: 1px;"/>
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" 
+                        maxHeight="150" minHeight="50" style="-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0; -fx-border-color: transparent;">
+                <Label fx:id="descriptionDetail" text="Détails de la réclamation..." wrapText="true" 
+                       style="-fx-text-fill: #475569; -fx-font-size: 14px; -fx-line-spacing: 1.4;"/>
+            </ScrollPane>
+        </VBox>
+
+        <!-- AI Summary Integration -->
+        <VBox fx:id="summaryBoxIA" spacing="8" 
+              style="-fx-background-color: #FAF5FF; -fx-padding: 14; -fx-background-radius: 12; -fx-border-color: #E9D5FF; -fx-border-width: 1;" 
+              visible="false" managed="false">
+             <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="✨" style="-fx-font-size: 12px;"/>
+                <Label text="RÉSUMÉ IA POUR L'ADMIN" style="-fx-font-weight: 900; -fx-font-size: 10px; -fx-text-fill: #7E22CE; -fx-letter-spacing: 0.5px;"/>
+             </HBox>
+             <Label fx:id="summaryLabelIA" text="Résumé généré..." wrapText="true" 
+                    style="-fx-font-size: 13px; -fx-text-fill: #581C87; -fx-font-weight: 800;"/>
+        </VBox>
+    </VBox>
+
+    <!-- Admin Response Area -->
+    <VBox spacing="10">
+        <Label text="Votre Solution / Réponse"
+               style="-fx-font-size: 15px; -fx-font-weight: 800; -fx-text-fill: #1E293B;"/>
+        <TextArea fx:id="reponseArea"
+                  promptText="Rédigez ici la solution pour le patient..."
+                  prefHeight="140" wrapText="true"
+                  style="-fx-background-color: white; -fx-border-color: #CBD5E0;
+                         -fx-border-radius: 12; -fx-background-radius: 12;
+                         -fx-border-width: 1.5; -fx-padding: 12; -fx-font-size: 14px;"/>
+    </VBox>
+
+    <!-- Action Buttons -->
+    <HBox spacing="18" alignment="CENTER_RIGHT" style="-fx-padding: 5 0 0 0;">
+        <Button text="✕  Annuler" onAction="#handleCancel"
+                style="-fx-background-color: white; -fx-background-radius: 14;
+                       -fx-border-color: #E2E8F0; -fx-border-radius: 14;
+                       -fx-border-width: 1.5; -fx-padding: 12 30;
+                       -fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #64748B; -fx-cursor: hand;"/>
+        <Button text="🚀 Envoyer &amp; Marquer comme Traité" onAction="#handleRepondre"
+                style="-fx-background-color: linear-gradient(to right, #059669, #10B981); 
+                       -fx-background-radius: 14;
+                       -fx-text-fill: white; -fx-font-size: 14px;
+                       -fx-font-weight: 900; -fx-padding: 12 35;
+                       -fx-cursor: hand;
+                       -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.3), 15, 0, 0, 5);"/>
+    </HBox>
+
+</VBox>
+
